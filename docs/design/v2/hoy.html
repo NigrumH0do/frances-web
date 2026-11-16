@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoy · Frances Classroom v2 (maqueta)</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<script>
+/* Alternar tema: ?theme=dark|light, o el botón; se recuerda en localStorage. */
+(function () {
+  var r = document.documentElement, k = 'fc-theme';
+  var q = new URLSearchParams(location.search).get('theme'), v = q;
+  try { v = q || localStorage.getItem(k); } catch (e) {}
+  if (v === 'dark' || v === 'light') r.classList.add('theme-' + v);
+  window.setTheme = function (n) {
+    r.classList.remove('theme-dark', 'theme-light');
+    if (n !== 'system') r.classList.add('theme-' + n);
+    try { n === 'system' ? localStorage.removeItem(k) : localStorage.setItem(k, n); } catch (e) {}
+  };
+  window.toggleTheme = function () {
+    var dark = r.classList.contains('theme-dark') ||
+      (!r.classList.contains('theme-light') && matchMedia('(prefers-color-scheme: dark)').matches);
+    setTheme(dark ? 'light' : 'dark');
+  };
+})();
+</script>
+</head>
+<body>
+<div class="stage">
+  <div class="stage-bar">
+    <a href="index.html"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg> Índice</a>
+    <span>Hoy · 390×844</span>
+    <button class="btn btn-ghost theme-toggle" type="button" onclick="toggleTheme()"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg> Tema</button>
+  </div>
+  <div class="phone">
+    <div class="statusbar" aria-hidden="true"><span>9:41</span><span>5G ▮▮▮ 82 %</span></div>
+    <header class="appbar"><h1>Bonsoir, Marta<span class="sub">Lunes 2 de noviembre · Français A2</span></h1>
+<span class="chip chip-streak" aria-label="Racha de 6 días"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-3.5 2-6 1.5 1 2.5 2.5 3-4Z"/></svg> 6 días</span></header>
+    <main class="content" id="main">
+<section class="card card-accent" aria-labelledby="plan-h">
+  <div class="row-between">
+    <h2 id="plan-h">Tu plan de hoy</h2>
+    <span class="small"><b>1</b> de 4 hecho · ~25 min</span>
+  </div>
+  <div class="progress" style="margin-top:var(--sp-3)" aria-hidden="true"><span style="width:25%"></span></div>
+  <p class="small" style="margin-top:var(--sp-3)"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg> <b>Por qué:</b> el miércoles entregas la redacción y <i lang="fr">le passé composé</i> va al 45 %.</p>
+</section>
+
+<ul class="list" style="margin-top:var(--sp-4)" aria-label="Tareas de hoy">
+  <li><a class="list-item" href="repasar.html">
+    <span class="check" aria-hidden="true"></span>
+    <span class="grow"><span class="title">Repasar 18 tarjetas</span><br><span class="meta">12 vencidas · 6 nuevas · ~12 min</span></span>
+    <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+  </a></li>
+  <li><a class="list-item" href="tema-detalle.html#quiz">
+    <span class="check" aria-hidden="true"></span>
+    <span class="grow"><span class="title">Quiz: <span lang="fr">Le passé composé</span></span><br><span class="meta">8 preguntas · pendiente desde ayer</span></span>
+    <span class="chip chip-warning">Pendiente</span>
+  </a></li>
+  <li><a class="list-item" href="tema-detalle.html">
+    <span class="check" aria-hidden="true"></span>
+    <span class="grow"><span class="title">Leer la ficha «Leçon 7»</span><br><span class="meta">Resumen, vocabulario y 3 reglas · 5 min</span></span>
+    <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+  </a></li>
+  <li><a class="list-item" href="repasar.html#pron">
+    <span class="check done" aria-label="Hecho"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span>
+    <span class="grow"><span class="title muted"><s>Practicar pronunciación</s></span><br><span class="meta">5 frases · media 82</span></span>
+  </a></li>
+</ul>
+
+<div class="section-title"><h2>Próxima entrega</h2><a class="small" href="#">Ver todas</a></div>
+<article class="card">
+  <div class="row" style="align-items:flex-start">
+    <span class="lead-icon warn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+    <div class="grow">
+      <h3 lang="fr">Rédaction « Mon dernier week-end »</h3>
+      <p class="small muted">Vence <b style="color:var(--c-warning)">mié 4 nov, 23:59 · en 2 días</b></p>
+      <p class="small" style="margin-top:var(--sp-2)">150–200 palabras en <span lang="fr">passé composé</span>. Prof. Claire Martin.</p>
+    </div>
+  </div>
+  <div class="row" style="margin-top:var(--sp-3)">
+    <a class="btn btn-tonal grow" href="tema-detalle.html">Repasar el tema</a>
+    <a class="btn btn-secondary" href="#"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg> Classroom</a>
+  </div>
+</article>
+
+<div class="section-title"><h2>Esta semana</h2><span class="small muted">74 min de 120</span></div>
+<div class="card">
+  <div class="bars" aria-label="Minutos por día: lunes 18, martes 22, miércoles 9, jueves 0, viernes 14, sábado 11, domingo 0">
+    <span style="height:60%"></span><span style="height:73%"></span><span style="height:30%"></span><span class="off" style="height:4%"></span><span style="height:47%"></span><span style="height:37%"></span><span class="off" style="height:4%"></span>
+  </div>
+  <div class="bars-labels" aria-hidden="true"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+</div>
+
+<ul class="list" style="margin-top:var(--sp-3)" aria-label="Plan de la semana">
+  <li><div class="list-item"><span class="lead-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17v.5"/></svg></span><span class="grow"><span class="title">Mar · Quiz <span lang="fr">Les loisirs</span></span><br><span class="meta">10 preguntas</span></span></div></li>
+  <li><div class="list-item"><span class="lead-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4V4ZM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6V4Z"/></svg></span><span class="grow"><span class="title">Jue · Nueva clase</span><br><span class="meta">Se sincroniza al publicarse</span></span></div></li>
+</ul>
+
+<p class="xs muted" style="margin-top:var(--sp-5);text-align:center">Material sincronizado hace 2 h · 3 publicaciones nuevas</p>
+    </main>
+    
+    <nav class="tabbar" aria-label="Secciones">
+    <a href="hoy.html" aria-current="page"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span>Hoy</a>
+    <a href="temas.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 16 10 5 10-5M2 12l10 5 10-5"/></svg></span>Temas</a>
+    <a href="repasar.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg></span>Repasar</a>
+    <a href="chat.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12Z"/></svg></span>Chat</a>
+    <a href="mas.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></span>Más</a>
+    </nav>
+  </div>
+</div>
+<script>
+/* Voltear tarjeta: cualquier [data-flip=id] alterna .is-flipped en #id. */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-flip]');
+  if (!b) return;
+  var c = document.getElementById(b.getAttribute('data-flip'));
+  var on = c.classList.toggle('is-flipped');
+  c.querySelector('.flip-front').setAttribute('aria-hidden', on);
+  c.querySelector('.flip-back').setAttribute('aria-hidden', !on);
+  var host = c.closest('[data-review]');
+  if (host) host.classList.toggle('answered', on);
+});
+if (new URLSearchParams(location.search).get('flip') === '1') {
+  document.querySelectorAll('.flip').forEach(function (c) {
+    c.classList.add('is-flipped');
+    var host = c.closest('[data-review]');
+    if (host) host.classList.add('answered');
+  });
+}
+</script>
+
+</body>
+</html>

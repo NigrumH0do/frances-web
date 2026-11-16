@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Componentes · Frances Classroom v2 (maqueta)</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<script>
+/* Alternar tema: ?theme=dark|light, o el botón; se recuerda en localStorage. */
+(function () {
+  var r = document.documentElement, k = 'fc-theme';
+  var q = new URLSearchParams(location.search).get('theme'), v = q;
+  try { v = q || localStorage.getItem(k); } catch (e) {}
+  if (v === 'dark' || v === 'light') r.classList.add('theme-' + v);
+  window.setTheme = function (n) {
+    r.classList.remove('theme-dark', 'theme-light');
+    if (n !== 'system') r.classList.add('theme-' + n);
+    try { n === 'system' ? localStorage.removeItem(k) : localStorage.setItem(k, n); } catch (e) {}
+  };
+  window.toggleTheme = function () {
+    var dark = r.classList.contains('theme-dark') ||
+      (!r.classList.contains('theme-light') && matchMedia('(prefers-color-scheme: dark)').matches);
+    setTheme(dark ? 'light' : 'dark');
+  };
+})();
+</script>
+</head>
+<body>
+<div class="doc">
+<header>
+  <div><a class="small" href="index.html">← Índice</a><h1>Componentes</h1><p class="muted">Catálogo de la v2. Estilos en <code>tokens.css</code> + <code>app.css</code>.</p></div>
+  <button class="btn btn-secondary theme-toggle" type="button" onclick="toggleTheme()"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg> Claro / oscuro</button>
+</header>
+
+<section id="color">
+  <h2>Color</h2>
+  <div class="grid">
+    <div class="specimen stack">
+      <h3>Superficies y texto</h3>
+      <div class="swatch"><i style="background:var(--c-bg)"></i>--c-bg · fondo</div>
+      <div class="swatch"><i style="background:var(--c-card)"></i>--c-card · tarjetas</div>
+      <div class="swatch"><i style="background:var(--c-surface)"></i>--c-surface · rellenos</div>
+      <div class="swatch"><i style="background:var(--c-text)"></i>--c-text</div>
+      <div class="swatch"><i style="background:var(--c-text-muted)"></i>--c-text-muted</div>
+    </div>
+    <div class="specimen stack">
+      <h3>Acento y estados</h3>
+      <div class="swatch"><i style="background:var(--c-accent)"></i>--c-accent</div>
+      <div class="swatch"><i style="background:var(--c-success)"></i>--c-success · Bien / Excelente</div>
+      <div class="swatch"><i style="background:var(--c-warning)"></i>--c-warning · Difícil / Mejorable</div>
+      <div class="swatch"><i style="background:var(--c-danger)"></i>--c-danger · Otra vez / A repetir</div>
+      <div class="swatch"><i style="background:var(--c-streak)"></i>--c-streak · racha</div>
+    </div>
+    <div class="specimen stack">
+      <h3>Tipografía</h3>
+      <p style="font-size:var(--fs-2xl)" lang="fr" class="fr">Nous sommes allés au cinéma.</p>
+      <p class="muted small">Serif de lectura (Georgia) sólo para francés</p>
+      <h1>Título de pantalla 22</h1>
+      <h2>Sección 18</h2>
+      <p>Texto base 16 · interfaz con fuente del sistema.</p>
+      <p class="small muted">Secundario 14</p>
+    </div>
+  </div>
+</section>
+
+<section id="botones">
+  <h2>Botones</h2>
+  <div class="specimen row wrap">
+    <button class="btn btn-primary">Primario</button>
+    <button class="btn btn-tonal">Tonal</button>
+    <button class="btn btn-secondary">Secundario</button>
+    <button class="btn btn-ghost">Texto</button>
+    <button class="btn btn-danger">Borrar</button>
+    <button class="btn btn-primary" disabled>Deshabilitado</button>
+    <button class="btn btn-secondary btn-icon" aria-label="Escuchar"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
+    <button class="btn btn-primary btn-lg">Grande 52 px</button>
+  </div>
+  <p class="small muted" style="margin-top:var(--sp-2)">Todo objetivo táctil mide al menos 44×44 px (los chips de filtro amplían su zona con un pseudoelemento).</p>
+</section>
+
+<section id="chips">
+  <h2>Chips de tema y estado</h2>
+  <div class="specimen stack">
+    <div class="row wrap"><span class="chip chip-level">A1</span><span class="chip chip-level">A2</span><span class="chip chip-level">B1</span><span class="chip chip-success">Nuevo</span><span class="chip chip-warning">Pendiente</span><span class="chip chip-danger">Difícil</span><span class="chip">Nueva</span><span class="chip chip-streak"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-3.5 2-6 1.5 1 2.5 2.5 3-4Z"/></svg> 6 días</span></div>
+    <div class="row wrap" role="group" aria-label="Filtros"><button class="chip chip-filter" aria-pressed="true">Todos</button><button class="chip chip-filter" aria-pressed="false">Con pendientes</button><button class="chip chip-filter" aria-pressed="false">A2</button></div>
+  </div>
+</section>
+
+<section id="tarjeta">
+  <h2>Tarjeta de estudio (volteo)</h2>
+  <div class="grid">
+    <div class="specimen" data-review>
+      <h3>Toca la tarjeta o «Mostrar respuesta»</h3>
+      <div class="flip" id="demo-card">
+        <div class="flip-inner" data-flip="demo-card" style="cursor:pointer">
+          <div class="flip-face flip-front">
+            <span class="kind">Vocabulario · <span lang="fr">Au marché</span></span>
+            <div class="spacer"></div>
+            <p class="front-fr" lang="fr">une botte de radis</p>
+            <div class="spacer"></div>
+            <p class="xs muted">Toca para voltear</p>
+          </div>
+          <div class="flip-face flip-back" aria-hidden="true">
+            <span class="kind">Respuesta</span>
+            <p class="back-es">un manojo de rábanos</p>
+            <p class="example" lang="fr">Je voudrais une botte de radis, s'il vous plaît.</p>
+            <div class="spacer"></div>
+            <p class="xs muted">Fuente: Leçon 4 · pág. 2</p>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block show-answer" data-flip="demo-card" style="margin-top:var(--sp-3)">Mostrar respuesta</button>
+      <div class="rating" style="margin-top:var(--sp-3)">
+        <button class="btn again">Otra vez<small>&lt;10 min</small></button>
+        <button class="btn hard">Difícil<small>1 d</small></button>
+        <button class="btn good">Bien<small>3 d</small></button>
+        <button class="btn easy">Fácil<small>9 d</small></button>
+      </div>
+    </div>
+    <div class="specimen stack">
+      <h3>Reproductor con selector de voz</h3>
+      <div class="player">
+        <button class="btn btn-icon play" aria-label="Reproducir"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7Z" fill="currentColor"/></svg></button>
+        <div class="track" aria-hidden="true"><span></span></div>
+        <span class="time">0:01</span>
+        <label class="sr-only" for="cv">Voz</label>
+        <select class="select select-pill" id="cv"><option>Céline · adulta</option><option>Paul · adulto</option><option>Lou · adolescente</option><option>Léo · niño</option></select>
+      </div>
+      <div class="player">
+        <button class="btn btn-icon play" aria-label="Pausar"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
+        <div class="track" aria-hidden="true"><span style="width:70%"></span></div>
+        <span class="time">0:02</span>
+        <button class="btn btn-ghost btn-sm-text">0,75×</button>
+      </div>
+      <div class="player" aria-disabled="true">
+        <span class="spinner" aria-hidden="true" style="margin:0 11px"></span>
+        <span class="small muted grow">Generando audio…</span>
+      </div>
+      <div class="callout error"><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17v.5"/></svg></span><p class="small grow">Este audio no está disponible sin conexión.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="listas">
+  <h2>Listas</h2>
+  <div class="grid">
+    <ul class="list">
+      <li><a class="list-item" href="#"><span class="lead-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6v18h12V7l-4-4Z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg></span><span class="grow"><span class="title" lang="fr">Leçon 7</span><br><span class="meta">PDF · 6 págs.</span></span><svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a></li>
+      <li><a class="list-item" href="#"><span class="lead-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-5-5-9 8"/></svg></span><span class="grow"><span class="title">Exercices p. 42</span><br><span class="meta">Imagen</span></span><svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a></li>
+      <li><div class="list-item"><span class="check done" aria-label="Hecho"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span><span class="grow">Tarea hecha</span></div></li>
+      <li><div class="list-item"><span class="check" aria-hidden="true"></span><span class="grow">Tarea pendiente</span><button class="switch" role="switch" aria-checked="true" aria-label="Interruptor"></button></div></li>
+    </ul>
+    <div class="specimen stack">
+      <h3>Campos</h3>
+      <div class="search"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><label class="sr-only" for="cs">Buscar</label><input class="input" id="cs" placeholder="Buscar"></div>
+      <div class="field"><label for="cf">Francés</label><input class="input fr" id="cf" lang="fr" value="hier soir"></div>
+      <div class="segmented" role="group" aria-label="Demo"><button aria-pressed="true">Sistema</button><button aria-pressed="false">Claro</button><button aria-pressed="false">Oscuro</button></div>
+    </div>
+  </div>
+</section>
+
+<section id="barra">
+  <h2>Barra inferior</h2>
+  <div class="specimen" style="max-width:390px;padding:0;overflow:hidden">
+    <nav class="tabbar" aria-label="Secciones">
+    <a href="hoy.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span>Hoy</a>
+    <a href="temas.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 16 10 5 10-5M2 12l10 5 10-5"/></svg></span>Temas</a>
+    <a href="repasar.html" aria-current="page"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg></span>Repasar</a>
+    <a href="chat.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12Z"/></svg></span>Chat</a>
+    <a href="mas.html" class="badge-dot"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></span>Más</a>
+    </nav>
+  </div>
+  <p class="small muted" style="margin-top:var(--sp-2)">Cinco destinos fijos; la sección activa usa píldora tonal y texto en negrita (no sólo color). El punto rojo avisa de fallos al admin.</p>
+</section>
+
+<section id="estados">
+  <h2>Estados vacío, carga y error</h2>
+  <div class="grid">
+    <div class="specimen">
+      <div class="state">
+        <div class="art"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div>
+        <h3>¡Listo por hoy!</h3>
+        <p class="small muted">No quedan tarjetas. La próxima vence mañana a las 08:10.</p>
+        <a class="btn btn-tonal" href="#">Practicar pronunciación</a>
+      </div>
+    </div>
+    <div class="specimen stack" aria-busy="true" aria-label="Cargando">
+      <h3>Cargando (esqueleto)</h3>
+      <div class="skeleton" style="height:22px;width:60%"></div>
+      <div class="skeleton" style="height:14px;width:90%"></div>
+      <div class="skeleton" style="height:14px;width:75%"></div>
+      <div class="skeleton" style="height:88px"></div>
+      <div class="row small muted"><span class="spinner" aria-hidden="true"></span> Generando el resumen con IA…</div>
+    </div>
+    <div class="specimen">
+      <div class="state error">
+        <div class="art"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 5-2.8M22 8.5A15 15 0 0 0 11 5M5 12.5a10 10 0 0 1 4-2M19 12.5a10 10 0 0 0-2.5-1.7M8.5 16a5 5 0 0 1 7 0M12 20h.01M3 3l18 18"/></svg></div>
+        <h3>No se pudo actualizar</h3>
+        <p class="small muted">Sin conexión con el servidor. Te mostramos lo último guardado (hace 2 h).</p>
+        <button class="btn btn-secondary">Reintentar</button>
+      </div>
+    </div>
+    <div class="specimen stack">
+      <h3>Avisos</h3>
+      <div class="callout info"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg><p class="small grow">Resumen generado por IA. Puede tener errores.</p></div>
+      <div class="callout"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17v.5"/></svg><p class="small grow"><b>La publicación cambió.</b> ¿Regenerar tarjetas?</p></div>
+      <div class="callout error"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17v.5"/></svg><p class="small grow">Kiosapi no respondió. Se usan tarjetas por reglas.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="quiz">
+  <h2>Preguntas de quiz</h2>
+  <div class="grid">
+    <div class="specimen stack">
+      <h3>Opción múltiple · respondida</h3>
+      <p class="quiz-q">¿Cuál es correcta?</p>
+      <div class="options" role="radiogroup">
+        <button class="option wrong" role="radio" aria-checked="true"><span class="key">A</span><span lang="fr">J'ai allé au marché.</span></button>
+        <button class="option correct" role="radio" aria-checked="false"><span class="key">B</span><span lang="fr">Je suis allé au marché.</span></button>
+        <button class="option" role="radio" aria-checked="false"><span class="key">C</span><span lang="fr">Je suis aller au marché.</span></button>
+      </div>
+      <div class="feedback ko small"><strong class="ko">Incorrecto.</strong> <i lang="fr">Aller</i> usa <b>être</b>.</div>
+    </div>
+    <div class="specimen stack">
+      <h3>Completar</h3>
+      <p class="quiz-q"><span class="fr" lang="fr">Hier, elle <label class="sr-only" for="g1">hueco</label><input class="gap" id="g1" value="est"> partie à 8 h.</span></p>
+      <div class="feedback ok small"><strong class="ok">¡Correcto!</strong> <i lang="fr">partir</i> → <i lang="fr">être</i>, concuerda: <i lang="fr">partie</i>.</div>
+      <button class="btn btn-primary btn-block">Siguiente</button>
+    </div>
+    <div class="specimen stack">
+      <h3>Traducir al francés</h3>
+      <p class="quiz-q">«Comimos un crepe el fin de semana pasado.»</p>
+      <label class="sr-only" for="tr">Tu traducción</label>
+      <textarea class="textarea fr" id="tr" lang="fr" placeholder="Escribe en francés…">Nous avons mangé une crêpe</textarea>
+      <button class="btn btn-primary btn-block">Comprobar</button>
+    </div>
+    <div class="specimen stack">
+      <h3>Ordenar la frase</h3>
+      <p class="quiz-q">«Fuimos al cine.»</p>
+      <div class="answer-line" aria-label="Tu respuesta"><button class="tile">Nous</button><button class="tile">sommes</button></div>
+      <div class="tiles" aria-label="Palabras disponibles"><button class="tile">au</button><button class="tile used" aria-hidden="true" tabindex="-1">Nous</button><button class="tile">allés</button><button class="tile used" aria-hidden="true" tabindex="-1">sommes</button><button class="tile">cinéma</button></div>
+      <button class="btn btn-primary btn-block" disabled>Comprobar</button>
+    </div>
+    <div class="specimen stack">
+      <h3>Dictado</h3>
+      <p class="quiz-q">Escucha y escribe lo que oyes.</p>
+      <div class="row" style="justify-content:center;gap:var(--sp-4)">
+        <button class="btn btn-primary btn-icon btn-lg" style="width:64px;height:64px" aria-label="Escuchar"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
+        <button class="btn btn-secondary" aria-label="Escuchar despacio">Despacio 0,75×</button>
+      </div>
+      <label class="sr-only" for="dc">Lo que oyes</label>
+      <input class="input fr" id="dc" lang="fr" value="le week-end dernier">
+      <div class="feedback ok small"><strong class="ok">¡Correcto!</strong></div>
+    </div>
+    <div class="specimen stack">
+      <h3>Resultado del quiz</h3>
+      <div class="state" style="padding:var(--sp-4)">
+        <div class="score-ring" style="--v:75"><span>6/8</span></div>
+        <p><b>Bien</b> · mejor que la última vez (5/8)</p>
+        <p class="small muted">Repasa 2 tarjetas marcadas como difíciles.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pron">
+  <h2>Pronunciación: puntaje por palabra y fonema</h2>
+  <div class="specimen stack" style="max-width:420px">
+    <div class="words" lang="fr"><button class="word excelente">Bonjour</button><button class="word bien">madame</button><button class="word mejorable">je</button><button class="word repetir" aria-pressed="true">voudrais</button></div>
+    <div class="phonemes"><div class="phoneme excelente"><b>v</b><span>93</span></div><div class="phoneme mejorable"><b>u</b><span>66</span></div><div class="phoneme repetir"><b>d</b><span>52</span></div><div class="phoneme repetir"><b>ʁ</b><span>38</span></div><div class="phoneme bien"><b>ɛ</b><span>80</span></div></div>
+    <p class="small muted">El color nunca va solo: cada palabra lleva subrayado de color y su puntaje se anuncia en la etiqueta accesible.</p>
+  </div>
+</section>
+
+<section id="chat">
+  <h2>Chat con citas</h2>
+  <div class="specimen chat" style="max-width:420px">
+    <div class="bubble me">¿Cómo se dice «anoche»?</div>
+    <div class="bubble bot">
+      <p>Se dice <b lang="fr">hier soir</b> <a class="cite" href="#">1</a>.</p>
+      <div class="sources"><a class="source" href="#"><span class="cite">1</span><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6v18h12V7l-4-4Z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg><span class="grow" lang="fr">Leçon 7</span><span class="muted">pág. 2</span></a></div>
+    </div>
+    <div class="thinking" role="status"><span class="row"><span class="dots" aria-hidden="true"><span></span><span></span><span></span></span><b>Pensando…</b><span class="small muted">6 s</span></span></div>
+  </div>
+</section>
+</div>
+
+<script>
+/* Voltear tarjeta: cualquier [data-flip=id] alterna .is-flipped en #id. */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-flip]');
+  if (!b) return;
+  var c = document.getElementById(b.getAttribute('data-flip'));
+  var on = c.classList.toggle('is-flipped');
+  c.querySelector('.flip-front').setAttribute('aria-hidden', on);
+  c.querySelector('.flip-back').setAttribute('aria-hidden', !on);
+  var host = c.closest('[data-review]');
+  if (host) host.classList.toggle('answered', on);
+});
+if (new URLSearchParams(location.search).get('flip') === '1') {
+  document.querySelectorAll('.flip').forEach(function (c) {
+    c.classList.add('is-flipped');
+    var host = c.closest('[data-review]');
+    if (host) host.classList.add('answered');
+  });
+}
+</script>
+
+</body>
+</html>

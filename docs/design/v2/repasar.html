@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repasar · Frances Classroom v2 (maqueta)</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<script>
+/* Alternar tema: ?theme=dark|light, o el botón; se recuerda en localStorage. */
+(function () {
+  var r = document.documentElement, k = 'fc-theme';
+  var q = new URLSearchParams(location.search).get('theme'), v = q;
+  try { v = q || localStorage.getItem(k); } catch (e) {}
+  if (v === 'dark' || v === 'light') r.classList.add('theme-' + v);
+  window.setTheme = function (n) {
+    r.classList.remove('theme-dark', 'theme-light');
+    if (n !== 'system') r.classList.add('theme-' + n);
+    try { n === 'system' ? localStorage.removeItem(k) : localStorage.setItem(k, n); } catch (e) {}
+  };
+  window.toggleTheme = function () {
+    var dark = r.classList.contains('theme-dark') ||
+      (!r.classList.contains('theme-light') && matchMedia('(prefers-color-scheme: dark)').matches);
+    setTheme(dark ? 'light' : 'dark');
+  };
+})();
+</script>
+</head>
+<body>
+<div class="stage">
+  <div class="stage-bar">
+    <a href="index.html"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg> Índice</a>
+    <span>Repasar · 390×844</span>
+    <button class="btn btn-ghost theme-toggle" type="button" onclick="toggleTheme()"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg> Tema</button>
+  </div>
+  <div class="phone">
+    <div class="statusbar" aria-hidden="true"><span>9:41</span><span>5G ▮▮▮ 82 %</span></div>
+    <header class="appbar"><h1>Repasar<span class="sub">Quedan 14 · ~9 min</span></h1>
+<button class="btn btn-ghost btn-icon" aria-label="Terminar sesión"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+    <main class="content" id="main">
+<nav class="segmented" aria-label="Modo">
+  <a href="#tarjetas" aria-current="true">Tarjetas</a>
+  <a href="#pron">Pronunciación</a>
+</nav>
+
+<section id="tarjetas" data-review style="margin-top:var(--sp-4)">
+  <div class="row" style="margin-bottom:var(--sp-3)">
+    <div class="progress grow" role="progressbar" aria-valuenow="4" aria-valuemin="0" aria-valuemax="18" aria-label="4 de 18"><span style="width:22%"></span></div>
+    <span class="xs muted">4/18</span>
+  </div>
+
+  <div class="flip" id="card1">
+    <div class="flip-inner">
+      <div class="flip-face flip-front">
+        <div class="row-between"><span class="kind">Frase · <span lang="fr">Le passé composé</span></span><span class="chip chip-danger">Difícil</span></div>
+        <div class="spacer"></div>
+        <p class="front-fr" lang="fr">Nous sommes allés au cinéma hier soir.</p>
+        <div class="spacer"></div>
+        <div class="player">
+          <button class="btn btn-icon play" aria-label="Reproducir"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7Z" fill="currentColor"/></svg></button>
+          <div class="track" aria-hidden="true"><span></span></div>
+          <span class="time">0:01</span>
+          <label class="sr-only" for="v1">Voz</label>
+          <select class="select select-pill" id="v1"><option>Céline · adulta</option><option>Paul · adulto</option><option>Lou · adolescente</option><option>Léo · niño</option></select>
+        </div>
+      </div>
+      <div class="flip-face flip-back" aria-hidden="true">
+        <span class="kind">Respuesta</span>
+        <p class="front-fr" lang="fr" style="font-size:var(--fs-lg)">Nous sommes allés au cinéma hier soir.</p>
+        <p class="back-es">Fuimos al cine anoche.</p>
+        <p class="small muted">Con <b>aller</b> se usa <b>être</b>; el participio concuerda: <i lang="fr">allés</i> (masc. plural).</p>
+        <div class="spacer"></div>
+        <p class="xs muted">Fuente: <span lang="fr">Leçon 7</span> · pág. 4</p>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary btn-lg btn-block show-answer" data-flip="card1" style="margin-top:var(--sp-4)">Mostrar respuesta</button>
+  <div class="rating" style="margin-top:var(--sp-4)" role="group" aria-label="¿Qué tal la recordaste?">
+    <button class="btn again">Otra vez<small>&lt;10 min</small></button>
+    <button class="btn hard">Difícil<small>1 d</small></button>
+    <button class="btn good">Bien<small>4 d</small></button>
+    <button class="btn easy">Fácil<small>11 d</small></button>
+  </div>
+  <div class="row" style="justify-content:center;margin-top:var(--sp-2)">
+    <button class="btn btn-ghost btn-sm-text" data-flip="card1">Voltear</button>
+    <button class="btn btn-ghost btn-sm-text">Suspender</button>
+    <button class="btn btn-ghost btn-sm-text"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13 7 4 4"/></svg> Editar</button>
+  </div>
+</section>
+
+<section id="pron" aria-labelledby="pron-h">
+  <div class="section-title"><h2 id="pron-h">Practicar pronunciación</h2><span class="xs muted">Frase 2 de 5</span></div>
+  <div class="card stack">
+    <p class="small muted">Escucha, graba y mira qué sonidos fallan.</p>
+    <div class="row" style="gap:var(--sp-4)">
+      <div class="score-ring" style="--v:78" role="img" aria-label="Puntaje global 78, Bien"><span>78</span></div>
+      <div class="grow">
+        <p><b style="color:var(--c-score-bien)">Bien</b></p>
+        <p class="small muted">Precisión 74 · Fluidez 85 · Completitud 100</p>
+      </div>
+    </div>
+    <div class="words" lang="fr" aria-label="Puntaje por palabra">
+      <button class="word excelente" aria-label="Nous, 95, excelente">Nous</button>
+      <button class="word bien" aria-label="sommes, 88, bien">sommes</button>
+      <button class="word mejorable" aria-label="allés, 62, mejorable">allés</button>
+      <button class="word excelente" aria-label="au, 97, excelente">au</button>
+      <button class="word bien" aria-label="cinéma, 81, bien">cinéma</button>
+      <button class="word repetir" aria-pressed="true" aria-label="hier, 54, a repetir; seleccionada">hier</button>
+      <button class="word excelente" aria-label="soir, 90, excelente">soir</button>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <span><i style="background:var(--c-score-excelente)"></i>Excelente ≥90</span>
+      <span><i style="background:var(--c-score-bien)"></i>Bien ≥75</span>
+      <span><i style="background:var(--c-score-mejorable)"></i>Mejorable ≥60</span>
+      <span><i style="background:var(--c-score-repetir)"></i>A repetir</span>
+    </div>
+    <div class="callout error">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17v.5"/></svg>
+      <div class="grow">
+        <p><b lang="fr">hier</b> · 54 · mal pronunciada</p>
+        <div class="phonemes" style="margin-top:var(--sp-2)">
+          <div class="phoneme repetir"><b>j</b><span>48</span></div>
+          <div class="phoneme mejorable"><b>ɛ</b><span>72</span></div>
+          <div class="phoneme repetir"><b>ʁ</b><span>41</span></div>
+        </div>
+        <p class="small" style="margin-top:var(--sp-2)">La <b>r</b> francesa se hace al fondo de la garganta, no con la punta de la lengua.</p>
+      </div>
+    </div>
+    <div class="row" style="justify-content:space-around">
+      <button class="btn btn-secondary btn-icon" aria-label="Escuchar modelo"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
+      <button class="mic" aria-label="Grabar"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button class="btn btn-secondary btn-icon" aria-label="Escuchar mi grabación"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7Z" fill="currentColor"/></svg></button>
+    </div>
+    <button class="btn btn-tonal btn-block">Siguiente frase</button>
+  </div>
+</section>
+    </main>
+    
+    <nav class="tabbar" aria-label="Secciones">
+    <a href="hoy.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span>Hoy</a>
+    <a href="temas.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 16 10 5 10-5M2 12l10 5 10-5"/></svg></span>Temas</a>
+    <a href="repasar.html" aria-current="page"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg></span>Repasar</a>
+    <a href="chat.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12Z"/></svg></span>Chat</a>
+    <a href="mas.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></span>Más</a>
+    </nav>
+  </div>
+</div>
+<script>
+/* Voltear tarjeta: cualquier [data-flip=id] alterna .is-flipped en #id. */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-flip]');
+  if (!b) return;
+  var c = document.getElementById(b.getAttribute('data-flip'));
+  var on = c.classList.toggle('is-flipped');
+  c.querySelector('.flip-front').setAttribute('aria-hidden', on);
+  c.querySelector('.flip-back').setAttribute('aria-hidden', !on);
+  var host = c.closest('[data-review]');
+  if (host) host.classList.toggle('answered', on);
+});
+if (new URLSearchParams(location.search).get('flip') === '1') {
+  document.querySelectorAll('.flip').forEach(function (c) {
+    c.classList.add('is-flipped');
+    var host = c.closest('[data-review]');
+    if (host) host.classList.add('answered');
+  });
+}
+</script>
+
+</body>
+</html>

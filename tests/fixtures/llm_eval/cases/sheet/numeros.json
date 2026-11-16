@@ -1,0 +1,280 @@
+{
+  "bad": [
+    {
+      "output": {
+        "common_mistakes": [
+          {
+            "right_fr": "un chat",
+            "why_es": "Después de un el sustantivo va en singular.",
+            "wrong_fr": "un chats"
+          }
+        ],
+        "grammar": [
+          {
+            "examples": [
+              {
+                "es": "tres gatos",
+                "fr": "trois chats"
+              },
+              {
+                "es": "dos peces",
+                "fr": "deux poissons"
+              }
+            ],
+            "explanation_es": "Los números no cambian de forma delante de sustantivos.",
+            "title": "Números cardinales"
+          }
+        ],
+        "key_phrases": [
+          {
+            "es": "Tengo tres gatos y dos peces rojos.",
+            "fr": "J’ai trois chats et deux poissons rouges."
+          }
+        ],
+        "objectives_es": [
+          "Contar del uno al diez en francés"
+        ],
+        "summary_es": "Oración 1. Oración 2. Oración 3. Oración 4. Oración 5. Oración 6. Oración 7.",
+        "vocab_fronts": [
+          "trois"
+        ]
+      },
+      "problem": "summary_es tiene más de 6 oraciones"
+    },
+    {
+      "output": {
+        "common_mistakes": [
+          {
+            "right_fr": "un chat",
+            "why_es": "Después de un el sustantivo va en singular.",
+            "wrong_fr": "un chats"
+          }
+        ],
+        "grammar": [
+          {
+            "examples": [
+              {
+                "es": "tres gatos",
+                "fr": "trois chats"
+              },
+              {
+                "es": "dos peces",
+                "fr": "deux poissons"
+              }
+            ],
+            "explanation_es": "Los números no cambian de forma delante de sustantivos.",
+            "title": "Números cardinales"
+          }
+        ],
+        "key_phrases": [
+          {
+            "es": "Tengo tres gatos y dos peces rojos.",
+            "fr": "J’ai trois chats et deux poissons rouges."
+          }
+        ],
+        "objectives_es": [],
+        "summary_es": "La lección presenta los números del uno al diez. Se usan para contar objetos y dar cantidades.",
+        "vocab_fronts": [
+          "trois"
+        ]
+      },
+      "problem": "entre 1 y 5 objetivos"
+    },
+    {
+      "output": {
+        "common_mistakes": [
+          {
+            "right_fr": "un chat",
+            "why_es": "Después de un el sustantivo va en singular.",
+            "wrong_fr": "un chats"
+          }
+        ],
+        "grammar": [
+          {
+            "examples": [
+              {
+                "es": "tres gatos",
+                "fr": "trois chats"
+              },
+              {
+                "es": "dos peces",
+                "fr": "deux poissons"
+              }
+            ],
+            "explanation_es": "Los números no cambian de forma delante de sustantivos.",
+            "title": "Números cardinales"
+          }
+        ],
+        "key_phrases": [
+          {
+            "es": "Estoy muy contento.",
+            "fr": "Je suis très content."
+          },
+          {
+            "es": "Llueve mucho.",
+            "fr": "Il pleut beaucoup."
+          }
+        ],
+        "objectives_es": [
+          "Contar del uno al diez en francés"
+        ],
+        "summary_es": "La lección presenta los números del uno al diez. Se usan para contar objetos y dar cantidades.",
+        "vocab_fronts": [
+          "trois"
+        ]
+      },
+      "problem": "más de la mitad de key_phrases"
+    },
+    {
+      "output": {
+        "common_mistakes": [
+          {
+            "right_fr": "un chats",
+            "why_es": "Después de un el sustantivo va en singular.",
+            "wrong_fr": "un chats"
+          }
+        ],
+        "grammar": [
+          {
+            "examples": [
+              {
+                "es": "tres gatos",
+                "fr": "trois chats"
+              },
+              {
+                "es": "dos peces",
+                "fr": "deux poissons"
+              }
+            ],
+            "explanation_es": "Los números no cambian de forma delante de sustantivos.",
+            "title": "Números cardinales"
+          }
+        ],
+        "key_phrases": [
+          {
+            "es": "Tengo tres gatos y dos peces rojos.",
+            "fr": "J’ai trois chats et deux poissons rouges."
+          }
+        ],
+        "objectives_es": [
+          "Contar del uno al diez en francés"
+        ],
+        "summary_es": "La lección presenta los números del uno al diez. Se usan para contar objetos y dar cantidades.",
+        "vocab_fronts": [
+          "trois"
+        ]
+      },
+      "problem": "wrong_fr igual a right_fr"
+    },
+    {
+      "output": {
+        "common_mistakes": [
+          {
+            "right_fr": "un chat",
+            "why_es": "Después de un el sustantivo va en singular.",
+            "wrong_fr": "un chats"
+          }
+        ],
+        "grammar": [
+          {
+            "examples": [
+              {
+                "es": "tres gatos",
+                "fr": "trois chats"
+              }
+            ],
+            "explanation_es": "Los números no cambian de forma delante de sustantivos.",
+            "title": "Números cardinales"
+          }
+        ],
+        "key_phrases": [
+          {
+            "es": "Tengo tres gatos y dos peces rojos.",
+            "fr": "J’ai trois chats et deux poissons rouges."
+          }
+        ],
+        "objectives_es": [
+          "Contar del uno al diez en francés"
+        ],
+        "summary_es": "La lección presenta los números del uno al diez. Se usan para contar objetos y dar cantidades.",
+        "vocab_fronts": [
+          "trois"
+        ]
+      },
+      "problem": "no tiene exactamente 2 ejemplos"
+    }
+  ],
+  "case_id": "numeros",
+  "expected": {
+    "common_mistakes": [
+      {
+        "right_fr": "un chat",
+        "why_es": "Después de un el sustantivo va en singular.",
+        "wrong_fr": "un chats"
+      }
+    ],
+    "grammar": [
+      {
+        "examples": [
+          {
+            "es": "tres gatos",
+            "fr": "trois chats"
+          },
+          {
+            "es": "dos peces",
+            "fr": "deux poissons"
+          }
+        ],
+        "explanation_es": "Los números no cambian de forma delante de sustantivos.",
+        "title": "Números cardinales"
+      }
+    ],
+    "key_phrases": [
+      {
+        "es": "Tengo tres gatos y dos peces rojos.",
+        "fr": "J’ai trois chats et deux poissons rouges."
+      }
+    ],
+    "objectives_es": [
+      "Contar del uno al diez en francés"
+    ],
+    "summary_es": "La lección presenta los números del uno al diez. Se usan para contar objetos y dar cantidades.",
+    "vocab_fronts": [
+      "trois"
+    ]
+  },
+  "input": {
+    "card_fronts": [
+      "trois",
+      "J’ai trois chats et deux poissons rouges.",
+      "Números: un, une"
+    ],
+    "generation": {
+      "blocks": [
+        {
+          "lang": "fr",
+          "page": null,
+          "source": "item",
+          "text": "un, deux, trois, quatre, cinq, six, sept, huit, neuf, dix."
+        },
+        {
+          "lang": "es",
+          "page": null,
+          "source": "item",
+          "text": "Los números del uno al diez aparecen en casi todas las conversaciones."
+        },
+        {
+          "lang": "fr",
+          "page": null,
+          "source": "item",
+          "text": "J’ai trois chats et deux poissons rouges."
+        }
+      ],
+      "input_hash": "cc1d15553d1b9e9ea5eeabe76c3dc86fd1574890458c02cf802b4eb69c25ec1f",
+      "item_id": "syn-numeros",
+      "title": "Contar hasta diez"
+    }
+  },
+  "synthetic": true,
+  "task": "sheet"
+}

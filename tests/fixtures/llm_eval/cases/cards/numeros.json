@@ -1,0 +1,288 @@
+{
+  "bad": [
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "tres",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "trois",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Tengo tres gatos y dos peces rojos.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "J’ai trois chats et deux poissons rouges.",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Uno se dice un con masculino y une con femenino.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Números: un, une",
+            "kind": "grammar",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "pan de chocolate",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "pain au chocolat",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "tres gatos",
+                  "fr": "trois chats"
+                },
+                {
+                  "es": "dos peces",
+                  "fr": "deux poissons"
+                }
+              ],
+              "explanation_es": "Los números no cambian de forma delante de sustantivos.",
+              "title": "Números cardinales"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Tengo tres gatos y dos peces rojos.",
+              "fr": "J’ai trois chats et deux poissons rouges."
+            }
+          ],
+          "summary_es": "La lección presenta los números del uno al diez. Se usan para contar objetos y dar cantidades.",
+          "vocab_fronts": [
+            "trois"
+          ]
+        }
+      },
+      "problem": "front_fr no aparece en el texto"
+    },
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "trois",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Tengo tres gatos y dos peces rojos.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "J’ai trois chats et deux poissons rouges.",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Uno se dice un con masculino y une con femenino.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Números: un, une",
+            "kind": "grammar",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "tres gatos",
+                  "fr": "trois chats"
+                },
+                {
+                  "es": "dos peces",
+                  "fr": "deux poissons"
+                }
+              ],
+              "explanation_es": "Los números no cambian de forma delante de sustantivos.",
+              "title": "Números cardinales"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Tengo tres gatos y dos peces rojos.",
+              "fr": "J’ai trois chats et deux poissons rouges."
+            }
+          ],
+          "summary_es": "La lección presenta los números del uno al diez. Se usan para contar objetos y dar cantidades.",
+          "vocab_fronts": [
+            "trois"
+          ]
+        }
+      },
+      "problem": "back_es vacío"
+    },
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "tres",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "trois",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "¿Qué tal?",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "¿Cómo estás hoy?",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Uno se dice un con masculino y une con femenino.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Números: un, une",
+            "kind": "grammar",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "tres gatos",
+                  "fr": "trois chats"
+                },
+                {
+                  "es": "dos peces",
+                  "fr": "deux poissons"
+                }
+              ],
+              "explanation_es": "Los números no cambian de forma delante de sustantivos.",
+              "title": "Números cardinales"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Tengo tres gatos y dos peces rojos.",
+              "fr": "J’ai trois chats et deux poissons rouges."
+            }
+          ],
+          "summary_es": "La lección presenta los números del uno al diez. Se usan para contar objetos y dar cantidades.",
+          "vocab_fronts": [
+            "trois"
+          ]
+        }
+      },
+      "problem": "front_fr de una frase no está en francés"
+    }
+  ],
+  "case_id": "numeros",
+  "expected": {
+    "cards": [
+      {
+        "back_es": "tres",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "trois",
+        "kind": "vocab",
+        "notes": null,
+        "tags": []
+      },
+      {
+        "back_es": "Tengo tres gatos y dos peces rojos.",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "J’ai trois chats et deux poissons rouges.",
+        "kind": "phrase",
+        "notes": null,
+        "tags": []
+      },
+      {
+        "back_es": "Uno se dice un con masculino y une con femenino.",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "Números: un, une",
+        "kind": "grammar",
+        "notes": null,
+        "tags": []
+      }
+    ],
+    "sheet": {
+      "grammar": [
+        {
+          "examples": [
+            {
+              "es": "tres gatos",
+              "fr": "trois chats"
+            },
+            {
+              "es": "dos peces",
+              "fr": "deux poissons"
+            }
+          ],
+          "explanation_es": "Los números no cambian de forma delante de sustantivos.",
+          "title": "Números cardinales"
+        }
+      ],
+      "key_phrases": [
+        {
+          "es": "Tengo tres gatos y dos peces rojos.",
+          "fr": "J’ai trois chats et deux poissons rouges."
+        }
+      ],
+      "summary_es": "La lección presenta los números del uno al diez. Se usan para contar objetos y dar cantidades.",
+      "vocab_fronts": [
+        "trois"
+      ]
+    }
+  },
+  "input": {
+    "generation": {
+      "blocks": [
+        {
+          "lang": "fr",
+          "page": null,
+          "source": "item",
+          "text": "un, deux, trois, quatre, cinq, six, sept, huit, neuf, dix."
+        },
+        {
+          "lang": "es",
+          "page": null,
+          "source": "item",
+          "text": "Los números del uno al diez aparecen en casi todas las conversaciones."
+        },
+        {
+          "lang": "fr",
+          "page": null,
+          "source": "item",
+          "text": "J’ai trois chats et deux poissons rouges."
+        }
+      ],
+      "input_hash": "cc1d15553d1b9e9ea5eeabe76c3dc86fd1574890458c02cf802b4eb69c25ec1f",
+      "item_id": "syn-numeros",
+      "title": "Contar hasta diez"
+    }
+  },
+  "synthetic": true,
+  "task": "cards"
+}

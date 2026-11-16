@@ -1,0 +1,32 @@
+{
+  "bad": [
+    {
+      "output": {
+        "text": "Tres se dice trois."
+      },
+      "problem": "sin ninguna cita"
+    },
+    {
+      "output": {
+        "text": "Tres se dice trois [4]."
+      },
+      "problem": "fuera de rango"
+    }
+  ],
+  "case_id": "numeros-tres",
+  "expected": {
+    "text": "Tres se dice trois [1]."
+  },
+  "input": {
+    "fragments": [
+      {
+        "label": "Contar hasta diez, p. 1",
+        "n": 1,
+        "text": "un, deux, trois, quatre, cinq, six, sept, huit, neuf, dix."
+      }
+    ],
+    "question": "¿Cómo se dice tres en francés?"
+  },
+  "synthetic": true,
+  "task": "chat"
+}

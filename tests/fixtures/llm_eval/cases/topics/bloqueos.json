@@ -1,0 +1,160 @@
+{
+  "bad": [
+    {
+      "output": {
+        "topics": [
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": "t-familia",
+            "item_ids": [],
+            "key": "familia",
+            "title": "Mi familia"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-saludos",
+              "syn-numeros",
+              "syn-rutina",
+              "syn-pasado",
+              "syn-familia"
+            ],
+            "key": "resto",
+            "title": "Saludos, números y rutina"
+          }
+        ]
+      },
+      "problem": "publicación bloqueada fuera de su tema"
+    },
+    {
+      "output": {
+        "topics": [
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": "t-familia",
+            "item_ids": [
+              "syn-familia"
+            ],
+            "key": "familia",
+            "title": "Familia"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-saludos",
+              "syn-numeros",
+              "syn-rutina",
+              "syn-pasado"
+            ],
+            "key": "resto",
+            "title": "Saludos, números y rutina"
+          }
+        ]
+      },
+      "problem": "tema bloqueado con otro título"
+    }
+  ],
+  "case_id": "bloqueos",
+  "expected": {
+    "topics": [
+      {
+        "cefr": "A1",
+        "description_es": "Tema de prueba con publicaciones sintéticas.",
+        "existing_topic_id": "t-familia",
+        "item_ids": [
+          "syn-familia"
+        ],
+        "key": "familia",
+        "title": "Mi familia"
+      },
+      {
+        "cefr": "A1",
+        "description_es": "Tema de prueba con publicaciones sintéticas.",
+        "existing_topic_id": null,
+        "item_ids": [
+          "syn-saludos",
+          "syn-numeros",
+          "syn-rutina",
+          "syn-pasado"
+        ],
+        "key": "resto",
+        "title": "Saludos, números y rutina"
+      }
+    ]
+  },
+  "input": {
+    "items": [
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": "t-familia",
+        "id": "syn-familia",
+        "locked": true,
+        "summary_es": "Vocabulario de la familia y posesivos básicos.",
+        "tags": [
+          "familia"
+        ],
+        "title": "Mi familia"
+      },
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-saludos",
+        "locked": false,
+        "summary_es": "Frases para saludar y responder a la pregunta cómo estás.",
+        "tags": [
+          "saludos"
+        ],
+        "title": "Saludos sin prisa"
+      },
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-numeros",
+        "locked": false,
+        "summary_es": "Los números del uno al diez para contar objetos.",
+        "tags": [
+          "numeros"
+        ],
+        "title": "Contar hasta diez"
+      },
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-rutina",
+        "locked": false,
+        "summary_es": "Verbos de la rutina de cada día.",
+        "tags": [
+          "rutina"
+        ],
+        "title": "Rutina diaria"
+      },
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-pasado",
+        "locked": false,
+        "summary_es": "Acciones terminadas con el pasado compuesto.",
+        "tags": [
+          "pasado"
+        ],
+        "title": "El pasado compuesto"
+      }
+    ],
+    "topics": [
+      {
+        "description_es": "Tema existente de prueba.",
+        "id": "t-familia",
+        "locked": true,
+        "title": "Mi familia"
+      }
+    ]
+  },
+  "synthetic": true,
+  "task": "topics"
+}

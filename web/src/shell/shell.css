@@ -1,0 +1,59 @@
+/* Marco del shell v2. Solo tokens y utilidades de `design/`; el contenido se
+ * desplaza dentro de `<main>` y la barra queda siempre accesible. */
+
+.shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+.shell-main {
+  order: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell-tabbar {
+  order: 2;
+  flex: none;
+}
+
+.shell-skip {
+  position: fixed;
+  top: var(--sp-2);
+  left: var(--sp-2);
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--sp-4);
+  background: var(--c-card);
+  color: var(--c-text);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-1);
+  transform: translateY(calc(-100% - var(--sp-4)));
+}
+
+.shell-skip:focus {
+  transform: translateY(0);
+}
+
+@media (min-width: 900px) {
+  .shell {
+    flex-direction: row;
+  }
+
+  .shell-tabbar {
+    order: 0;
+  }
+
+  .shell-main {
+    order: 1;
+    width: 100%;
+  }
+}

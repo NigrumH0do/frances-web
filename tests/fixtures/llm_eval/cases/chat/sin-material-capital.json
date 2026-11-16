@@ -1,0 +1,32 @@
+{
+  "bad": [
+    {
+      "output": {
+        "text": "Es París."
+      },
+      "problem": "sin ninguna cita"
+    },
+    {
+      "output": {
+        "text": "Es París [0]."
+      },
+      "problem": "fuera de rango"
+    }
+  ],
+  "case_id": "sin-material-capital",
+  "expected": {
+    "text": "El material del curso no cubre esta pregunta."
+  },
+  "input": {
+    "fragments": [
+      {
+        "label": "Saludos sin prisa, p. 2",
+        "n": 2,
+        "text": "Esta lección presenta los saludos formales e informales."
+      }
+    ],
+    "question": "¿Cuál es la capital de Francia?"
+  },
+  "synthetic": true,
+  "task": "chat"
+}

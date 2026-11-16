@@ -1,0 +1,282 @@
+{
+  "bad": [
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "mercado",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "marché",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Ayer comí una manzana.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Hier, j’ai mangé une pomme.",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "comí, he comido",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "j’ai mangé",
+            "kind": "conjugation",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "pan de chocolate",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "pain au chocolat",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "comí",
+                  "fr": "j’ai mangé"
+                },
+                {
+                  "es": "habló",
+                  "fr": "il a parlé"
+                }
+              ],
+              "explanation_es": "Se usa avoir en presente y se añade el participio pasado.",
+              "title": "Pasado compuesto con avoir"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Ayer comí una manzana.",
+              "fr": "Hier, j’ai mangé une pomme."
+            }
+          ],
+          "summary_es": "El pasado compuesto describe acciones terminadas. Se forma con el auxiliar y el participio pasado.",
+          "vocab_fronts": [
+            "marché"
+          ]
+        }
+      },
+      "problem": "front_fr no aparece en el texto"
+    },
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "marché",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Ayer comí una manzana.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Hier, j’ai mangé une pomme.",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "comí, he comido",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "j’ai mangé",
+            "kind": "conjugation",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "comí",
+                  "fr": "j’ai mangé"
+                },
+                {
+                  "es": "habló",
+                  "fr": "il a parlé"
+                }
+              ],
+              "explanation_es": "Se usa avoir en presente y se añade el participio pasado.",
+              "title": "Pasado compuesto con avoir"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Ayer comí una manzana.",
+              "fr": "Hier, j’ai mangé une pomme."
+            }
+          ],
+          "summary_es": "El pasado compuesto describe acciones terminadas. Se forma con el auxiliar y el participio pasado.",
+          "vocab_fronts": [
+            "marché"
+          ]
+        }
+      },
+      "problem": "back_es vacío"
+    },
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "mercado",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "marché",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "¿Qué tal?",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "¿Cómo estás hoy?",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "comí, he comido",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "j’ai mangé",
+            "kind": "conjugation",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "comí",
+                  "fr": "j’ai mangé"
+                },
+                {
+                  "es": "habló",
+                  "fr": "il a parlé"
+                }
+              ],
+              "explanation_es": "Se usa avoir en presente y se añade el participio pasado.",
+              "title": "Pasado compuesto con avoir"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Ayer comí una manzana.",
+              "fr": "Hier, j’ai mangé une pomme."
+            }
+          ],
+          "summary_es": "El pasado compuesto describe acciones terminadas. Se forma con el auxiliar y el participio pasado.",
+          "vocab_fronts": [
+            "marché"
+          ]
+        }
+      },
+      "problem": "front_fr de una frase no está en francés"
+    }
+  ],
+  "case_id": "pasado",
+  "expected": {
+    "cards": [
+      {
+        "back_es": "mercado",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "marché",
+        "kind": "vocab",
+        "notes": null,
+        "tags": []
+      },
+      {
+        "back_es": "Ayer comí una manzana.",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "Hier, j’ai mangé une pomme.",
+        "kind": "phrase",
+        "notes": null,
+        "tags": []
+      },
+      {
+        "back_es": "comí, he comido",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "j’ai mangé",
+        "kind": "conjugation",
+        "notes": null,
+        "tags": []
+      }
+    ],
+    "sheet": {
+      "grammar": [
+        {
+          "examples": [
+            {
+              "es": "comí",
+              "fr": "j’ai mangé"
+            },
+            {
+              "es": "habló",
+              "fr": "il a parlé"
+            }
+          ],
+          "explanation_es": "Se usa avoir en presente y se añade el participio pasado.",
+          "title": "Pasado compuesto con avoir"
+        }
+      ],
+      "key_phrases": [
+        {
+          "es": "Ayer comí una manzana.",
+          "fr": "Hier, j’ai mangé une pomme."
+        }
+      ],
+      "summary_es": "El pasado compuesto describe acciones terminadas. Se forma con el auxiliar y el participio pasado.",
+      "vocab_fronts": [
+        "marché"
+      ]
+    }
+  },
+  "input": {
+    "generation": {
+      "blocks": [
+        {
+          "lang": "fr",
+          "page": null,
+          "source": "item",
+          "text": "Hier, j’ai mangé une pomme. Nous sommes allés au marché."
+        },
+        {
+          "lang": "es",
+          "page": null,
+          "source": "item",
+          "text": "El pasado compuesto se forma con avoir o être más el participio."
+        }
+      ],
+      "input_hash": "e657627170ffbaae7d33da0956cd0fee5f5062b708bb7ffa87bfb41515e17f96",
+      "item_id": "syn-pasado",
+      "title": "El pasado compuesto"
+    }
+  },
+  "synthetic": true,
+  "task": "cards"
+}

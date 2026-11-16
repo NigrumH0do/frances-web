@@ -1,0 +1,124 @@
+{
+  "bad": [
+    {
+      "output": {
+        "lines": [
+          {
+            "position": 1,
+            "why_es": "Repasa familia antes de que venzan las tarjetas."
+          },
+          {
+            "position": 2,
+            "why_es": "El quiz de rutina confirma lo que ya leíste."
+          },
+          {
+            "position": 3,
+            "why_es": "Lee el pasado compuesto para cerrar el tema."
+          }
+        ]
+      },
+      "problem": "faltan posiciones del plan"
+    },
+    {
+      "output": {
+        "lines": [
+          {
+            "position": 1,
+            "why_es": "Repasa familia antes de que venzan las tarjetas."
+          },
+          {
+            "position": 2,
+            "why_es": "El quiz de rutina confirma lo que ya leíste."
+          },
+          {
+            "position": 3,
+            "why_es": "Lee el pasado compuesto para cerrar el tema."
+          },
+          {
+            "position": 4,
+            "why_es": "Un dictado de números afina tu oído."
+          },
+          {
+            "position": 99,
+            "why_es": "Tarea ajena."
+          }
+        ]
+      },
+      "problem": "posición ajena al plan"
+    },
+    {
+      "output": {
+        "lines": [
+          {
+            "position": 1,
+            "why_es": "hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy."
+          },
+          {
+            "position": 2,
+            "why_es": "El quiz de rutina confirma lo que ya leíste."
+          },
+          {
+            "position": 3,
+            "why_es": "Lee el pasado compuesto para cerrar el tema."
+          },
+          {
+            "position": 4,
+            "why_es": "Un dictado de números afina tu oído."
+          }
+        ]
+      },
+      "problem": "más de 30 palabras"
+    }
+  ],
+  "case_id": "cuatro-tareas",
+  "expected": {
+    "lines": [
+      {
+        "position": 1,
+        "why_es": "Repasa familia antes de que venzan las tarjetas."
+      },
+      {
+        "position": 2,
+        "why_es": "El quiz de rutina confirma lo que ya leíste."
+      },
+      {
+        "position": 3,
+        "why_es": "Lee el pasado compuesto para cerrar el tema."
+      },
+      {
+        "position": 4,
+        "why_es": "Un dictado de números afina tu oído."
+      }
+    ]
+  },
+  "input": {
+    "entries": [
+      {
+        "kind": "review",
+        "position": 1,
+        "reason_es": "Hay tarjetas que vencen hoy.",
+        "title_es": "Repasar familia"
+      },
+      {
+        "kind": "quiz",
+        "position": 2,
+        "reason_es": "El tema ya tiene lecciones leídas.",
+        "title_es": "Quiz de rutina"
+      },
+      {
+        "kind": "read",
+        "position": 3,
+        "reason_es": "Falta una lección del tema.",
+        "title_es": "Leer el pasado compuesto"
+      },
+      {
+        "kind": "drill",
+        "position": 4,
+        "reason_es": "Escuchar cifras mejora la comprensión.",
+        "title_es": "Dictado de números"
+      }
+    ]
+  },
+  "synthetic": true,
+  "task": "plan_why"
+}

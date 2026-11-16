@@ -1,0 +1,22 @@
+{
+  "chat": {
+    "system_sha256": "46c65877897dab4c0353106ae093021dce20e9d3b9ce5c0138333c516bbac8c4",
+    "version": "chat-1"
+  },
+  "plan_why": {
+    "system_sha256": "73b91063d14f3a214de15cc11515b947cf144ec3cd1244d84b4f257227327d3b",
+    "version": "plan-why-1"
+  },
+  "quiz": {
+    "system_sha256": "ef53e7f60d797abd452e434d1baa3a5f0de3ae17343cd2e47eeac154a1abf4d5",
+    "version": "quiz-1"
+  },
+  "sheet": {
+    "system_sha256": "25958ee6cd9b292b46326b18ba522774dd4fb1cb2a9fdfcbfcafe4cc26b67f9c",
+    "version": "sheet-1"
+  },
+  "topics": {
+    "system_sha256": "cb5b786e63b0a73481609de2dd6ad8c4cb8365cc72ca673338078e6e2c10c9a9",
+    "version": "topics-1"
+  }
+}

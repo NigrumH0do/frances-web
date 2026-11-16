@@ -1,0 +1,521 @@
+{
+  "bad": [
+    {
+      "output": {
+        "topics": [
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-saludos",
+              "syn-inventado"
+            ],
+            "key": "saludos",
+            "title": "Saludos y presentaciones"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-numeros",
+              "syn-rutina"
+            ],
+            "key": "numeros-rutina",
+            "title": "Números y rutina diaria"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-familia"
+            ],
+            "key": "familia",
+            "title": "Vocabulario familiar"
+          },
+          {
+            "cefr": "A2",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-pasado"
+            ],
+            "key": "pasado",
+            "title": "El pasado compuesto"
+          }
+        ]
+      },
+      "problem": "id de publicación inventado"
+    },
+    {
+      "output": {
+        "topics": [
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-saludos"
+            ],
+            "key": "saludos",
+            "title": "Saludos y presentaciones"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-numeros",
+              "syn-rutina"
+            ],
+            "key": "numeros-rutina",
+            "title": "Números y rutina diaria"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-familia",
+              "syn-saludos"
+            ],
+            "key": "familia",
+            "title": "Vocabulario familiar"
+          },
+          {
+            "cefr": "A2",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-pasado"
+            ],
+            "key": "pasado",
+            "title": "El pasado compuesto"
+          }
+        ]
+      },
+      "problem": "id de publicación repetido"
+    },
+    {
+      "output": {
+        "topics": [
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-saludos"
+            ],
+            "key": "saludos",
+            "title": "Saludos y presentaciones"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-numeros"
+            ],
+            "key": "numeros-rutina",
+            "title": "Números y rutina diaria"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-familia"
+            ],
+            "key": "familia",
+            "title": "Vocabulario familiar"
+          },
+          {
+            "cefr": "A2",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-pasado"
+            ],
+            "key": "pasado",
+            "title": "El pasado compuesto"
+          }
+        ]
+      },
+      "problem": "publicación(es) sin tema"
+    },
+    {
+      "output": {
+        "topics": [
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-saludos"
+            ],
+            "key": "saludos",
+            "title": "Saludos y presentaciones"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-numeros",
+              "syn-rutina"
+            ],
+            "key": "numeros-rutina",
+            "title": "Números y rutina diaria"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-familia"
+            ],
+            "key": "familia",
+            "title": "Vocabulario familiar"
+          },
+          {
+            "cefr": "A2",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-pasado"
+            ],
+            "key": "pasado",
+            "title": "El pasado compuesto"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-1",
+            "title": "Tema extra 1"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-2",
+            "title": "Tema extra 2"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-3",
+            "title": "Tema extra 3"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-4",
+            "title": "Tema extra 4"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-5",
+            "title": "Tema extra 5"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-6",
+            "title": "Tema extra 6"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-7",
+            "title": "Tema extra 7"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-8",
+            "title": "Tema extra 8"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-9",
+            "title": "Tema extra 9"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-10",
+            "title": "Tema extra 10"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-11",
+            "title": "Tema extra 11"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-12",
+            "title": "Tema extra 12"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-13",
+            "title": "Tema extra 13"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-14",
+            "title": "Tema extra 14"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-15",
+            "title": "Tema extra 15"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-16",
+            "title": "Tema extra 16"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-17",
+            "title": "Tema extra 17"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-18",
+            "title": "Tema extra 18"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-19",
+            "title": "Tema extra 19"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-20",
+            "title": "Tema extra 20"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-21",
+            "title": "Tema extra 21"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-22",
+            "title": "Tema extra 22"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-23",
+            "title": "Tema extra 23"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-24",
+            "title": "Tema extra 24"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-25",
+            "title": "Tema extra 25"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-26",
+            "title": "Tema extra 26"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [],
+            "key": "extra-27",
+            "title": "Tema extra 27"
+          }
+        ]
+      },
+      "problem": "más de 30 temas"
+    }
+  ],
+  "case_id": "sin-bloqueos",
+  "expected": {
+    "topics": [
+      {
+        "cefr": "A1",
+        "description_es": "Tema de prueba con publicaciones sintéticas.",
+        "existing_topic_id": null,
+        "item_ids": [
+          "syn-saludos"
+        ],
+        "key": "saludos",
+        "title": "Saludos y presentaciones"
+      },
+      {
+        "cefr": "A1",
+        "description_es": "Tema de prueba con publicaciones sintéticas.",
+        "existing_topic_id": null,
+        "item_ids": [
+          "syn-numeros",
+          "syn-rutina"
+        ],
+        "key": "numeros-rutina",
+        "title": "Números y rutina diaria"
+      },
+      {
+        "cefr": "A1",
+        "description_es": "Tema de prueba con publicaciones sintéticas.",
+        "existing_topic_id": null,
+        "item_ids": [
+          "syn-familia"
+        ],
+        "key": "familia",
+        "title": "Vocabulario familiar"
+      },
+      {
+        "cefr": "A2",
+        "description_es": "Tema de prueba con publicaciones sintéticas.",
+        "existing_topic_id": null,
+        "item_ids": [
+          "syn-pasado"
+        ],
+        "key": "pasado",
+        "title": "El pasado compuesto"
+      }
+    ]
+  },
+  "input": {
+    "items": [
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-saludos",
+        "locked": false,
+        "summary_es": "Frases para saludar y responder a la pregunta cómo estás.",
+        "tags": [
+          "saludos"
+        ],
+        "title": "Saludos sin prisa"
+      },
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-numeros",
+        "locked": false,
+        "summary_es": "Los números del uno al diez para contar objetos.",
+        "tags": [
+          "numeros"
+        ],
+        "title": "Contar hasta diez"
+      },
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-familia",
+        "locked": false,
+        "summary_es": "Vocabulario de la familia y posesivos básicos.",
+        "tags": [
+          "familia"
+        ],
+        "title": "Mi familia"
+      },
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-rutina",
+        "locked": false,
+        "summary_es": "Verbos de la rutina de cada día.",
+        "tags": [
+          "rutina"
+        ],
+        "title": "Rutina diaria"
+      },
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-pasado",
+        "locked": false,
+        "summary_es": "Acciones terminadas con el pasado compuesto.",
+        "tags": [
+          "pasado"
+        ],
+        "title": "El pasado compuesto"
+      }
+    ],
+    "topics": []
+  },
+  "synthetic": true,
+  "task": "topics"
+}

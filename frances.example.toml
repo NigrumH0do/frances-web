@@ -1,0 +1,97 @@
+# Ejemplo de configuración de Frances Classroom. Los valores son los por defecto.
+# Cópialo a frances.toml dentro del directorio de datos (FRANCES_DATA_DIR) y ajústalo;
+# en producción va en /srv/frances/data/frances.toml (ver infra/README.md).
+# Los secretos NUNCA van aquí: solo por variables de entorno (.env, ver README).
+
+[classroom]
+# Ids de cursos a incluir; vacío = todos los ACTIVE que pasen el regex.
+include_course_ids = []
+# Regex (insensible a mayúsculas) sobre el nombre del curso para filtrar.
+include_name_regex = "(?i)fran"
+# Tamaño máximo por adjunto descargado, en MB.
+max_download_mb = 50
+
+[cards]
+# Motor LLM: "auto" (solo si LLM_BASE_URL está definido) u "off".
+llm = "auto"
+# Tope diario de publicaciones enviadas al LLM.
+llm_daily_item_limit = 30
+# Máximo de tarjetas de vocabulario por publicación.
+vocab_per_item_max = 25
+
+[audio]
+# Voces fijas que siempre tienen audio.
+fixed_voices = ["fr-FR-DeniseNeural", "fr-FR-HenriNeural"]
+# Voces rotativas por tarjeta (para variar la exposición).
+rotating = 1
+# Tope mensual de caracteres de Azure TTS (plan F0).
+azure_tts_monthly_char_cap = 450000
+# Máximo de clips sintetizados por ejecución.
+max_clips_per_run = 3000
+
+[translator]
+# Tope mensual de caracteres del traductor Azure (plan F0).
+monthly_char_cap = 1800000
+
+[bundle]
+# Solo v1 (paquete cifrado, retirado en CHG-21). La v2 no lo lee; se conserva por compatibilidad.
+# Sal 16 bytes en b64url para derivar la clave (no es secreto).
+salt = ""
+# Iteraciones de PBKDF2-HMAC-SHA256 para la clave del bundle.
+iterations = 600000
+# Tamaño máximo total del bundle publicado, en MB.
+max_total_mb = 900
+
+# --- Config v2 (servidor) ---
+
+[server]
+# Días de vida de la sesión (deslizante: se renueva con el uso).
+session_ttl_days = 30
+# Horas de validez de una invitación.
+invite_ttl_hours = 72
+# Intentos de login por minuto, por IP y por email (en memoria del proceso api).
+login_max_per_minute = 5
+# Máximo de cuentas de usuario.
+max_users = 25
+
+[llm]
+# "auto" u "off". off apaga toda la IA de estudio; las tarjetas usan el respaldo por reglas.
+mode = "auto"
+# Tope diario de llamadas al LLM (usage_daily.llm_calls).
+max_calls_per_day = 300
+# Tiempo máximo por llamada al LLM, en segundos.
+timeout_s = 120
+
+[jobs]
+# Intentos máximos de un job antes de marcarlo fallido.
+max_attempts = 5
+# Espera base del reintento exponencial, en segundos.
+backoff_base_s = 60
+# Espera máxima entre reintentos, en segundos.
+backoff_cap_s = 3600
+# Cada cuántos segundos el worker busca jobs nuevos.
+poll_s = 5
+
+[scheduler]
+# Zona horaria de todos los horarios de abajo (HH:MM).
+timezone = "America/Bogota"
+# Hora de la corrida diaria del pipeline.
+daily_at = "05:17"
+# Día de la reconciliación semanal: 0 = lunes … 6 = domingo.
+reconcile_weekday = 6
+# Hora de la reconciliación semanal.
+reconcile_at = "06:00"
+# Hora de la verificación diaria de la autorización de Google.
+auth_check_at = "05:00"
+# Hora en que se arma el plan de estudio del día.
+plan_at = "05:45"
+# Si el worker estuvo caído, dispara el slot perdido dentro de esta ventana (horas).
+catchup_hours = 12
+
+[backup]
+# Hora del respaldo diario de state.db.
+at = "04:30"
+# Días que se conservan los respaldos.
+retention_days = 14
+# Prefijo de los objetos en el bucket; debe terminar en /.
+prefix = "frances/"

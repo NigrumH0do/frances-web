@@ -1,0 +1,280 @@
+{
+  "bad": [
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "respuesta ausente"
+            ],
+            "explanation_es": null,
+            "kind": "mcq",
+            "options": [
+              "deux",
+              "trois",
+              "cinq",
+              "dix"
+            ],
+            "prompt_es": "¿Cómo se dice 'tres' en francés?",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "trois"
+            ],
+            "explanation_es": null,
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa con el número de gatos.",
+            "prompt_fr": "J’ai ___ chats et deux poissons rouges.",
+            "source_block": 3
+          },
+          {
+            "answers": [
+              "J’ai cinq livres."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Tengo cinco libros.",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "deux",
+              "poissons",
+              "rouges"
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena las palabras de los peces.",
+            "prompt_fr": null,
+            "source_block": 3
+          }
+        ],
+        "title_es": "Contar hasta diez"
+      },
+      "problem": "la respuesta no es una de las opciones"
+    },
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "trois"
+            ],
+            "explanation_es": null,
+            "kind": "mcq",
+            "options": [
+              "deux",
+              "trois",
+              "cinq",
+              "dix"
+            ],
+            "prompt_es": "¿Cómo se dice 'tres' en francés?",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "trois"
+            ],
+            "explanation_es": null,
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa con el número de gatos.",
+            "prompt_fr": "J’ai ___ chats et deux poissons rouges. ___",
+            "source_block": 3
+          },
+          {
+            "answers": [
+              "J’ai cinq livres."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Tengo cinco libros.",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "deux",
+              "poissons",
+              "rouges"
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena las palabras de los peces.",
+            "prompt_fr": null,
+            "source_block": 3
+          }
+        ],
+        "title_es": "Contar hasta diez"
+      },
+      "problem": "cloze sin exactamente un ___"
+    },
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "trois"
+            ],
+            "explanation_es": null,
+            "kind": "mcq",
+            "options": [
+              "deux",
+              "trois",
+              "cinq",
+              "dix"
+            ],
+            "prompt_es": "¿Cómo se dice 'tres' en francés?",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "trois"
+            ],
+            "explanation_es": null,
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa con el número de gatos.",
+            "prompt_fr": "J’ai ___ chats et deux poissons rouges.",
+            "source_block": 3
+          },
+          {
+            "answers": [
+              "J’ai cinq livres."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Tengo cinco libros.",
+            "prompt_fr": null,
+            "source_block": 9
+          },
+          {
+            "answers": [
+              "deux",
+              "poissons",
+              "rouges"
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena las palabras de los peces.",
+            "prompt_fr": null,
+            "source_block": 3
+          }
+        ],
+        "title_es": "Contar hasta diez"
+      },
+      "problem": "source_block fuera de"
+    }
+  ],
+  "case_id": "numeros",
+  "expected": {
+    "questions": [
+      {
+        "answers": [
+          "trois"
+        ],
+        "explanation_es": null,
+        "kind": "mcq",
+        "options": [
+          "deux",
+          "trois",
+          "cinq",
+          "dix"
+        ],
+        "prompt_es": "¿Cómo se dice 'tres' en francés?",
+        "prompt_fr": null,
+        "source_block": 1
+      },
+      {
+        "answers": [
+          "trois"
+        ],
+        "explanation_es": null,
+        "kind": "cloze",
+        "options": [],
+        "prompt_es": "Completa con el número de gatos.",
+        "prompt_fr": "J’ai ___ chats et deux poissons rouges.",
+        "source_block": 3
+      },
+      {
+        "answers": [
+          "J’ai cinq livres."
+        ],
+        "explanation_es": null,
+        "kind": "translate",
+        "options": [],
+        "prompt_es": "Tengo cinco libros.",
+        "prompt_fr": null,
+        "source_block": 1
+      },
+      {
+        "answers": [
+          "deux",
+          "poissons",
+          "rouges"
+        ],
+        "explanation_es": null,
+        "kind": "order",
+        "options": [],
+        "prompt_es": "Ordena las palabras de los peces.",
+        "prompt_fr": null,
+        "source_block": 3
+      }
+    ],
+    "title_es": "Contar hasta diez"
+  },
+  "input": {
+    "cards": [
+      {
+        "back_es": "tres",
+        "front_fr": "trois",
+        "kind": "vocab"
+      },
+      {
+        "back_es": "Tengo tres gatos y dos peces rojos.",
+        "front_fr": "J’ai trois chats et deux poissons rouges.",
+        "kind": "phrase"
+      },
+      {
+        "back_es": "Uno se dice un con masculino y une con femenino.",
+        "front_fr": "Números: un, une",
+        "kind": "grammar"
+      }
+    ],
+    "fragments": [
+      {
+        "label": "Contar hasta diez, p. 1",
+        "n": 1,
+        "text": "un, deux, trois, quatre, cinq, six, sept, huit, neuf, dix."
+      },
+      {
+        "label": "Contar hasta diez, p. 2",
+        "n": 2,
+        "text": "Los números del uno al diez aparecen en casi todas las conversaciones."
+      },
+      {
+        "label": "Contar hasta diez, p. 3",
+        "n": 3,
+        "text": "J’ai trois chats et deux poissons rouges."
+      }
+    ],
+    "summaries": [
+      "Los números del uno al diez para contar objetos."
+    ],
+    "title": "Contar hasta diez"
+  },
+  "synthetic": true,
+  "task": "quiz"
+}

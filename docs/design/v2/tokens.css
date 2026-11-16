@@ -1,0 +1,222 @@
+/* Frances Classroom v2 — tokens del sistema de diseño.
+ *
+ * Punto de partida: web/src/ui/theme.css del dueño (azul #1d4ed8, gris
+ * #f4f5f7, texto #1b1f24, serif para el francés). Se añade modo oscuro,
+ * escala de tipografía/espaciado, radios, sombras y movimiento.
+ *
+ * Modo: sigue `prefers-color-scheme`; la clase `theme-light` o `theme-dark`
+ * en <html> lo fuerza (alternador de las maquetas y ajuste «Tema» en Más).
+ *
+ * Contraste WCAG 2.x (calculado con script; peor caso entre card/bg/surface):
+ *   claro  texto 14.4:1 · secundario 6.6:1 · acento 5.8:1 · éxito 6.1:1
+ *          aviso 6.1:1 · peligro 5.7:1 · racha 5.4:1 · sobre acento 6.7:1
+ *   oscuro texto 11.5:1 · secundario 6.6:1 · acento 6.6:1 · éxito 8.1:1
+ *          aviso 8.3:1 · peligro 6.7:1 · racha 7.8:1 · sobre acento 8.4:1
+ * Todos >= 4.5:1 (AA texto normal). Bordes de control >= 3:1.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Superficies */
+  --c-bg: #f4f5f7;
+  --c-surface: #eceff3;
+  --c-card: #ffffff;
+  --c-card-raised: #ffffff;
+  --c-border: #d8dde5;
+  --c-border-strong: #7b8594; /* bordes de inputs: 3.7:1 */
+  --c-overlay: rgb(15 23 42 / 45%);
+
+  /* Texto */
+  --c-text: #1b1f24;
+  --c-text-muted: #4b5563;
+  --c-text-faint: #5f6b7a; /* sólo >= 14px; 5.4:1 */
+
+  /* Acento (marca) */
+  --c-accent: #1d4ed8;
+  --c-accent-strong: #1e40af;
+  --c-accent-soft: #e8eefc;
+  --c-on-accent: #ffffff;
+  --c-on-accent-soft: #1e3a8a;
+
+  /* Estados */
+  --c-success: #166534;
+  --c-success-soft: #e7f6ec;
+  --c-warning: #92400e;
+  --c-warning-soft: #fff4e5;
+  --c-warning-border: #f5c58a;
+  --c-danger: #b42318;
+  --c-danger-soft: #fdecea;
+  --c-info: #1e3a8a;
+
+  /* Puntaje de pronunciación (bandas de ui/pron/score.ts) */
+  --c-score-excelente: #166534;
+  --c-score-bien: #1e3a8a;
+  --c-score-mejorable: #92400e;
+  --c-score-repetir: #b42318;
+
+  /* Calificación FSRS */
+  --c-rate-again: #b42318;
+  --c-rate-hard: #92400e;
+  --c-rate-good: #166534;
+  --c-rate-easy: #1d4ed8;
+
+  /* Racha / gamificación ligera */
+  --c-streak: #9a4a07;
+  --c-streak-soft: #fff1e0;
+
+  --focus-ring: 3px solid #1d4ed8;
+  --skeleton-a: #e5e8ed;
+  --skeleton-b: #f1f3f6;
+
+  /* Tipografía: pila de sistema, sin fuentes remotas */
+  --font-ui:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-read: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  --fs-xs: 0.8125rem;  /* 13 — sólo metadatos */
+  --fs-sm: 0.875rem;   /* 14 */
+  --fs-md: 1rem;       /* 16 — base */
+  --fs-lg: 1.125rem;   /* 18 */
+  --fs-xl: 1.375rem;   /* 22 — títulos de pantalla */
+  --fs-2xl: 1.75rem;   /* 28 — frente de tarjeta */
+  --fs-3xl: 2.25rem;   /* 36 — cifras grandes */
+  --lh-tight: 1.2;
+  --lh-base: 1.5;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Espaciado: base 4 px */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+
+  /* Radios */
+  --r-sm: 0.5rem;
+  --r-md: 0.75rem; /* = --radius del theme.css del dueño */
+  --r-lg: 1rem;
+  --r-xl: 1.5rem;
+  --r-pill: 999px;
+
+  /* Sombras */
+  --shadow-1: 0 1px 2px rgb(15 23 42 / 6%);
+  --shadow-2: 0 1px 2px rgb(15 23 42 / 6%), 0 8px 24px rgb(15 23 42 / 6%);
+  --shadow-3: 0 12px 32px rgb(15 23 42 / 16%);
+
+  /* Tamaños táctiles */
+  --tap: 44px;
+  --tap-lg: 52px;
+  --tabbar-h: 64px;
+
+  /* Movimiento */
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-flip: 420ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* Paleta oscura: se aplica por sistema o forzada con .theme-dark */
+@media (prefers-color-scheme: dark) {
+  :root:not(.theme-light) {
+    color-scheme: dark;
+    --c-bg: #0f141a;
+    --c-surface: #151b23;
+    --c-card: #1b232d;
+    --c-card-raised: #222c38;
+    --c-border: #2f3a47;
+    --c-border-strong: #7d8a9a;
+    --c-overlay: rgb(0 0 0 / 60%);
+    --c-text: #e8ebef;
+    --c-text-muted: #aab4c1;
+    --c-text-faint: #98a3b1;
+    --c-accent: #8db4ff;
+    --c-accent-strong: #b3ccff;
+    --c-accent-soft: #1f2d48;
+    --c-on-accent: #0b1a33;
+    --c-on-accent-soft: #c9dbff;
+    --c-success: #6fdc9b;
+    --c-success-soft: #15301f;
+    --c-warning: #f7be7a;
+    --c-warning-soft: #33240f;
+    --c-warning-border: #6b4a1e;
+    --c-danger: #ff9a8f;
+    --c-danger-soft: #3a1a17;
+    --c-info: #b3ccff;
+    --c-score-excelente: #6fdc9b;
+    --c-score-bien: #8db4ff;
+    --c-score-mejorable: #f7be7a;
+    --c-score-repetir: #ff9a8f;
+    --c-rate-again: #ff9a8f;
+    --c-rate-hard: #f7be7a;
+    --c-rate-good: #6fdc9b;
+    --c-rate-easy: #8db4ff;
+    --c-streak: #ffb366;
+    --c-streak-soft: #35230f;
+    --focus-ring: 3px solid #b3ccff;
+    --skeleton-a: #222b36;
+    --skeleton-b: #2b3542;
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-2: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px rgb(0 0 0 / 30%);
+    --shadow-3: 0 12px 32px rgb(0 0 0 / 55%);
+  }
+}
+
+:root.theme-dark {
+  color-scheme: dark;
+  --c-bg: #0f141a;
+  --c-surface: #151b23;
+  --c-card: #1b232d;
+  --c-card-raised: #222c38;
+  --c-border: #2f3a47;
+  --c-border-strong: #7d8a9a;
+  --c-overlay: rgb(0 0 0 / 60%);
+  --c-text: #e8ebef;
+  --c-text-muted: #aab4c1;
+  --c-text-faint: #98a3b1;
+  --c-accent: #8db4ff;
+  --c-accent-strong: #b3ccff;
+  --c-accent-soft: #1f2d48;
+  --c-on-accent: #0b1a33;
+  --c-on-accent-soft: #c9dbff;
+  --c-success: #6fdc9b;
+  --c-success-soft: #15301f;
+  --c-warning: #f7be7a;
+  --c-warning-soft: #33240f;
+  --c-warning-border: #6b4a1e;
+  --c-danger: #ff9a8f;
+  --c-danger-soft: #3a1a17;
+  --c-info: #b3ccff;
+  --c-score-excelente: #6fdc9b;
+  --c-score-bien: #8db4ff;
+  --c-score-mejorable: #f7be7a;
+  --c-score-repetir: #ff9a8f;
+  --c-rate-again: #ff9a8f;
+  --c-rate-hard: #f7be7a;
+  --c-rate-good: #6fdc9b;
+  --c-rate-easy: #8db4ff;
+  --c-streak: #ffb366;
+  --c-streak-soft: #35230f;
+  --focus-ring: 3px solid #b3ccff;
+  --skeleton-a: #222b36;
+  --skeleton-b: #2b3542;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-2: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px rgb(0 0 0 / 30%);
+  --shadow-3: 0 12px 32px rgb(0 0 0 / 55%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-flip: 0ms;
+  }
+}

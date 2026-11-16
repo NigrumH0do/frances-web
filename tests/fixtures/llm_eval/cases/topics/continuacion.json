@@ -1,0 +1,161 @@
+{
+  "bad": [
+    {
+      "output": {
+        "topics": [
+          {
+            "cefr": "A2",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": "t-pasado",
+            "item_ids": [
+              "syn-pasado"
+            ],
+            "key": "pasado",
+            "title": "El pasado compuesto"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-saludos",
+              "syn-numeros"
+            ],
+            "key": "saludos",
+            "title": "El pasado compuesto"
+          }
+        ]
+      },
+      "problem": "título repetido"
+    },
+    {
+      "output": {
+        "topics": [
+          {
+            "cefr": "A2",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": "t-pasado",
+            "item_ids": [
+              "syn-pasado"
+            ],
+            "key": "pasado",
+            "title": "El pasado compuesto"
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-saludos",
+              "syn-numeros"
+            ],
+            "key": "pasado",
+            "title": "Saludos y números"
+          }
+        ]
+      },
+      "problem": "key repetida"
+    },
+    {
+      "output": {
+        "topics": [
+          {
+            "cefr": "A2",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": "t-pasado",
+            "item_ids": [
+              "syn-pasado"
+            ],
+            "key": "pasado",
+            "title": ""
+          },
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-saludos",
+              "syn-numeros"
+            ],
+            "key": "saludos",
+            "title": "Saludos y números"
+          }
+        ]
+      },
+      "problem": "title vacío"
+    }
+  ],
+  "case_id": "continuacion",
+  "expected": {
+    "topics": [
+      {
+        "cefr": "A2",
+        "description_es": "Tema de prueba con publicaciones sintéticas.",
+        "existing_topic_id": "t-pasado",
+        "item_ids": [
+          "syn-pasado"
+        ],
+        "key": "pasado",
+        "title": "El pasado compuesto"
+      },
+      {
+        "cefr": "A1",
+        "description_es": "Tema de prueba con publicaciones sintéticas.",
+        "existing_topic_id": null,
+        "item_ids": [
+          "syn-saludos",
+          "syn-numeros"
+        ],
+        "key": "saludos",
+        "title": "Saludos y números"
+      }
+    ]
+  },
+  "input": {
+    "items": [
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": "t-pasado",
+        "id": "syn-pasado",
+        "locked": false,
+        "summary_es": "Acciones terminadas con el pasado compuesto.",
+        "tags": [
+          "pasado"
+        ],
+        "title": "El pasado compuesto"
+      },
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-saludos",
+        "locked": false,
+        "summary_es": "Frases para saludar y responder a la pregunta cómo estás.",
+        "tags": [
+          "saludos"
+        ],
+        "title": "Saludos sin prisa"
+      },
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-numeros",
+        "locked": false,
+        "summary_es": "Los números del uno al diez para contar objetos.",
+        "tags": [
+          "numeros"
+        ],
+        "title": "Contar hasta diez"
+      }
+    ],
+    "topics": [
+      {
+        "description_es": "Tema existente de prueba.",
+        "id": "t-pasado",
+        "locked": false,
+        "title": "Pasado"
+      }
+    ]
+  },
+  "synthetic": true,
+  "task": "topics"
+}

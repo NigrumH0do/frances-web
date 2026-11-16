@@ -1,0 +1,116 @@
+name: frances
+
+# Caddy y api comparten solo esta red: ningún otro contenedor puede inyectar
+# X-Forwarded-For en la API. worker y backup viven en la red por defecto.
+networks:
+  edge:
+
+services:
+  caddy:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      target: web
+    image: frances-web:local
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - /srv/frances/caddy/data:/data
+      - /srv/frances/caddy/config:/config
+    env_file: /srv/frances/caddy.env
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - edge
+    init: true
+    restart: unless-stopped
+    mem_limit: 256m
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      target: app
+    image: frances-app:local
+    command: ["serve", "--host", "0.0.0.0", "--port", "8000"]
+    env_file: /srv/frances/.env
+    environment:
+      FRANCES_DATA_DIR: /data
+      FRANCES_STATE_DB: /data/state.db
+    volumes:
+      - /srv/frances/data:/data
+    expose:
+      - "8000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    user: "10001:10001"
+    networks:
+      - edge
+    init: true
+    restart: unless-stopped
+    mem_limit: 1g
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3).status == 200 else 1)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  worker:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      target: app
+    image: frances-app:local
+    command: ["worker"]
+    env_file: /srv/frances/.env
+    environment:
+      FRANCES_DATA_DIR: /data
+      FRANCES_STATE_DB: /data/state.db
+    volumes:
+      - /srv/frances/data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    user: "10001:10001"
+    init: true
+    restart: unless-stopped
+    mem_limit: 6g
+    stop_grace_period: 10m
+    healthcheck:
+      test: ["CMD", "frances", "worker", "--check"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  backup:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      target: app
+    image: frances-app:local
+    command: ["backup", "loop"]
+    env_file: /srv/frances/.env
+    environment:
+      FRANCES_DATA_DIR: /data
+      FRANCES_STATE_DB: /data/state.db
+    volumes:
+      - /srv/frances/data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    user: "10001:10001"
+    init: true
+    restart: unless-stopped
+    mem_limit: 512m

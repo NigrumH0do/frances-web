@@ -1,0 +1,57 @@
+{
+  "bad": [
+    {
+      "output": {
+        "lines": []
+      },
+      "problem": "faltan posiciones del plan"
+    },
+    {
+      "output": {
+        "lines": [
+          {
+            "position": 1,
+            "why_es": "Repasa saludos hoy para no perder lo aprendido."
+          },
+          {
+            "position": 99,
+            "why_es": "Tarea ajena."
+          }
+        ]
+      },
+      "problem": "posición ajena al plan"
+    },
+    {
+      "output": {
+        "lines": [
+          {
+            "position": 1,
+            "why_es": "hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy."
+          }
+        ]
+      },
+      "problem": "más de 30 palabras"
+    }
+  ],
+  "case_id": "una-tarea",
+  "expected": {
+    "lines": [
+      {
+        "position": 1,
+        "why_es": "Repasa saludos hoy para no perder lo aprendido."
+      }
+    ]
+  },
+  "input": {
+    "entries": [
+      {
+        "kind": "review",
+        "position": 1,
+        "reason_es": "Hay tarjetas pendientes.",
+        "title_es": "Repasar saludos"
+      }
+    ]
+  },
+  "synthetic": true,
+  "task": "plan_why"
+}

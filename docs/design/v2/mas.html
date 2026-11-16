@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Más · Frances Classroom v2 (maqueta)</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<script>
+/* Alternar tema: ?theme=dark|light, o el botón; se recuerda en localStorage. */
+(function () {
+  var r = document.documentElement, k = 'fc-theme';
+  var q = new URLSearchParams(location.search).get('theme'), v = q;
+  try { v = q || localStorage.getItem(k); } catch (e) {}
+  if (v === 'dark' || v === 'light') r.classList.add('theme-' + v);
+  window.setTheme = function (n) {
+    r.classList.remove('theme-dark', 'theme-light');
+    if (n !== 'system') r.classList.add('theme-' + n);
+    try { n === 'system' ? localStorage.removeItem(k) : localStorage.setItem(k, n); } catch (e) {}
+  };
+  window.toggleTheme = function () {
+    var dark = r.classList.contains('theme-dark') ||
+      (!r.classList.contains('theme-light') && matchMedia('(prefers-color-scheme: dark)').matches);
+    setTheme(dark ? 'light' : 'dark');
+  };
+})();
+</script>
+</head>
+<body>
+<div class="stage">
+  <div class="stage-bar">
+    <a href="index.html"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg> Índice</a>
+    <span>Más · 390×844</span>
+    <button class="btn btn-ghost theme-toggle" type="button" onclick="toggleTheme()"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg> Tema</button>
+  </div>
+  <div class="phone">
+    <div class="statusbar" aria-hidden="true"><span>9:41</span><span>5G ▮▮▮ 82 %</span></div>
+    <header class="appbar"><h1>Más</h1></header>
+    <main class="content" id="main">
+<div class="card row">
+  <span class="lead-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+  <div class="grow"><b>Marta Ibáñez</b><br><span class="small muted">marta@example.com · <span class="chip chip-level">Admin</span></span></div>
+</div>
+
+<div class="section-title"><h2><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg> Progreso</h2><a class="small" href="#">Detalle</a></div>
+<div class="stats">
+  <div class="stat"><b>412</b><span>tarjetas aprendidas</span></div>
+  <div class="stat"><b>91 %</b><span>retención 30 d</span></div>
+  <div class="stat"><b>6</b><span>días de racha</span></div>
+</div>
+<ul class="list" style="margin-top:var(--sp-2)" aria-label="Notas de quiz">
+  <li><div class="list-item"><span class="grow" lang="fr">Au marché</span><span class="chip chip-success">9/10</span></div></li>
+  <li><div class="list-item"><span class="grow" lang="fr">Le passé composé</span><span class="chip chip-warning">6/8</span></div></li>
+</ul>
+
+<div class="section-title"><h2><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg> Ajustes</h2></div>
+<div class="card stack">
+  <div class="field">
+    <span id="tema-l" class="small" style="font-weight:600">Tema</span>
+    <div class="segmented" role="group" aria-labelledby="tema-l">
+      <button aria-pressed="true" onclick="setTheme('system')">Sistema</button>
+      <button aria-pressed="false" onclick="setTheme('light')">Claro</button>
+      <button aria-pressed="false" onclick="setTheme('dark')">Oscuro</button>
+    </div>
+  </div>
+  <div class="field">
+    <label for="meta">Meta diaria</label>
+    <select class="select" id="meta"><option>15 min</option><option selected>20 min</option><option>30 min</option></select>
+  </div>
+  <div class="row-between"><span>Recordatorio a las 19:00</span><button class="switch" role="switch" aria-checked="true" aria-label="Recordatorio"></button></div>
+  <div class="row-between"><span>Guardar audios sin conexión <span class="xs muted">(84 MB)</span></span><button class="switch" role="switch" aria-checked="false" aria-label="Audios sin conexión"></button></div>
+</div>
+
+<div class="section-title"><h2><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg> Voces</h2><span class="xs muted">Elige tus preferidas</span></div>
+<ul class="list" aria-label="Voces">
+  <li><div class="list-item"><button class="btn btn-tonal btn-icon" aria-label="Oír Céline"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7Z" fill="currentColor"/></svg></button><span class="grow"><b>Céline</b> · adulta<br><span class="meta">Por defecto del curso</span></span><span class="check done" aria-label="Preferida"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span></div></li>
+  <li><div class="list-item"><button class="btn btn-tonal btn-icon" aria-label="Oír Paul"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7Z" fill="currentColor"/></svg></button><span class="grow"><b>Paul</b> · adulto</span><span class="check done" aria-label="Preferida"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span></div></li>
+  <li><div class="list-item"><button class="btn btn-tonal btn-icon" aria-label="Oír Lou"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7Z" fill="currentColor"/></svg></button><span class="grow"><b>Lou</b> · adolescente</span><span class="check" aria-label="No preferida"></span></div></li>
+  <li><div class="list-item"><button class="btn btn-tonal btn-icon" aria-label="Oír Léo"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7Z" fill="currentColor"/></svg></button><span class="grow"><b>Léo</b> · niño</span><span class="check" aria-label="No preferida"></span></div></li>
+</ul>
+
+<div class="section-title" style="margin-top:var(--sp-8)"><h2>Administración</h2><span class="chip chip-level">Admin</span></div>
+
+<div class="card stack" aria-labelledby="pipe-h">
+  <div class="row-between"><h3 id="pipe-h"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg> Pipeline</h3><span class="chip chip-warning">Con 2 fallos</span></div>
+  <p class="small">Último run: <b>hoy 06:00</b> · 4 min 12 s · 3 publicaciones, 41 tarjetas, 1 tema nuevo.</p>
+  <div>
+    <div class="row-between xs muted"><span>Llamadas LLM hoy</span><span>118 / 300</span></div>
+    <div class="progress" aria-hidden="true"><span style="width:39%"></span></div>
+  </div>
+  <p class="small muted">Cola: 2 trabajos LLM · 7 audios</p>
+  <button class="btn btn-secondary btn-block"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg> Lanzar ahora</button>
+</div>
+
+<div class="section-title"><h2>Trabajos fallidos</h2><button class="btn btn-ghost btn-sm-text">Reintentar todos</button></div>
+<ul class="list">
+  <li><div class="list-item"><span class="lead-icon err"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17v.5"/></svg></span><span class="grow"><span class="title">Resumen · Exercices p. 42</span><br><span class="meta">Kiosapi sin respuesta en 30 s · 3 intentos</span></span><button class="btn btn-secondary btn-sm-text">Reintentar</button></div></li>
+  <li><div class="list-item"><span class="lead-icon err"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17v.5"/></svg></span><span class="grow"><span class="title">Audio · «hier soir» (Lou)</span><br><span class="meta">429 demasiadas peticiones · 1 intento</span></span><button class="btn btn-secondary btn-sm-text">Reintentar</button></div></li>
+</ul>
+
+<div class="section-title"><h2><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg> Usuarios e invitaciones</h2></div>
+<ul class="list">
+  <li><div class="list-item"><span class="grow"><span class="title">Julián Pérez</span><br><span class="meta">Última vez hace 3 h</span></span><button class="btn btn-ghost btn-sm-text" style="color:var(--c-danger)">Quitar</button></div></li>
+  <li><div class="list-item"><span class="grow"><span class="title">Sofía Lara</span><br><span class="meta">Última vez ayer</span></span><button class="btn btn-ghost btn-sm-text" style="color:var(--c-danger)">Quitar</button></div></li>
+  <li><div class="list-item"><span class="grow"><span class="title">Invitación pendiente</span><br><span class="meta">Enlace caduca en 6 días</span></span><button class="btn btn-ghost btn-icon" aria-label="Copiar enlace"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg></button><button class="btn btn-ghost btn-sm-text" style="color:var(--c-danger)">Revocar</button></div></li>
+</ul>
+<button class="btn btn-primary btn-block" style="margin-top:var(--sp-3)"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg> Invitar con enlace</button>
+
+<div class="section-title"><h2><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13 7 4 4"/></svg> Editar tarjeta compartida</h2></div>
+<form class="card stack" onsubmit="return false">
+  <div class="callout">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17v.5"/></svg>
+    <div class="grow"><p class="small"><b>La publicación cambió</b> el 1 nov. Tu edición se respeta; puedes regenerar desde la nueva versión.</p>
+    <button class="btn btn-secondary btn-sm-text" style="margin-top:var(--sp-2)">Regenerar</button></div>
+  </div>
+  <div class="field"><label for="ff">Francés (front_fr)</label><input class="input fr" id="ff" lang="fr" value="nous sommes allés"></div>
+  <div class="field"><label for="fb">Español (back_es)</label><input class="input" id="fb" value="fuimos"></div>
+  <div class="field"><label for="fe">Ejemplo</label><textarea class="textarea fr" id="fe" lang="fr">Nous sommes allés au cinéma hier soir.</textarea></div>
+  <div class="field"><label for="ft">Tipo</label><select class="select" id="ft"><option>Vocabulario</option><option selected>Frase</option><option>Gramática</option></select></div>
+  <p class="xs muted"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg> Editada por una persona: el pipeline no la pisará.</p>
+  <div class="row">
+    <button class="btn btn-primary grow">Guardar</button>
+    <button class="btn btn-secondary"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg> Regenerar audio</button>
+  </div>
+  <button class="btn btn-danger btn-block">Borrar tarjeta</button>
+</form>
+
+<button class="btn btn-ghost btn-block" style="margin-top:var(--sp-6)">Cerrar sesión</button>
+<p class="xs muted" style="text-align:center">Frances Classroom 2.0 · maqueta</p>
+    </main>
+    
+    <nav class="tabbar" aria-label="Secciones">
+    <a href="hoy.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span>Hoy</a>
+    <a href="temas.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 16 10 5 10-5M2 12l10 5 10-5"/></svg></span>Temas</a>
+    <a href="repasar.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg></span>Repasar</a>
+    <a href="chat.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12Z"/></svg></span>Chat</a>
+    <a href="mas.html" aria-current="page" class="badge-dot"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></span>Más</a>
+    </nav>
+  </div>
+</div>
+<script>
+/* Voltear tarjeta: cualquier [data-flip=id] alterna .is-flipped en #id. */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-flip]');
+  if (!b) return;
+  var c = document.getElementById(b.getAttribute('data-flip'));
+  var on = c.classList.toggle('is-flipped');
+  c.querySelector('.flip-front').setAttribute('aria-hidden', on);
+  c.querySelector('.flip-back').setAttribute('aria-hidden', !on);
+  var host = c.closest('[data-review]');
+  if (host) host.classList.toggle('answered', on);
+});
+if (new URLSearchParams(location.search).get('flip') === '1') {
+  document.querySelectorAll('.flip').forEach(function (c) {
+    c.classList.add('is-flipped');
+    var host = c.closest('[data-review]');
+    if (host) host.classList.add('answered');
+  });
+}
+</script>
+
+</body>
+</html>

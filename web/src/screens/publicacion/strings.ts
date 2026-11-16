@@ -1,0 +1,53 @@
+// Textos de la pantalla de publicación y de la ficha de estudio.
+export const publicacionStrings = {
+  back: 'Volver a Temas',
+  title: 'Publicación',
+  untitled: 'Publicación sin título',
+  refresh: 'Actualizar publicación',
+  kinds: {
+    coursework: 'Tarea',
+    material: 'Material',
+    announcement: 'Anuncio',
+  },
+  published: 'Publicado {date}',
+  updated: 'Actualizado {date}',
+  due: 'Vence {date}',
+  openClassroom: 'Abrir en Classroom',
+  text: 'Texto',
+  attachments: 'Adjuntos',
+  sheet: 'Ficha de estudio',
+  sheetPendingTitle: 'La ficha se está preparando',
+  sheetPendingBody:
+    'Aparecerá aquí cuando termine la IA. Mientras tanto puedes leer el texto y los adjuntos.',
+  cards: 'Tarjetas',
+  cardsCount: '{n} tarjetas',
+  cardsCountOne: '1 tarjeta',
+  cardsEmpty: 'Esta publicación todavía no tiene tarjetas.',
+  cardKinds: {
+    vocab: 'Vocabulario',
+    phrase: 'Frase',
+    grammar: 'Gramática',
+    conjugation: 'Conjugación',
+    drill: 'Taladro',
+  },
+  hard: 'Difícil',
+  suspended: 'Suspendida',
+  changed: 'La publicación cambió',
+  quizzes: 'Quiz',
+  quizQuestions: '{n} preguntas',
+  quizQuestionsOne: '1 pregunta',
+  quizStale: 'Quiz desactualizado',
+  startQuiz: 'Empezar quiz',
+  quizzesEmpty: 'Esta publicación todavía no tiene quiz.',
+  empty: 'Esta publicación no tiene texto ni adjuntos.',
+} as const;
+
+export const sheetStrings = {
+  summary: 'Resumen',
+  objectives: 'Objetivos',
+  keyPhrases: 'Frases clave',
+  grammar: 'Gramática',
+  mistakes: 'Errores típicos',
+  vocab: 'Vocabulario',
+  ai: 'Resumen IA · {version}',
+} as const;

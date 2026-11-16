@@ -1,0 +1,41 @@
+// Textos del shell v2. Los comunes viven en `l10n/es.ts`.
+
+export const shellStrings = {
+  skip: 'Saltar al contenido',
+  navLabel: 'Secciones',
+  brand: 'Français',
+  brandSub: 'Tu cuaderno de estudio',
+  tabs: {
+    hoy: 'Hoy',
+    temas: 'Temas',
+    repasar: 'Repasar',
+    chat: 'Chat',
+    mas: 'Más',
+  },
+  reviewBadge: '{n} por repasar',
+  placeholder: 'Esta sección llega pronto',
+  notFound: {
+    code: '404',
+    title: 'Página no encontrada',
+    body: 'La página que buscas no existe.',
+    home: 'Volver al inicio',
+  },
+  offline: 'Sin conexión. Verás lo último que se guardó',
+  pending: '{n} cambios esperando',
+  syncing: 'Sincronizando…',
+  flushFailed: '{n} cambios no se pudieron guardar',
+  dismiss: 'Descartar',
+  screens: {
+    hoy: 'Hoy',
+    temas: 'Temas',
+    tema: 'Tema',
+    publicacion: 'Publicación',
+    repasar: 'Repasar',
+    pronunciacion: 'Pronunciación',
+    texto: 'Texto libre',
+    quiz: 'Quiz',
+    chat: 'Chat',
+    mas: 'Más',
+    admin: 'Admin',
+  },
+} as const;

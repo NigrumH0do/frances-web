@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Temas · Frances Classroom v2 (maqueta)</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<script>
+/* Alternar tema: ?theme=dark|light, o el botón; se recuerda en localStorage. */
+(function () {
+  var r = document.documentElement, k = 'fc-theme';
+  var q = new URLSearchParams(location.search).get('theme'), v = q;
+  try { v = q || localStorage.getItem(k); } catch (e) {}
+  if (v === 'dark' || v === 'light') r.classList.add('theme-' + v);
+  window.setTheme = function (n) {
+    r.classList.remove('theme-dark', 'theme-light');
+    if (n !== 'system') r.classList.add('theme-' + n);
+    try { n === 'system' ? localStorage.removeItem(k) : localStorage.setItem(k, n); } catch (e) {}
+  };
+  window.toggleTheme = function () {
+    var dark = r.classList.contains('theme-dark') ||
+      (!r.classList.contains('theme-light') && matchMedia('(prefers-color-scheme: dark)').matches);
+    setTheme(dark ? 'light' : 'dark');
+  };
+})();
+</script>
+</head>
+<body>
+<div class="stage">
+  <div class="stage-bar">
+    <a href="index.html"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg> Índice</a>
+    <span>Temas · 390×844</span>
+    <button class="btn btn-ghost theme-toggle" type="button" onclick="toggleTheme()"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg> Tema</button>
+  </div>
+  <div class="phone">
+    <div class="statusbar" aria-hidden="true"><span>9:41</span><span>5G ▮▮▮ 82 %</span></div>
+    <header class="appbar"><h1>Temas<span class="sub">Français A2 · 6 temas · 136 tarjetas</span></h1></header>
+    <main class="content" id="main">
+<div class="search">
+  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+  <label class="sr-only" for="q">Buscar temas</label>
+  <input class="input" id="q" type="search" placeholder="Buscar tema, palabra o publicación">
+</div>
+<div class="chips-scroll" role="group" aria-label="Filtros" style="margin-top:var(--sp-3)">
+  <button class="chip chip-filter" aria-pressed="true">Todos</button>
+  <button class="chip chip-filter" aria-pressed="false">Con pendientes</button>
+  <button class="chip chip-filter" aria-pressed="false">A1</button>
+  <button class="chip chip-filter" aria-pressed="false">A2</button>
+  <button class="chip chip-filter" aria-pressed="false">B1</button>
+</div>
+
+<div class="callout info" style="margin-top:var(--sp-3)">
+  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg>
+  <p class="small">Tras la sincronización de hoy hay <b>1 tema nuevo</b> y 2 publicaciones movidas.</p>
+</div>
+
+<ul class="list" style="margin-top:var(--sp-4)" aria-label="Temas del curso">
+  <li><a class="list-item" href="tema-detalle.html">
+    <div class="grow stack" style="--x:0">
+      <div class="row-between"><span class="title" lang="fr">Le passé composé</span><span class="chip chip-level">A2</span></div>
+      <p class="meta">4 publicaciones · 28 tarjetas · quiz pendiente</p>
+      <div class="row"><div class="progress grow" aria-hidden="true"><span style="width:45%"></span></div><span class="xs muted">45 %</span></div>
+    </div>
+  </a></li>
+  <li><a class="list-item" href="tema-detalle.html">
+    <div class="grow stack">
+      <div class="row-between"><span class="title" lang="fr">Le subjonctif présent</span><span class="row"><span class="chip chip-success">Nuevo</span><span class="chip chip-level">B1</span></span></div>
+      <p class="meta">1 publicación · 12 tarjetas</p>
+      <div class="row"><div class="progress grow" aria-hidden="true"><span style="width:0%"></span></div><span class="xs muted">0 %</span></div>
+    </div>
+  </a></li>
+  <li><a class="list-item" href="tema-detalle.html">
+    <div class="grow stack">
+      <div class="row-between"><span class="title" lang="fr">Décrire sa ville</span><span class="chip chip-level">A2</span></div>
+      <p class="meta">3 publicaciones · 22 tarjetas</p>
+      <div class="row"><div class="progress grow" aria-hidden="true"><span style="width:55%"></span></div><span class="xs muted">55 %</span></div>
+    </div>
+  </a></li>
+  <li><a class="list-item" href="tema-detalle.html">
+    <div class="grow stack">
+      <div class="row-between"><span class="title" lang="fr">Les loisirs</span><span class="chip chip-level">A2</span></div>
+      <p class="meta">2 publicaciones · 19 tarjetas · quiz el martes</p>
+      <div class="row"><div class="progress grow" aria-hidden="true"><span style="width:30%"></span></div><span class="xs muted">30 %</span></div>
+    </div>
+  </a></li>
+  <li><a class="list-item" href="tema-detalle.html">
+    <div class="grow stack">
+      <div class="row-between"><span class="title" lang="fr">Au marché</span><span class="chip chip-level">A1</span></div>
+      <p class="meta">3 publicaciones · 31 tarjetas</p>
+      <div class="row"><div class="progress grow" aria-hidden="true"><span style="width:70%"></span></div><span class="xs muted">70 %</span></div>
+    </div>
+  </a></li>
+  <li><a class="list-item" href="tema-detalle.html">
+    <div class="grow stack">
+      <div class="row-between"><span class="title" lang="fr">Se présenter</span><span class="chip chip-level">A1</span></div>
+      <p class="meta">2 publicaciones · 24 tarjetas</p>
+      <div class="row"><div class="progress ok grow" aria-hidden="true"><span style="width:92%"></span></div><span class="xs muted">92 %</span></div>
+    </div>
+  </a></li>
+</ul>
+
+<p class="xs muted" style="margin-top:var(--sp-4);text-align:center">Los temas se reagrupan con IA tras cada sincronización. El admin puede renombrarlos, unirlos o dividirlos.</p>
+    </main>
+    
+    <nav class="tabbar" aria-label="Secciones">
+    <a href="hoy.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span>Hoy</a>
+    <a href="temas.html" aria-current="page"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 16 10 5 10-5M2 12l10 5 10-5"/></svg></span>Temas</a>
+    <a href="repasar.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg></span>Repasar</a>
+    <a href="chat.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12Z"/></svg></span>Chat</a>
+    <a href="mas.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></span>Más</a>
+    </nav>
+  </div>
+</div>
+<script>
+/* Voltear tarjeta: cualquier [data-flip=id] alterna .is-flipped en #id. */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-flip]');
+  if (!b) return;
+  var c = document.getElementById(b.getAttribute('data-flip'));
+  var on = c.classList.toggle('is-flipped');
+  c.querySelector('.flip-front').setAttribute('aria-hidden', on);
+  c.querySelector('.flip-back').setAttribute('aria-hidden', !on);
+  var host = c.closest('[data-review]');
+  if (host) host.classList.toggle('answered', on);
+});
+if (new URLSearchParams(location.search).get('flip') === '1') {
+  document.querySelectorAll('.flip').forEach(function (c) {
+    c.classList.add('is-flipped');
+    var host = c.closest('[data-review]');
+    if (host) host.classList.add('answered');
+  });
+}
+</script>
+
+</body>
+</html>

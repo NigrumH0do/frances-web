@@ -1,0 +1,285 @@
+{
+  "bad": [
+    {
+      "output": {
+        "common_mistakes": [
+          {
+            "right_fr": "ma mère",
+            "why_es": "Mère es femenino, por eso va ma.",
+            "wrong_fr": "mon mère"
+          }
+        ],
+        "grammar": [
+          {
+            "examples": [
+              {
+                "es": "mi madre",
+                "fr": "ma mère"
+              },
+              {
+                "es": "mi hermano",
+                "fr": "mon frère"
+              }
+            ],
+            "explanation_es": "Mon se usa con sustantivos masculinos y ma con femeninos.",
+            "title": "Posesivos"
+          }
+        ],
+        "key_phrases": [
+          {
+            "es": "Mi madre y mi hermano viven en Lille.",
+            "fr": "Ma mère et mon frère habitent à Lille."
+          }
+        ],
+        "objectives_es": [
+          "Nombrar a los miembros de la familia",
+          "Usar los posesivos ma y mon"
+        ],
+        "summary_es": "Oración 1. Oración 2. Oración 3. Oración 4. Oración 5. Oración 6. Oración 7.",
+        "vocab_fronts": [
+          "mère"
+        ]
+      },
+      "problem": "summary_es tiene más de 6 oraciones"
+    },
+    {
+      "output": {
+        "common_mistakes": [
+          {
+            "right_fr": "ma mère",
+            "why_es": "Mère es femenino, por eso va ma.",
+            "wrong_fr": "mon mère"
+          }
+        ],
+        "grammar": [
+          {
+            "examples": [
+              {
+                "es": "mi madre",
+                "fr": "ma mère"
+              },
+              {
+                "es": "mi hermano",
+                "fr": "mon frère"
+              }
+            ],
+            "explanation_es": "Mon se usa con sustantivos masculinos y ma con femeninos.",
+            "title": "Posesivos"
+          }
+        ],
+        "key_phrases": [
+          {
+            "es": "Mi madre y mi hermano viven en Lille.",
+            "fr": "Ma mère et mon frère habitent à Lille."
+          }
+        ],
+        "objectives_es": [],
+        "summary_es": "Vocabulario para hablar de la familia y describir a las personas. La lección usa los posesivos ma y mon.",
+        "vocab_fronts": [
+          "mère"
+        ]
+      },
+      "problem": "entre 1 y 5 objetivos"
+    },
+    {
+      "output": {
+        "common_mistakes": [
+          {
+            "right_fr": "ma mère",
+            "why_es": "Mère es femenino, por eso va ma.",
+            "wrong_fr": "mon mère"
+          }
+        ],
+        "grammar": [
+          {
+            "examples": [
+              {
+                "es": "mi madre",
+                "fr": "ma mère"
+              },
+              {
+                "es": "mi hermano",
+                "fr": "mon frère"
+              }
+            ],
+            "explanation_es": "Mon se usa con sustantivos masculinos y ma con femeninos.",
+            "title": "Posesivos"
+          }
+        ],
+        "key_phrases": [
+          {
+            "es": "Estoy muy contento.",
+            "fr": "Je suis très content."
+          },
+          {
+            "es": "Llueve mucho.",
+            "fr": "Il pleut beaucoup."
+          }
+        ],
+        "objectives_es": [
+          "Nombrar a los miembros de la familia",
+          "Usar los posesivos ma y mon"
+        ],
+        "summary_es": "Vocabulario para hablar de la familia y describir a las personas. La lección usa los posesivos ma y mon.",
+        "vocab_fronts": [
+          "mère"
+        ]
+      },
+      "problem": "más de la mitad de key_phrases"
+    },
+    {
+      "output": {
+        "common_mistakes": [
+          {
+            "right_fr": "mon mère",
+            "why_es": "Mère es femenino, por eso va ma.",
+            "wrong_fr": "mon mère"
+          }
+        ],
+        "grammar": [
+          {
+            "examples": [
+              {
+                "es": "mi madre",
+                "fr": "ma mère"
+              },
+              {
+                "es": "mi hermano",
+                "fr": "mon frère"
+              }
+            ],
+            "explanation_es": "Mon se usa con sustantivos masculinos y ma con femeninos.",
+            "title": "Posesivos"
+          }
+        ],
+        "key_phrases": [
+          {
+            "es": "Mi madre y mi hermano viven en Lille.",
+            "fr": "Ma mère et mon frère habitent à Lille."
+          }
+        ],
+        "objectives_es": [
+          "Nombrar a los miembros de la familia",
+          "Usar los posesivos ma y mon"
+        ],
+        "summary_es": "Vocabulario para hablar de la familia y describir a las personas. La lección usa los posesivos ma y mon.",
+        "vocab_fronts": [
+          "mère"
+        ]
+      },
+      "problem": "wrong_fr igual a right_fr"
+    },
+    {
+      "output": {
+        "common_mistakes": [
+          {
+            "right_fr": "ma mère",
+            "why_es": "Mère es femenino, por eso va ma.",
+            "wrong_fr": "mon mère"
+          }
+        ],
+        "grammar": [
+          {
+            "examples": [
+              {
+                "es": "mi madre",
+                "fr": "ma mère"
+              }
+            ],
+            "explanation_es": "Mon se usa con sustantivos masculinos y ma con femeninos.",
+            "title": "Posesivos"
+          }
+        ],
+        "key_phrases": [
+          {
+            "es": "Mi madre y mi hermano viven en Lille.",
+            "fr": "Ma mère et mon frère habitent à Lille."
+          }
+        ],
+        "objectives_es": [
+          "Nombrar a los miembros de la familia",
+          "Usar los posesivos ma y mon"
+        ],
+        "summary_es": "Vocabulario para hablar de la familia y describir a las personas. La lección usa los posesivos ma y mon.",
+        "vocab_fronts": [
+          "mère"
+        ]
+      },
+      "problem": "no tiene exactamente 2 ejemplos"
+    }
+  ],
+  "case_id": "familia",
+  "expected": {
+    "common_mistakes": [
+      {
+        "right_fr": "ma mère",
+        "why_es": "Mère es femenino, por eso va ma.",
+        "wrong_fr": "mon mère"
+      }
+    ],
+    "grammar": [
+      {
+        "examples": [
+          {
+            "es": "mi madre",
+            "fr": "ma mère"
+          },
+          {
+            "es": "mi hermano",
+            "fr": "mon frère"
+          }
+        ],
+        "explanation_es": "Mon se usa con sustantivos masculinos y ma con femeninos.",
+        "title": "Posesivos"
+      }
+    ],
+    "key_phrases": [
+      {
+        "es": "Mi madre y mi hermano viven en Lille.",
+        "fr": "Ma mère et mon frère habitent à Lille."
+      }
+    ],
+    "objectives_es": [
+      "Nombrar a los miembros de la familia",
+      "Usar los posesivos ma y mon"
+    ],
+    "summary_es": "Vocabulario para hablar de la familia y describir a las personas. La lección usa los posesivos ma y mon.",
+    "vocab_fronts": [
+      "mère"
+    ]
+  },
+  "input": {
+    "card_fronts": [
+      "mère",
+      "Mon grand-père est très gentil.",
+      "Ma mère et mon frère habitent à Lille."
+    ],
+    "generation": {
+      "blocks": [
+        {
+          "lang": "fr",
+          "page": null,
+          "source": "item",
+          "text": "Ma mère et mon frère habitent à Lille avec mon oncle."
+        },
+        {
+          "lang": "es",
+          "page": null,
+          "source": "item",
+          "text": "Vocabulario de la familia para describir a las personas."
+        },
+        {
+          "lang": "fr",
+          "page": null,
+          "source": "item",
+          "text": "Mon grand-père est très gentil et il aime le jardin."
+        }
+      ],
+      "input_hash": "fe703c57804471a6f1ebc00194e6dda43d898fc1c85f8663ab226e8b5944d91e",
+      "item_id": "syn-familia",
+      "title": "Mi familia"
+    }
+  },
+  "synthetic": true,
+  "task": "sheet"
+}

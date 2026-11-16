@@ -1,0 +1,80 @@
+{
+  "bad": [
+    {
+      "output": {
+        "lines": [
+          {
+            "position": 1,
+            "why_es": "Practica el participio hoy para no olvidarlo mañana."
+          }
+        ]
+      },
+      "problem": "faltan posiciones del plan"
+    },
+    {
+      "output": {
+        "lines": [
+          {
+            "position": 1,
+            "why_es": "Practica el participio hoy para no olvidarlo mañana."
+          },
+          {
+            "position": 2,
+            "why_es": "La rutina es corta, así que léela con calma."
+          },
+          {
+            "position": 99,
+            "why_es": "Tarea ajena."
+          }
+        ]
+      },
+      "problem": "posición ajena al plan"
+    },
+    {
+      "output": {
+        "lines": [
+          {
+            "position": 1,
+            "why_es": "hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy."
+          },
+          {
+            "position": 2,
+            "why_es": "La rutina es corta, así que léela con calma."
+          }
+        ]
+      },
+      "problem": "más de 30 palabras"
+    }
+  ],
+  "case_id": "dos-tareas",
+  "expected": {
+    "lines": [
+      {
+        "position": 1,
+        "why_es": "Practica el participio hoy para no olvidarlo mañana."
+      },
+      {
+        "position": 2,
+        "why_es": "La rutina es corta, así que léela con calma."
+      }
+    ]
+  },
+  "input": {
+    "entries": [
+      {
+        "kind": "drill",
+        "position": 1,
+        "reason_es": "Practicar el participio evita errores.",
+        "title_es": "Práctica del pasado"
+      },
+      {
+        "kind": "read",
+        "position": 2,
+        "reason_es": "Es corta y sirve de repaso.",
+        "title_es": "Leer la rutina diaria"
+      }
+    ]
+  },
+  "synthetic": true,
+  "task": "plan_why"
+}

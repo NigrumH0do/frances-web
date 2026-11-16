@@ -1,0 +1,102 @@
+{
+  "bad": [
+    {
+      "output": {
+        "lines": [
+          {
+            "position": 1,
+            "why_es": "Repasa hoy las tarjetas de saludo para que no se acumulen."
+          },
+          {
+            "position": 2,
+            "why_es": "Haz el quiz de números mientras lo recuerdas."
+          }
+        ]
+      },
+      "problem": "faltan posiciones del plan"
+    },
+    {
+      "output": {
+        "lines": [
+          {
+            "position": 1,
+            "why_es": "Repasa hoy las tarjetas de saludo para que no se acumulen."
+          },
+          {
+            "position": 2,
+            "why_es": "Haz el quiz de números mientras lo recuerdas."
+          },
+          {
+            "position": 3,
+            "why_es": "Leer la lección de familia te prepara para el siguiente quiz."
+          },
+          {
+            "position": 99,
+            "why_es": "Tarea ajena."
+          }
+        ]
+      },
+      "problem": "posición ajena al plan"
+    },
+    {
+      "output": {
+        "lines": [
+          {
+            "position": 1,
+            "why_es": "hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy hoy."
+          },
+          {
+            "position": 2,
+            "why_es": "Haz el quiz de números mientras lo recuerdas."
+          },
+          {
+            "position": 3,
+            "why_es": "Leer la lección de familia te prepara para el siguiente quiz."
+          }
+        ]
+      },
+      "problem": "más de 30 palabras"
+    }
+  ],
+  "case_id": "tres-tareas",
+  "expected": {
+    "lines": [
+      {
+        "position": 1,
+        "why_es": "Repasa hoy las tarjetas de saludo para que no se acumulen."
+      },
+      {
+        "position": 2,
+        "why_es": "Haz el quiz de números mientras lo recuerdas."
+      },
+      {
+        "position": 3,
+        "why_es": "Leer la lección de familia te prepara para el siguiente quiz."
+      }
+    ]
+  },
+  "input": {
+    "entries": [
+      {
+        "kind": "review",
+        "position": 1,
+        "reason_es": "Tienes tarjetas pendientes.",
+        "title_es": "Repasar saludos"
+      },
+      {
+        "kind": "quiz",
+        "position": 2,
+        "reason_es": "Ya leíste la lección de números.",
+        "title_es": "Quiz de números"
+      },
+      {
+        "kind": "read",
+        "position": 3,
+        "reason_es": "Es una lección nueva.",
+        "title_es": "Leer la lección de familia"
+      }
+    ]
+  },
+  "synthetic": true,
+  "task": "plan_why"
+}

@@ -1,0 +1,113 @@
+/* Fuentes autoalojadas (ADR-018): solo los cortes latinos que usa la app. */
+@import '@fontsource-variable/lexend/wght.css';
+@import '@fontsource/spectral/latin-400.css';
+@import '@fontsource/spectral/latin-400-italic.css';
+@import '@fontsource/spectral/latin-600.css';
+@import './tokens.css';
+@import './components.css';
+@import './legacy.css';
+@import './screens.css';
+
+/* Base: elementos y el francés de estudio. Los valores vienen de tokens.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  line-height: var(--lh-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'kern' 1;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  line-height: var(--lh-tight);
+}
+h1 {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+}
+h2 {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+}
+h3 {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+}
+p {
+  margin: 0;
+}
+a {
+  color: var(--c-accent);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+a:hover {
+  text-decoration-thickness: 2px;
+}
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--c-surface);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+::selection {
+  background: var(--c-highlight);
+  color: var(--c-on-highlight);
+}
+
+[lang='fr'],
+.fr {
+  font-family: var(--font-read);
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* El foco programático al cambiar de pantalla (RouteFocus) va al h1 o al
+ * <main> con tabindex=-1: el lector de pantalla lo anuncia, pero no es un
+ * control, así que no se dibuja el anillo encima del título. */
+h1[tabindex='-1']:focus,
+main[tabindex='-1']:focus {
+  outline: none;
+}
+
+/* La serif es para leer francés de estudio; en metadatos y fuentes de
+ * interfaz el francés usa la fuente de la UI para no mezclar estilos. Los
+ * títulos de pantalla ya usan la serif de display. */
+h3[lang='fr'],
+.title[lang='fr'],
+.title [lang='fr'],
+.meta [lang='fr'],
+.small [lang='fr'],
+.xs [lang='fr'],
+.kind [lang='fr'],
+.source [lang='fr'],
+.list-item > .grow[lang='fr'] {
+  font-family: inherit;
+}
+.title.fr,
+.title.fr[lang='fr'] {
+  font-family: var(--font-read);
+}

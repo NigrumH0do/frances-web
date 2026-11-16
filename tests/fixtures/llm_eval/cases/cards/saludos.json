@@ -1,0 +1,308 @@
+{
+  "bad": [
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "buenos días",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "bonjour",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "¿Cómo estás hoy?",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Comment ça va aujourd’hui ?",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Muy bien, gracias",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Très bien, merci",
+            "kind": "drill",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "pan de chocolate",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "pain au chocolat",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "Buenos días, ¿cómo estás?",
+                  "fr": "Bonjour, comment ça va ?"
+                },
+                {
+                  "es": "¡Hola! ¿Qué tal?",
+                  "fr": "Salut ! Ça va ?"
+                }
+              ],
+              "explanation_es": "Bonjour sirve en cualquier contexto. Salut se usa con amigos.",
+              "title": "Saludos formales e informales"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Sí, bien, gracias.",
+              "fr": "Oui, ça va bien, merci."
+            },
+            {
+              "es": "¡Hola! ¿Qué tal?",
+              "fr": "Salut ! Ça va ?"
+            }
+          ],
+          "summary_es": "La lección enseña a saludar con fórmulas formales e informales. También explica cómo responder a la pregunta cómo estás.",
+          "vocab_fronts": [
+            "bonjour",
+            "Très bien, merci"
+          ]
+        }
+      },
+      "problem": "front_fr no aparece en el texto"
+    },
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "bonjour",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "¿Cómo estás hoy?",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Comment ça va aujourd’hui ?",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Muy bien, gracias",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Très bien, merci",
+            "kind": "drill",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "Buenos días, ¿cómo estás?",
+                  "fr": "Bonjour, comment ça va ?"
+                },
+                {
+                  "es": "¡Hola! ¿Qué tal?",
+                  "fr": "Salut ! Ça va ?"
+                }
+              ],
+              "explanation_es": "Bonjour sirve en cualquier contexto. Salut se usa con amigos.",
+              "title": "Saludos formales e informales"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Sí, bien, gracias.",
+              "fr": "Oui, ça va bien, merci."
+            },
+            {
+              "es": "¡Hola! ¿Qué tal?",
+              "fr": "Salut ! Ça va ?"
+            }
+          ],
+          "summary_es": "La lección enseña a saludar con fórmulas formales e informales. También explica cómo responder a la pregunta cómo estás.",
+          "vocab_fronts": [
+            "bonjour",
+            "Très bien, merci"
+          ]
+        }
+      },
+      "problem": "back_es vacío"
+    },
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "buenos días",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "bonjour",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "¿Qué tal?",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "¿Cómo estás hoy?",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Muy bien, gracias",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Très bien, merci",
+            "kind": "drill",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "Buenos días, ¿cómo estás?",
+                  "fr": "Bonjour, comment ça va ?"
+                },
+                {
+                  "es": "¡Hola! ¿Qué tal?",
+                  "fr": "Salut ! Ça va ?"
+                }
+              ],
+              "explanation_es": "Bonjour sirve en cualquier contexto. Salut se usa con amigos.",
+              "title": "Saludos formales e informales"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Sí, bien, gracias.",
+              "fr": "Oui, ça va bien, merci."
+            },
+            {
+              "es": "¡Hola! ¿Qué tal?",
+              "fr": "Salut ! Ça va ?"
+            }
+          ],
+          "summary_es": "La lección enseña a saludar con fórmulas formales e informales. También explica cómo responder a la pregunta cómo estás.",
+          "vocab_fronts": [
+            "bonjour",
+            "Très bien, merci"
+          ]
+        }
+      },
+      "problem": "front_fr de una frase no está en francés"
+    }
+  ],
+  "case_id": "saludos",
+  "expected": {
+    "cards": [
+      {
+        "back_es": "buenos días",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "bonjour",
+        "kind": "vocab",
+        "notes": null,
+        "tags": []
+      },
+      {
+        "back_es": "¿Cómo estás hoy?",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "Comment ça va aujourd’hui ?",
+        "kind": "phrase",
+        "notes": null,
+        "tags": []
+      },
+      {
+        "back_es": "Muy bien, gracias",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "Très bien, merci",
+        "kind": "drill",
+        "notes": null,
+        "tags": []
+      }
+    ],
+    "sheet": {
+      "grammar": [
+        {
+          "examples": [
+            {
+              "es": "Buenos días, ¿cómo estás?",
+              "fr": "Bonjour, comment ça va ?"
+            },
+            {
+              "es": "¡Hola! ¿Qué tal?",
+              "fr": "Salut ! Ça va ?"
+            }
+          ],
+          "explanation_es": "Bonjour sirve en cualquier contexto. Salut se usa con amigos.",
+          "title": "Saludos formales e informales"
+        }
+      ],
+      "key_phrases": [
+        {
+          "es": "Sí, bien, gracias.",
+          "fr": "Oui, ça va bien, merci."
+        },
+        {
+          "es": "¡Hola! ¿Qué tal?",
+          "fr": "Salut ! Ça va ?"
+        }
+      ],
+      "summary_es": "La lección enseña a saludar con fórmulas formales e informales. También explica cómo responder a la pregunta cómo estás.",
+      "vocab_fronts": [
+        "bonjour",
+        "Très bien, merci"
+      ]
+    }
+  },
+  "input": {
+    "generation": {
+      "blocks": [
+        {
+          "lang": "fr",
+          "page": null,
+          "source": "item",
+          "text": "Bonjour, comment ça va aujourd’hui ? Très bien, merci !"
+        },
+        {
+          "lang": "es",
+          "page": null,
+          "source": "item",
+          "text": "Esta lección presenta los saludos formales e informales."
+        },
+        {
+          "lang": "fr",
+          "page": null,
+          "source": "item",
+          "text": "Salut ! Ça va ? Oui, ça va bien, merci."
+        }
+      ],
+      "input_hash": "02f7d453b4e60fdcab14c6fea4c00b541cb1105665a612f3262095011f739b36",
+      "item_id": "syn-saludos",
+      "title": "Saludos sin prisa"
+    }
+  },
+  "synthetic": true,
+  "task": "cards"
+}

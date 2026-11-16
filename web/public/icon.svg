@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Français">
+  <rect width="512" height="512" rx="112" fill="#f7f7fb"/>
+  <g stroke="#7868c4" stroke-opacity="0.32" stroke-width="4">
+    <line x1="0" y1="168" x2="512" y2="168"/>
+    <line x1="0" y1="264" x2="512" y2="264"/>
+    <line x1="0" y1="360" x2="512" y2="360"/>
+  </g>
+  <line x1="120" y1="0" x2="120" y2="512" stroke="#d2283a" stroke-opacity="0.7" stroke-width="8"/>
+  <text x="300" y="360" text-anchor="middle" font-family="Spectral, Georgia, 'Times New Roman', serif" font-style="italic" font-weight="600" font-size="300" fill="#2b37b8">Fr</text>
+</svg>

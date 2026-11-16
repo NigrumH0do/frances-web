@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat · Frances Classroom v2 (maqueta)</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<script>
+/* Alternar tema: ?theme=dark|light, o el botón; se recuerda en localStorage. */
+(function () {
+  var r = document.documentElement, k = 'fc-theme';
+  var q = new URLSearchParams(location.search).get('theme'), v = q;
+  try { v = q || localStorage.getItem(k); } catch (e) {}
+  if (v === 'dark' || v === 'light') r.classList.add('theme-' + v);
+  window.setTheme = function (n) {
+    r.classList.remove('theme-dark', 'theme-light');
+    if (n !== 'system') r.classList.add('theme-' + n);
+    try { n === 'system' ? localStorage.removeItem(k) : localStorage.setItem(k, n); } catch (e) {}
+  };
+  window.toggleTheme = function () {
+    var dark = r.classList.contains('theme-dark') ||
+      (!r.classList.contains('theme-light') && matchMedia('(prefers-color-scheme: dark)').matches);
+    setTheme(dark ? 'light' : 'dark');
+  };
+})();
+</script>
+</head>
+<body>
+<div class="stage">
+  <div class="stage-bar">
+    <a href="index.html"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg> Índice</a>
+    <span>Chat · 390×844</span>
+    <button class="btn btn-ghost theme-toggle" type="button" onclick="toggleTheme()"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg> Tema</button>
+  </div>
+  <div class="phone">
+    <div class="statusbar" aria-hidden="true"><span>9:41</span><span>5G ▮▮▮ 82 %</span></div>
+    <header class="appbar"><h1>Chat<span class="sub">Responde sólo con el material del curso</span></h1>
+<button class="btn btn-ghost btn-icon" aria-label="Nueva conversación"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></header>
+    <main class="content" id="main">
+<div class="chat" aria-live="polite">
+  <p class="xs muted" style="text-align:center">Hoy</p>
+
+  <div class="bubble me">¿Qué es el <span lang="fr">plus-que-parfait</span>?</div>
+  <div class="bubble bot">
+    <p>El material del curso todavía <b>no cubre</b> el <i lang="fr">plus-que-parfait</i>, así que no puedo responder con una fuente.</p>
+    <p class="small muted" style="margin-top:var(--sp-2)">Prueba a preguntar por <a href="#">el passé composé</a> o <a href="#">l'imparfait</a>.</p>
+    <div class="sources"><span class="chip">Sin fuentes en el material</span></div>
+  </div>
+
+  <div class="bubble me">¿Cuándo uso <span lang="fr">être</span> en el <span lang="fr">passé composé</span>?</div>
+  <div class="bubble bot">
+    <p>Con <b>être</b> van los verbos de movimiento o cambio de estado (<i lang="fr">aller, venir, partir, naître…</i>) <a class="cite" href="#s1" aria-label="Fuente 1">1</a> y todos los pronominales <a class="cite" href="#s2" aria-label="Fuente 2">2</a>.</p>
+    <p>El participio concuerda con el sujeto:</p>
+    <ul lang="fr"><li>Elle est allée au marché.</li><li>Nous sommes partis tôt.</li></ul>
+    <p>En el ejercicio 3 de la página 42 tienes práctica de esto <a class="cite" href="#s3" aria-label="Fuente 3">3</a>.</p>
+    <div class="sources" aria-label="Fuentes">
+      <a class="source" id="s1" href="#"><span class="cite">1</span><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6v18h12V7l-4-4Z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg><span class="grow" lang="fr">Leçon 7 — Le passé composé</span><span class="muted">pág. 3</span></a>
+      <a class="source" id="s2" href="#"><span class="cite">2</span><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6v18h12V7l-4-4Z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg><span class="grow" lang="fr">Leçon 7 — Le passé composé</span><span class="muted">pág. 4</span></a>
+      <a class="source" id="s3" href="#"><span class="cite">3</span><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-5-5-9 8"/></svg><span class="grow">Exercices p. 42–43</span><span class="muted">img. 1</span></a>
+    </div>
+    <div class="row" style="margin-top:var(--sp-2)">
+      <button class="btn btn-ghost btn-sm-text"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/></svg> Crear tarjeta</button>
+      <button class="btn btn-ghost btn-sm-text"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg> Copiar</button>
+    </div>
+  </div>
+
+  <div class="bubble me">¿Y con los verbos pronominales cómo concuerda?</div>
+  <div class="thinking" role="status" aria-label="Pensando, 14 segundos">
+    <div class="row-between">
+      <span class="row"><span class="dots" aria-hidden="true"><span></span><span></span><span></span></span><b>Pensando…</b></span>
+      <span class="small muted" style="font-variant-numeric:tabular-nums">14 s</span>
+    </div>
+    <ul class="steps">
+      <li class="done"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg> Encontré 5 fragmentos en 2 publicaciones</li>
+      <li class="now"><span class="spinner" style="width:16px;height:16px;border-width:2px" aria-hidden="true"></span> Redactando la respuesta</li>
+      <li class="todo"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Comprobar las citas</li>
+    </ul>
+    <div class="progress" style="margin-top:var(--sp-3)" aria-hidden="true"><span style="width:47%"></span></div>
+    <p class="xs muted" style="margin-top:var(--sp-2)">Puede tardar hasta 30 s. Puedes salir: la respuesta te espera aquí.</p>
+    <button class="btn btn-secondary btn-sm-text" style="margin-top:var(--sp-2)"><svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg> Cancelar</button>
+  </div>
+</div>
+    </main>
+    <form class="composer" onsubmit="return false">
+  <label class="sr-only" for="msg">Pregunta sobre el material</label>
+  <textarea class="textarea grow" id="msg" placeholder="Pregunta sobre el material…" disabled></textarea>
+  <button class="btn btn-primary btn-icon" aria-label="Enviar" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-8-6 16-3-7-7-1Z"/></svg></button>
+</form>
+    <nav class="tabbar" aria-label="Secciones">
+    <a href="hoy.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span>Hoy</a>
+    <a href="temas.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 16 10 5 10-5M2 12l10 5 10-5"/></svg></span>Temas</a>
+    <a href="repasar.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg></span>Repasar</a>
+    <a href="chat.html" aria-current="page"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12Z"/></svg></span>Chat</a>
+    <a href="mas.html"><span class="pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></span>Más</a>
+    </nav>
+  </div>
+</div>
+<script>
+/* Voltear tarjeta: cualquier [data-flip=id] alterna .is-flipped en #id. */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-flip]');
+  if (!b) return;
+  var c = document.getElementById(b.getAttribute('data-flip'));
+  var on = c.classList.toggle('is-flipped');
+  c.querySelector('.flip-front').setAttribute('aria-hidden', on);
+  c.querySelector('.flip-back').setAttribute('aria-hidden', !on);
+  var host = c.closest('[data-review]');
+  if (host) host.classList.toggle('answered', on);
+});
+if (new URLSearchParams(location.search).get('flip') === '1') {
+  document.querySelectorAll('.flip').forEach(function (c) {
+    c.classList.add('is-flipped');
+    var host = c.closest('[data-review]');
+    if (host) host.classList.add('answered');
+  });
+}
+</script>
+<script>var m = document.getElementById('main'); m.scrollTop = m.scrollHeight;</script>
+</body>
+</html>

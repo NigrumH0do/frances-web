@@ -1,0 +1,37 @@
+{
+  "bad": [
+    {
+      "output": {
+        "text": "Se forma con avoir o être más el participio."
+      },
+      "problem": "sin ninguna cita"
+    },
+    {
+      "output": {
+        "text": "Se forma con avoir [3]."
+      },
+      "problem": "fuera de rango"
+    }
+  ],
+  "case_id": "pasado-compuesto",
+  "expected": {
+    "text": "Se forma con avoir o être más el participio [1]. Por ejemplo: Hier, j’ai mangé une pomme [2]."
+  },
+  "input": {
+    "fragments": [
+      {
+        "label": "El pasado compuesto, p. 2",
+        "n": 1,
+        "text": "El pasado compuesto se forma con avoir o être más el participio."
+      },
+      {
+        "label": "El pasado compuesto, p. 1",
+        "n": 2,
+        "text": "Hier, j’ai mangé une pomme. Nous sommes allés au marché."
+      }
+    ],
+    "question": "¿Cómo se forma el pasado compuesto?"
+  },
+  "synthetic": true,
+  "task": "chat"
+}

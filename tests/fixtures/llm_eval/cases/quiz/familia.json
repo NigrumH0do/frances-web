@@ -1,0 +1,288 @@
+{
+  "bad": [
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "respuesta ausente"
+            ],
+            "explanation_es": null,
+            "kind": "mcq",
+            "options": [
+              "mère",
+              "frère",
+              "oncle",
+              "jardin"
+            ],
+            "prompt_es": "¿Cómo se dice 'madre' en francés?",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Ma"
+            ],
+            "explanation_es": null,
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa con el posesivo de madre.",
+            "prompt_fr": "___ mère et mon frère habitent à Lille.",
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Mon grand-père est très gentil."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Mi abuelo es muy amable.",
+            "prompt_fr": null,
+            "source_block": 3
+          },
+          {
+            "answers": [
+              "Mon",
+              "grand-père",
+              "est",
+              "très",
+              "gentil."
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena: mi abuelo es muy amable.",
+            "prompt_fr": null,
+            "source_block": 3
+          }
+        ],
+        "title_es": "Mi familia"
+      },
+      "problem": "la respuesta no es una de las opciones"
+    },
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "mère"
+            ],
+            "explanation_es": null,
+            "kind": "mcq",
+            "options": [
+              "mère",
+              "frère",
+              "oncle",
+              "jardin"
+            ],
+            "prompt_es": "¿Cómo se dice 'madre' en francés?",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Ma"
+            ],
+            "explanation_es": null,
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa con el posesivo de madre.",
+            "prompt_fr": "___ mère et mon frère habitent à Lille. ___",
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Mon grand-père est très gentil."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Mi abuelo es muy amable.",
+            "prompt_fr": null,
+            "source_block": 3
+          },
+          {
+            "answers": [
+              "Mon",
+              "grand-père",
+              "est",
+              "très",
+              "gentil."
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena: mi abuelo es muy amable.",
+            "prompt_fr": null,
+            "source_block": 3
+          }
+        ],
+        "title_es": "Mi familia"
+      },
+      "problem": "cloze sin exactamente un ___"
+    },
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "mère"
+            ],
+            "explanation_es": null,
+            "kind": "mcq",
+            "options": [
+              "mère",
+              "frère",
+              "oncle",
+              "jardin"
+            ],
+            "prompt_es": "¿Cómo se dice 'madre' en francés?",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Ma"
+            ],
+            "explanation_es": null,
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa con el posesivo de madre.",
+            "prompt_fr": "___ mère et mon frère habitent à Lille.",
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Mon grand-père est très gentil."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Mi abuelo es muy amable.",
+            "prompt_fr": null,
+            "source_block": 9
+          },
+          {
+            "answers": [
+              "Mon",
+              "grand-père",
+              "est",
+              "très",
+              "gentil."
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena: mi abuelo es muy amable.",
+            "prompt_fr": null,
+            "source_block": 3
+          }
+        ],
+        "title_es": "Mi familia"
+      },
+      "problem": "source_block fuera de"
+    }
+  ],
+  "case_id": "familia",
+  "expected": {
+    "questions": [
+      {
+        "answers": [
+          "mère"
+        ],
+        "explanation_es": null,
+        "kind": "mcq",
+        "options": [
+          "mère",
+          "frère",
+          "oncle",
+          "jardin"
+        ],
+        "prompt_es": "¿Cómo se dice 'madre' en francés?",
+        "prompt_fr": null,
+        "source_block": 1
+      },
+      {
+        "answers": [
+          "Ma"
+        ],
+        "explanation_es": null,
+        "kind": "cloze",
+        "options": [],
+        "prompt_es": "Completa con el posesivo de madre.",
+        "prompt_fr": "___ mère et mon frère habitent à Lille.",
+        "source_block": 1
+      },
+      {
+        "answers": [
+          "Mon grand-père est très gentil."
+        ],
+        "explanation_es": null,
+        "kind": "translate",
+        "options": [],
+        "prompt_es": "Mi abuelo es muy amable.",
+        "prompt_fr": null,
+        "source_block": 3
+      },
+      {
+        "answers": [
+          "Mon",
+          "grand-père",
+          "est",
+          "très",
+          "gentil."
+        ],
+        "explanation_es": null,
+        "kind": "order",
+        "options": [],
+        "prompt_es": "Ordena: mi abuelo es muy amable.",
+        "prompt_fr": null,
+        "source_block": 3
+      }
+    ],
+    "title_es": "Mi familia"
+  },
+  "input": {
+    "cards": [
+      {
+        "back_es": "madre",
+        "front_fr": "mère",
+        "kind": "vocab"
+      },
+      {
+        "back_es": "Mi abuelo es muy amable.",
+        "front_fr": "Mon grand-père est très gentil.",
+        "kind": "phrase"
+      },
+      {
+        "back_es": "Mi madre y mi hermano viven en Lille.",
+        "front_fr": "Ma mère et mon frère habitent à Lille.",
+        "kind": "drill"
+      }
+    ],
+    "fragments": [
+      {
+        "label": "Mi familia, p. 1",
+        "n": 1,
+        "text": "Ma mère et mon frère habitent à Lille avec mon oncle."
+      },
+      {
+        "label": "Mi familia, p. 2",
+        "n": 2,
+        "text": "Vocabulario de la familia para describir a las personas."
+      },
+      {
+        "label": "Mi familia, p. 3",
+        "n": 3,
+        "text": "Mon grand-père est très gentil et il aime le jardin."
+      }
+    ],
+    "summaries": [
+      "Vocabulario de la familia y posesivos básicos."
+    ],
+    "title": "Mi familia"
+  },
+  "synthetic": true,
+  "task": "quiz"
+}

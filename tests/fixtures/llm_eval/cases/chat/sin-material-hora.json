@@ -1,0 +1,32 @@
+{
+  "bad": [
+    {
+      "output": {
+        "text": "Son las ocho."
+      },
+      "problem": "sin ninguna cita"
+    },
+    {
+      "output": {
+        "text": "Son las ocho [0]."
+      },
+      "problem": "fuera de rango"
+    }
+  ],
+  "case_id": "sin-material-hora",
+  "expected": {
+    "text": "El material del curso no cubre esta pregunta."
+  },
+  "input": {
+    "fragments": [
+      {
+        "label": "Rutina diaria, p. 1",
+        "n": 1,
+        "text": "Je me lève à sept heures et je prends mon petit-déjeuner."
+      }
+    ],
+    "question": "¿Qué hora es en Madrid ahora mismo?"
+  },
+  "synthetic": true,
+  "task": "chat"
+}

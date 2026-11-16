@@ -1,0 +1,86 @@
+{
+  "bad": [
+    {
+      "output": {
+        "topics": [
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-saludos",
+              "syn-numeros"
+            ],
+            "key": "basico",
+            "title": ""
+          }
+        ]
+      },
+      "problem": "title vacío"
+    },
+    {
+      "output": {
+        "topics": [
+          {
+            "cefr": "A1",
+            "description_es": "Tema de prueba con publicaciones sintéticas.",
+            "existing_topic_id": null,
+            "item_ids": [
+              "syn-saludos",
+              "syn-numeros",
+              "syn-otro"
+            ],
+            "key": "basico",
+            "title": "Primeros pasos"
+          }
+        ]
+      },
+      "problem": "id de publicación inventado"
+    }
+  ],
+  "case_id": "un-tema",
+  "expected": {
+    "topics": [
+      {
+        "cefr": "A1",
+        "description_es": "Tema de prueba con publicaciones sintéticas.",
+        "existing_topic_id": null,
+        "item_ids": [
+          "syn-saludos",
+          "syn-numeros"
+        ],
+        "key": "basico",
+        "title": "Primeros pasos"
+      }
+    ]
+  },
+  "input": {
+    "items": [
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-saludos",
+        "locked": false,
+        "summary_es": "Frases para saludar y responder a la pregunta cómo estás.",
+        "tags": [
+          "saludos"
+        ],
+        "title": "Saludos sin prisa"
+      },
+      {
+        "classroom_topic": "Unidad de prueba",
+        "current_topic_id": null,
+        "id": "syn-numeros",
+        "locked": false,
+        "summary_es": "Los números del uno al diez para contar objetos.",
+        "tags": [
+          "numeros"
+        ],
+        "title": "Contar hasta diez"
+      }
+    ],
+    "topics": []
+  },
+  "synthetic": true,
+  "task": "topics"
+}

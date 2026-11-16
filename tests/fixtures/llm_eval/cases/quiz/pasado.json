@@ -1,0 +1,283 @@
+{
+  "bad": [
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "respuesta ausente"
+            ],
+            "explanation_es": null,
+            "kind": "mcq",
+            "options": [
+              "avoir",
+              "être",
+              "faire",
+              "aller"
+            ],
+            "prompt_es": "¿Qué auxiliar se usa en 'j'ai mangé'?",
+            "prompt_fr": null,
+            "source_block": 2
+          },
+          {
+            "answers": [
+              "ai"
+            ],
+            "explanation_es": null,
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa el pasado de 'comí'.",
+            "prompt_fr": "Hier, j’___ mangé une pomme.",
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Hier, j’ai mangé une pomme."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Ayer comí una manzana.",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Nous",
+              "sommes",
+              "allés",
+              "au",
+              "marché"
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena: fuimos al mercado.",
+            "prompt_fr": null,
+            "source_block": 1
+          }
+        ],
+        "title_es": "El pasado compuesto"
+      },
+      "problem": "la respuesta no es una de las opciones"
+    },
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "avoir"
+            ],
+            "explanation_es": null,
+            "kind": "mcq",
+            "options": [
+              "avoir",
+              "être",
+              "faire",
+              "aller"
+            ],
+            "prompt_es": "¿Qué auxiliar se usa en 'j'ai mangé'?",
+            "prompt_fr": null,
+            "source_block": 2
+          },
+          {
+            "answers": [
+              "ai"
+            ],
+            "explanation_es": null,
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa el pasado de 'comí'.",
+            "prompt_fr": "Hier, j’___ mangé une pomme. ___",
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Hier, j’ai mangé une pomme."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Ayer comí una manzana.",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Nous",
+              "sommes",
+              "allés",
+              "au",
+              "marché"
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena: fuimos al mercado.",
+            "prompt_fr": null,
+            "source_block": 1
+          }
+        ],
+        "title_es": "El pasado compuesto"
+      },
+      "problem": "cloze sin exactamente un ___"
+    },
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "avoir"
+            ],
+            "explanation_es": null,
+            "kind": "mcq",
+            "options": [
+              "avoir",
+              "être",
+              "faire",
+              "aller"
+            ],
+            "prompt_es": "¿Qué auxiliar se usa en 'j'ai mangé'?",
+            "prompt_fr": null,
+            "source_block": 2
+          },
+          {
+            "answers": [
+              "ai"
+            ],
+            "explanation_es": null,
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa el pasado de 'comí'.",
+            "prompt_fr": "Hier, j’___ mangé une pomme.",
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Hier, j’ai mangé une pomme."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Ayer comí una manzana.",
+            "prompt_fr": null,
+            "source_block": 9
+          },
+          {
+            "answers": [
+              "Nous",
+              "sommes",
+              "allés",
+              "au",
+              "marché"
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena: fuimos al mercado.",
+            "prompt_fr": null,
+            "source_block": 1
+          }
+        ],
+        "title_es": "El pasado compuesto"
+      },
+      "problem": "source_block fuera de"
+    }
+  ],
+  "case_id": "pasado",
+  "expected": {
+    "questions": [
+      {
+        "answers": [
+          "avoir"
+        ],
+        "explanation_es": null,
+        "kind": "mcq",
+        "options": [
+          "avoir",
+          "être",
+          "faire",
+          "aller"
+        ],
+        "prompt_es": "¿Qué auxiliar se usa en 'j'ai mangé'?",
+        "prompt_fr": null,
+        "source_block": 2
+      },
+      {
+        "answers": [
+          "ai"
+        ],
+        "explanation_es": null,
+        "kind": "cloze",
+        "options": [],
+        "prompt_es": "Completa el pasado de 'comí'.",
+        "prompt_fr": "Hier, j’___ mangé une pomme.",
+        "source_block": 1
+      },
+      {
+        "answers": [
+          "Hier, j’ai mangé une pomme."
+        ],
+        "explanation_es": null,
+        "kind": "translate",
+        "options": [],
+        "prompt_es": "Ayer comí una manzana.",
+        "prompt_fr": null,
+        "source_block": 1
+      },
+      {
+        "answers": [
+          "Nous",
+          "sommes",
+          "allés",
+          "au",
+          "marché"
+        ],
+        "explanation_es": null,
+        "kind": "order",
+        "options": [],
+        "prompt_es": "Ordena: fuimos al mercado.",
+        "prompt_fr": null,
+        "source_block": 1
+      }
+    ],
+    "title_es": "El pasado compuesto"
+  },
+  "input": {
+    "cards": [
+      {
+        "back_es": "mercado",
+        "front_fr": "marché",
+        "kind": "vocab"
+      },
+      {
+        "back_es": "Ayer comí una manzana.",
+        "front_fr": "Hier, j’ai mangé une pomme.",
+        "kind": "phrase"
+      },
+      {
+        "back_es": "comí, he comido",
+        "front_fr": "j’ai mangé",
+        "kind": "conjugation"
+      }
+    ],
+    "fragments": [
+      {
+        "label": "El pasado compuesto, p. 1",
+        "n": 1,
+        "text": "Hier, j’ai mangé une pomme. Nous sommes allés au marché."
+      },
+      {
+        "label": "El pasado compuesto, p. 2",
+        "n": 2,
+        "text": "El pasado compuesto se forma con avoir o être más el participio."
+      }
+    ],
+    "summaries": [
+      "Acciones terminadas con el pasado compuesto."
+    ],
+    "title": "El pasado compuesto"
+  },
+  "synthetic": true,
+  "task": "quiz"
+}

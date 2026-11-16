@@ -1,0 +1,214 @@
+# Grafo de tareas — fuente de verdad para coordinar agentes.
+# Una tarea está LISTA cuando todas sus deps están fusionadas en main.
+# owns = rutas que SOLO esa tarea crea o modifica (otros las leen). Un cambio fuera de owns requiere una tarea CHG (AGENTS.md).
+# placeholders = archivos que la tarea crea provisionalmente y cuya propiedad pasa a la tarea que los tiene en owns (debe depender de ella).
+# Excepciones de propiedad: plan maestro R-01 (manifiestos de dependencias, solo agregar) y R-02 (__init__.py vacíos, tests propios).
+# Validado por scripts/tasks_check.py (AGT-01): IDs únicos, deps existentes, sin ciclos, owns sin solapes.
+plans:
+  P01: docs/superpowers/plans/2026-10-14-01-spikes-foundation.md
+  P02: docs/superpowers/plans/2026-10-14-02-sync-fetch-extract.md
+  P03: docs/superpowers/plans/2026-10-14-03-cards.md
+  P04: docs/superpowers/plans/2026-10-14-04-audio.md
+  P05: docs/superpowers/plans/2026-10-14-05-bundle-web.md
+  P06: docs/superpowers/plans/2026-10-14-06-pronunciation.md
+  P07: docs/superpowers/plans/2026-10-14-07-ops-golive.md
+  P08: docs/superpowers/plans/2026-11-02-08-servidor.md
+  P09: docs/superpowers/plans/2026-11-02-09-rediseno.md
+  P10: docs/superpowers/plans/2026-11-02-10-ia-estudio.md
+  P11: docs/superpowers/plans/2026-11-02-11-gestion.md
+  P12: docs/superpowers/plans/2026-11-02-12-golive.md
+tasks:
+  # ---------- Spikes (salida: ADR + fixtures) ----------
+  - {id: SPK-01, plan: P01, human: false, deps: [], title: "Edge-TTS: confirmar las 13 voces, formato y límites", owns: [docs/decisions/ADR-001-edge-tts.md, scripts/spikes/spk01_edge_voices.py]}
+  - {id: SPK-02, plan: P01, human: true,  deps: [], title: "Voces jóvenes sintéticas: escuchar y fijar parámetros", owns: [docs/decisions/ADR-002-child-voices.md, scripts/spikes/spk02_synth_voices.py, .github/workflows/spike-voices.yml]}
+  - {id: SPK-04, plan: P01, human: true,  deps: [], title: "Capturar fixtures reales de Azure Pronunciation fr-FR", owns: [docs/decisions/ADR-004-azure-phonemes.md, tests/fixtures/azure/, scripts/spikes/spk04_azure.py, .github/workflows/spike-azure.yml]}
+  - {id: SPK-05, plan: P01, human: true,  deps: [], title: "OAuth de Google en producción + acceso Workspace UNAL", owns: [docs/decisions/ADR-005-google-oauth.md]}
+  - {id: SPK-06, plan: P01, human: true,  deps: [], title: "Elegir proveedor LLM con API compatible con OpenAI", owns: [docs/decisions/ADR-006-llm.md, scripts/spikes/spk06_llm_probe.py]}
+  # ---------- Fundación ----------
+  - {id: FND-01, plan: P01, human: false, deps: [], title: "Scaffold del monorepo (uv, ruff, mypy, pytest, Vite/React/TS, CI básico)", owns: [pyproject.toml, uv.lock, .npmrc, .gitignore, web/package.json, web/package-lock.json, web/tsconfig.json, web/index.html, web/eslint.config.js, web/.npmrc, web/src/vite-env.d.ts, web/public/, .github/workflows/ci.yml, src/frances/__init__.py, tests/conftest.py], placeholders: [web/src/main.tsx, web/vite.config.ts]}
+  - {id: FND-02, plan: P01, human: false, deps: [FND-01], title: "Contratos: modelos, IDs, textnorm, export de JSON Schema y tipos TS", owns: [src/frances/models/, src/frances/textnorm.py, contracts/, web/src/contracts/, web/scripts/gen-types.mjs]}
+  - {id: FND-03, plan: P01, human: false, deps: [FND-02, FND-04], title: "SQLite: migración 0001, Store, dump/restore deterministas, medidores de uso", owns: [src/frances/db/, src/frances/stage.py]}
+  - {id: FND-04, plan: P01, human: false, deps: [FND-01], title: "Núcleo: config, paths, log+redact, errors, timeutil, CLI", owns: [src/frances/config.py, src/frances/paths.py, src/frances/log.py, src/frances/errors.py, src/frances/timeutil.py, src/frances/cli.py, frances.example.toml]}
+  - {id: FND-05, plan: P01, human: false, deps: [FND-01], title: "Generador de fixtures sintéticos (Classroom, Drive, PDF, imágenes) + mocks respx", owns: [tests/fixtures/make_fixtures.py, tests/fixtures/google_mock.py, tests/fixtures/classroom/, tests/fixtures/drive/, tests/fixtures/pdf/, tests/fixtures/images/]}
+  - {id: AGT-01, plan: P01, human: false, deps: [FND-01], title: "Validador de tasks.yaml y sincronización con GitHub Issues", owns: [scripts/tasks_check.py, scripts/sync_issues.py]}
+  # ---------- Sync ----------
+  - {id: SYN-01, plan: P02, human: false, deps: [FND-04, SYN-02], title: "OAuth: credenciales desde el entorno + frances auth check", owns: [src/frances/sync/auth.py, .github/workflows/auth-check.yml]}
+  - {id: SYN-02, plan: P02, human: false, deps: [FND-04], title: "Cliente HTTP de Google: refresh, reintentos, paginación, errores", owns: [src/frances/sync/google_http.py]}
+  - {id: SYN-03, plan: P02, human: false, deps: [SYN-02, FND-02, FND-05], title: "ClassroomClient: cursos, temas y streams por updateTime desc", owns: [src/frances/sync/classroom.py]}
+  - {id: SYN-04, plan: P02, human: false, deps: [SYN-03, SYN-05, FND-03], title: "Sync incremental por stream con watermark", owns: [src/frances/sync/streams.py, src/frances/sync/repo.py]}
+  - {id: SYN-05, plan: P02, human: false, deps: [FND-02, FND-05], title: "Normalización de adjuntos (materials → Attachment)", owns: [src/frances/sync/attachments.py]}
+  - {id: SYN-06, plan: P02, human: false, deps: [SYN-04], title: "Reconciliación completa: tombstones de publicaciones y adjuntos", owns: [src/frances/sync/reconcile.py]}
+  - {id: SYN-07, plan: P02, human: false, deps: [SYN-01, SYN-04, SYN-06], title: "Etapa sync/reconcile + CLI + semántica de fallo de auth", owns: [src/frances/sync/run.py]}
+  # ---------- Fetch ----------
+  - {id: FET-01, plan: P02, human: false, deps: [SYN-02, FND-05], title: "DriveClient: metadatos, versión, descarga, exportación", owns: [src/frances/fetch/drive.py]}
+  - {id: FET-02, plan: P02, human: false, deps: [FND-04], title: "BlobStore content-addressed con tope de tamaño", owns: [src/frances/fetch/blobs.py]}
+  - {id: FET-03, plan: P02, human: false, deps: [FET-01, FET-02, FND-03, SYN-01], title: "Etapa fetch: descarga/export, re-fetch por versión, estados", owns: [src/frances/fetch/run.py, src/frances/fetch/repo.py]}
+  # ---------- Extract ----------
+  - {id: EXT-01, plan: P02, human: false, deps: [FND-02, FND-05], title: "PDF: capa de texto + OCR por página", owns: [src/frances/extract/pdf.py]}
+  - {id: EXT-02, plan: P02, human: false, deps: [FND-02, FND-05], title: "OCR de imágenes fra+spa", owns: [src/frances/extract/ocr.py]}
+  - {id: EXT-03, plan: P02, human: false, deps: [FND-02], title: "Etiquetado de idioma por bloque", owns: [src/frances/extract/lang.py]}
+  - {id: EXT-04, plan: P02, human: false, deps: [EXT-01, EXT-02, EXT-03, FET-02, FND-03], title: "Etapa extract idempotente por (blob, versión)", owns: [src/frances/extract/run.py, src/frances/extract/repo.py]}
+  # ---------- Cards ----------
+  - {id: CRD-01, plan: P03, human: false, deps: [FND-03, EXT-03], title: "Ensamblado de GenerationInput por publicación", owns: [src/frances/cards/input.py]}
+  - {id: CRD-02, plan: P03, human: false, deps: [FND-02], title: "Generador por reglas (spaCy) con Translator inyectado", owns: [src/frances/cards/rules.py]}
+  - {id: CRD-03, plan: P03, human: false, deps: [FND-03], title: "AzureTranslator F0 con medidor de cuota", owns: [src/frances/cards/translate.py]}
+  - {id: CRD-04, plan: P03, human: false, deps: [FND-02, SPK-06], title: "Generador LLM (OpenAI-compatible, salida estructurada validada)", owns: [src/frances/cards/llm.py]}
+  - {id: CRD-05, plan: P03, human: false, deps: [CRD-01, CRD-02, CRD-03, CRD-04, EXT-04], title: "Etapa cards: merge, orígenes, stale, upgrade a LLM, fichas", owns: [src/frances/cards/run.py, src/frances/cards/merge.py, src/frances/cards/repo.py]}
+  - {id: CRD-06, plan: P03, human: false, deps: [FND-03, SPK-04], title: "Fonemización espeak-ng + mapa a etiquetas Azure", owns: [src/frances/cards/phonemes.py, src/frances/cards/phoneme_map.py]}
+  - {id: CRD-07, plan: P03, human: false, deps: [CRD-06], title: "Mazos de taladro curados y automáticos por fonema", owns: [src/frances/cards/drills.py, src/frances/cards/drills_seed.yaml]}
+  # ---------- Audio ----------
+  - {id: AUD-01, plan: P04, human: false, deps: [FND-02, FND-04, SPK-01], title: "Registro de voces (13 de Edge + voces jóvenes sintéticas)", owns: [src/frances/audio/voices.py, src/frances/audio/voices_default.yaml]}
+  - {id: AUD-02, plan: P04, human: false, deps: [AUD-01, FND-03], title: "Cache key + política de voces + plan_audio", owns: [src/frances/audio/cachekey.py, src/frances/audio/policy.py, src/frances/audio/repo.py]}
+  - {id: AUD-03, plan: P04, human: false, deps: [FND-02, SPK-01], title: "Motor Edge-TTS", owns: [src/frances/audio/edge.py]}
+  - {id: AUD-04, plan: P04, human: false, deps: [FND-03, AUD-03], title: "Motor Azure TTS F0 (respaldo) con tope mensual", owns: [src/frances/audio/azure_tts.py]}
+  - {id: AUD-05, plan: P04, human: false, deps: [FND-04], title: "Post-proceso ffmpeg: MP3 24k/48k mono, −16 LUFS, duración", owns: [src/frances/audio/post.py]}
+  - {id: AUD-06, plan: P04, human: false, deps: [AUD-02, AUD-03, AUD-04, AUD-05], title: "Etapa audio: cola, concurrencia, fallback Edge→Azure", owns: [src/frances/audio/run.py]}
+  # ---------- Bundle ----------
+  - {id: BND-01, plan: P05, human: false, deps: [FND-01], title: "FRB1 en Python + vectores de prueba", owns: [src/frances/bundle/frb1.py, tests/fixtures/frb1_vectors.json]}
+  - {id: BND-02, plan: P05, human: false, deps: [FND-02, FND-03, BND-03, EXT-03], title: "Constructor del ContentIndex desde el Store", owns: [src/frances/bundle/index.py]}
+  - {id: BND-03, plan: P05, human: false, deps: [BND-01, FND-04], title: "Empaquetador d/*.bin con dedupe y presupuesto de tamaño", owns: [src/frances/bundle/pack.py]}
+  - {id: BND-04, plan: P05, human: false, deps: [BND-02, BND-03, FND-05, CRD-07, AUD-01], title: "Etapa bundle + política de passphrase + demo-bundle", owns: [src/frances/bundle/run.py, src/frances/bundle/demo.py, tests/fixtures/demo_state.sql, tests/fixtures/demo_audio/]}
+  # ---------- Web ----------
+  - {id: WEB-01, plan: P05, human: false, deps: [FND-01], title: "Shell: rutas, layout, tokens, es.ts, a11y, idb.ts", owns: [web/src/App.tsx, web/src/main.tsx, web/src/ui/layout/, web/src/ui/theme.css, web/src/i18n/, web/src/db/idb.ts]}
+  - {id: WEB-02, plan: P05, human: false, deps: [WEB-01, BND-01], title: "FRB1 en TypeScript + keystore no extraíble", owns: [web/src/crypto/]}
+  - {id: WEB-03, plan: P05, human: false, deps: [WEB-02, FND-02], title: "Loader, blobs descifrados y ContentContext", owns: [web/src/data/]}
+  - {id: WEB-04, plan: P05, human: false, deps: [WEB-03], title: "Pantalla Desbloquear", owns: [web/src/routes/Unlock.tsx]}
+  - {id: WEB-05, plan: P05, human: false, deps: [WEB-08, WEB-06, PRN-04], title: "Pantalla Hoy", owns: [web/src/routes/Today.tsx]}
+  - {id: WEB-06, plan: P05, human: false, deps: [WEB-03], title: "Classroom + detalle de publicación + visores PDF/imagen", owns: [web/src/routes/Classroom.tsx, web/src/routes/ItemDetail.tsx, web/src/ui/viewers/]}
+  - {id: WEB-07, plan: P05, human: false, deps: [WEB-06], title: "Ficha de estudio", owns: [web/src/routes/Sheet.tsx]}
+  - {id: WEB-08, plan: P05, human: false, deps: [WEB-10], title: "SRS (ts-fsrs + IndexedDB) y pantalla Repaso", owns: [web/src/srs/, web/src/routes/Review.tsx]}
+  - {id: WEB-09, plan: P05, human: false, deps: [WEB-10], title: "Buscador de tarjetas", owns: [web/src/routes/Cards.tsx]}
+  - {id: WEB-10, plan: P05, human: false, deps: [WEB-03], title: "Componente AudioPlayer (voces, pendiente)", owns: [web/src/ui/AudioPlayer.tsx]}
+  - {id: WEB-11, plan: P05, human: false, deps: [WEB-08, PRN-04, PRN-06], title: "Ajustes + exportar/importar progreso + bloquear", owns: [web/src/routes/Settings.tsx, web/src/progress/]}
+  - {id: WEB-12, plan: P05, human: false, deps: [WEB-03], title: "PWA offline (service worker)", owns: [web/src/sw/, web/vite.config.ts]}
+  - {id: WEB-13, plan: P05, human: false, deps: [BND-04, WEB-04, WEB-05, WEB-07, WEB-09, WEB-11, PRN-05, PRN-07], title: "E2E Playwright sobre el demo-bundle", owns: [web/e2e/, web/playwright.config.ts]}
+  # ---------- Pronunciación ----------
+  - {id: PRN-01, plan: P06, human: false, deps: [FND-02, SPK-04], title: "Parser del JSON de Azure → PronResult", owns: [web/src/pron/parse.ts, web/src/pron/phonemeLabels.ts]}
+  - {id: PRN-02, plan: P06, human: false, deps: [PRN-01, WEB-03], title: "Recognizer Azure + máquina de estados del grabador", owns: [web/src/pron/recognizer.ts, web/src/pron/recorder.ts]}
+  - {id: PRN-03, plan: P06, human: false, deps: [PRN-02, PRN-04, PRN-06, WEB-10], title: "Pantalla Práctica: escuchar, grabar, puntajes por palabra/fonema", owns: [web/src/routes/Practice.tsx, web/src/ui/pron/]}
+  - {id: PRN-04, plan: P06, human: false, deps: [PRN-01, WEB-01], title: "Intentos + estadística EMA por fonema + debilidades", owns: [web/src/pron/attempts.ts, web/src/pron/stats.ts]}
+  - {id: PRN-05, plan: P06, human: false, deps: [PRN-03, PRN-04], title: "Sesión de taladro por fonema débil", owns: [web/src/pron/drill.ts, web/src/routes/Drill.tsx]}
+  - {id: PRN-06, plan: P06, human: false, deps: [PRN-04], title: "Medidor de cuota F0 (5 h/mes, aviso a 4 h)", owns: [web/src/pron/quota.ts]}
+  - {id: PRN-07, plan: P06, human: false, deps: [PRN-04, PRN-06], title: "Pantalla Progreso (mapa de fonemas, historial)", owns: [web/src/routes/Progress.tsx]}
+  # ---------- Operación ----------
+  - {id: OPS-01, plan: P07, human: false, deps: [AGT-01, BND-04, WEB-13], title: "CI completo del repo público (contratos, grafo, e2e)", owns: [.github/workflows/contracts.yml, .github/workflows/e2e.yml]}
+  - {id: OPS-02, plan: P07, human: false, deps: [SYN-07, FET-03, EXT-04, CRD-05, CRD-06, CRD-07, AUD-06, BND-04], title: "frances run-daily (orquestación + detección de cambios)", owns: [src/frances/ops/daily.py]}
+  - {id: OPS-03, plan: P07, human: false, deps: [FND-03, FND-04], title: "Almacén R2: pull, push con lease e If-Match, publicación del bundle", owns: [src/frances/ops/r2.py]}
+  - {id: OPS-04, plan: P07, human: false, deps: [FND-04], title: "frances report-failure (issues idempotentes)", owns: [src/frances/ops/report.py]}
+  - {id: OPS-05, plan: P07, human: false, deps: [OPS-02, OPS-03, OPS-04, OPS-07, AUD-01], title: "Workflows de producción (daily, reconcile) y configuración de despliegue", owns: [.github/workflows/daily.yml, .github/workflows/reconcile.yml, deploy/]}
+  - {id: OPS-06, plan: P07, human: false, deps: [OPS-01], title: "Pages: app real y demo sintético", owns: [.github/workflows/pages.yml]}
+  - {id: OPS-07, plan: P07, human: false, deps: [FND-03, AUD-01], title: "frances doctor (tamaños, cuotas, token, voces)", owns: [src/frances/ops/doctor.py]}
+  - {id: OPS-09, plan: P07, human: false, deps: [FND-01], title: "Worker de Cloudflare que sirve el bundle cifrado", owns: [worker/, .github/workflows/worker.yml, .github/workflows/worker-deploy.yml]}
+  # ---------- Puesta en marcha (humano + agente) ----------
+  - {id: LIVE-01, plan: P07, human: true, deps: [SPK-05, SYN-01], title: "Proyecto GCP, cliente OAuth en producción, refresh token", owns: []}
+  # LIVE-02 y LIVE-03 quedan CANCELADAS por el spec v2 (2026-11-02). El formato no tiene campo de estado:
+  # siguen aquí para no romper el validador ni sync_issues; ver «Tareas v1 canceladas» en 2026-11-02-00-v2-master-plan.md.
+  - {id: LIVE-02, plan: P07, human: true, deps: [OPS-05, OPS-09, LIVE-01], title: "CANCELADA (v2): Bucket R2, Worker, secretos del environment y variables", owns: []}
+  - {id: LIVE-03, plan: P07, human: false, deps: [LIVE-02], title: "CANCELADA (v2): Backfill inicial + checklist de aceptación", owns: []}
+  # ================= v2 — P08 Servidor (plan maestro v2: 2026-11-02-00-v2-master-plan.md) =================
+  # Las CHG-xx cambian archivos de tareas v1 (FND-02/03/04): owns vacío y la lista «Touches» en el plan (R-31).
+  # ---------- Cambios de contrato ----------
+  - {id: CHG-01, plan: P08, human: false, deps: [FND-03, CHG-07], title: "Store v2: WAL, busy_timeout, Store.connect, migraciones con triggers, dump sin FTS", owns: []}
+  - {id: CHG-02, plan: P08, human: false, deps: [CHG-01], title: "Migración 0002: usuarios, invitaciones, sesiones, jobs, programador, heartbeat", owns: []}
+  - {id: CHG-03, plan: P08, human: false, deps: [CHG-02], title: "Migración 0003: text_blocks + FTS5, llm_cache, usage_daily", owns: []}
+  - {id: CHG-04, plan: P08, human: false, deps: [CHG-03], title: "Migración 0004: estado FSRS por usuario, ediciones, temas, quizzes, plan, chat", owns: []}
+  - {id: CHG-05, plan: P08, human: false, deps: [FND-02], title: "Modelos v2 base: cuentas, jobs, vistas de la API, IDs v2, api.schema.json", owns: []}
+  - {id: CHG-06, plan: P08, human: false, deps: [CHG-05], title: "Modelos v2 de estudio: repaso, temas, quizzes, plan, chat, StudySheet ampliada", owns: []}
+  - {id: CHG-07, plan: P08, human: false, deps: [FND-04], title: "Núcleo v2: secciones de config, env del servidor, redact, comandos nuevos", owns: []}
+  # ---------- Servidor ----------
+  - {id: SRV-01, plan: P08, human: false, deps: [FND-01], title: "Dependencias del servidor (FastAPI, Uvicorn, argon2-cffi) + chequeo de wheels aarch64", owns: [docs/decisions/ADR-007-server-stack.md, scripts/check_aarch64_wheels.py]}
+  - {id: SRV-02, plan: P08, human: false, deps: [SRV-01, CHG-01, CHG-02, CHG-05, CHG-07], title: "App FastAPI base, errores, conexión por petición, /api/health y frances serve", owns: [src/frances/api/app.py, src/frances/api/deps.py, src/frances/api/errors.py, src/frances/api/cli.py, src/frances/api/routes/health.py, tests/api/conftest.py]}
+  - {id: SRV-03, plan: P08, human: false, deps: [SRV-01, CHG-02, CHG-05, CHG-07], title: "Cuentas: argon2id, usuarios, invitaciones de un solo uso, sesiones, CLI admin", owns: [src/frances/accounts/]}
+  - {id: SRV-04, plan: P08, human: false, deps: [SRV-02, SRV-03], title: "Auth HTTP: login, cookies, CSRF, rate limit, invitaciones y usuarios (admin)", owns: [src/frances/api/security.py, src/frances/api/routes/auth.py, src/frances/api/routes/admin_users.py, tests/testkit/api.py]}
+  - {id: SRV-05, plan: P08, human: false, deps: [CHG-02, CHG-05, CHG-07], title: "Cola de trabajos en SQLite: enqueue/claim/complete/fail con backoff", owns: [src/frances/jobs/queue.py]}
+  - {id: SRV-06, plan: P08, human: false, deps: [SRV-05], title: "Worker: registro de handlers, bucle, heartbeat, parada limpia, frances worker", owns: [src/frances/jobs/registry.py, src/frances/jobs/worker.py, src/frances/jobs/cli.py]}
+  - {id: SRV-07, plan: P08, human: false, deps: [SRV-06, OPS-02, SYN-07, SYN-01], title: "Programador 05:17/domingo 06:00 Bogotá + handlers del pipeline v1", owns: [src/frances/jobs/scheduler.py, src/frances/jobs/pipeline.py]}
+  - {id: SRV-08, plan: P08, human: false, deps: [SRV-04], title: "Lectura: cursos, temas de Classroom, publicaciones, adjuntos con streaming", owns: [src/frances/api/routes/content.py, src/frances/api/content_repo.py, src/frances/api/streaming.py]}
+  - {id: SRV-09, plan: P08, human: false, deps: [SRV-08, CHG-04, CHG-06, AUD-01, CRD-07], title: "Lectura: tarjetas, fichas, voces, taladros y audio con Range", owns: [src/frances/api/routes/cards.py, src/frances/api/cards_repo.py]}
+  - {id: SRV-10, plan: P08, human: false, deps: [SRV-04], title: "Token de Azure Speech para el navegador", owns: [src/frances/api/routes/speech.py]}
+  - {id: SRV-11, plan: P08, human: false, deps: [SRV-04, SRV-07], title: "Admin del pipeline: estado, lanzar, trabajos fallidos, reintentar, uso", owns: [src/frances/api/routes/admin_pipeline.py]}
+  - {id: SRV-12, plan: P08, human: false, deps: [SRV-07, CHG-07], title: "Backup diario a Object Storage de Oracle con retención de 14 días", owns: [src/frances/backup/]}
+  - {id: SRV-13, plan: P08, human: false, deps: [SRV-02, SRV-06, SRV-12], title: "Dockerfile multi-arch, compose y Caddyfile", owns: [infra/, .dockerignore]}
+  - {id: SRV-14, plan: P08, human: false, deps: [SRV-13, SRV-01], title: "CI: build arm64/amd64 con QEMU y chequeo de wheels", owns: [.github/workflows/docker.yml]}
+  # ================= v2 — P10 IA de estudio (2026-11-02-10-ia-estudio.md) =================
+  # CHG-08…11 cambian archivos de CRD-04/CRD-05 y contratos (FND-02): owns vacío y lista «Touches» en el plan (R-31).
+  # ---------- Cambios de contrato ----------
+  - {id: CHG-08, plan: P10, human: false, deps: [CRD-04, CRD-05, CHG-03, CHG-07], title: "Cliente LLM v2: timeout configurable, medidor diario con tope y complete_json (R-43)", owns: []}
+  - {id: CHG-09, plan: P10, human: false, deps: [CHG-08], title: "Streaming del chat en el cliente LLM (stream_chat)", owns: []}
+  - {id: CHG-10, plan: P10, human: false, deps: [CHG-04, CHG-08, AI-03], title: "El merge de tarjetas respeta ediciones humanas y descarta tarjetas LLM sin fragmento", owns: []}
+  - {id: CHG-11, plan: P10, human: false, deps: [CHG-06], title: "Contratos de API de estudio que faltan en el plan maestro", owns: []}
+  # ---------- IA de estudio ----------
+  - {id: AI-01, plan: P10, human: false, deps: [CHG-08, CHG-03], title: "Caché del LLM y fábrica del cliente de estudio", owns: [src/frances/study/llm_cache.py, src/frances/study/client.py, tests/study/conftest.py]}
+  - {id: AI-02, plan: P10, human: false, deps: [CHG-06, CHG-08], title: "Prompts versionados, renderizadores de entrada y esquemas de salida del LLM", owns: [src/frances/study/prompts.py, src/frances/study/schemas.py, tests/fixtures/llm_eval/prompts.lock.json]}
+  - {id: AI-03, plan: P10, human: false, deps: [AI-02, EXT-03], title: "Set de evaluación sintético y validadores de calidad", owns: [src/frances/study/quality.py, tests/fixtures/llm_eval/build_eval.py, tests/fixtures/llm_eval/cases/, tests/fixtures/llm_eval/README.md]}
+  - {id: AI-04, plan: P10, human: false, deps: [CHG-04, CRD-01], title: "Indexado de TextBlock en FTS5 con ids estables", owns: [src/frances/study/index.py]}
+  - {id: AI-05, plan: P10, human: false, deps: [AI-04, SRV-04], title: "Búsqueda BM25 y GET /api/search", owns: [src/frances/study/search.py, src/frances/api/routes/search.py]}
+  - {id: AI-06, plan: P10, human: false, deps: [AI-01, AI-03, CHG-10], title: "Resumen por clase (StudySheet ampliada)", owns: [src/frances/study/sheet.py]}
+  - {id: AI-07, plan: P10, human: false, deps: [AI-01, AI-03, CHG-04], title: "Temas del curso: reagrupado completo que respeta las ediciones del admin", owns: [src/frances/study/topics.py, src/frances/study/topics_repo.py]}
+  - {id: AI-08, plan: P10, human: false, deps: [AI-01, AI-03, AI-04, AI-07], title: "Generación de quizzes por tema y publicación (LLM, reglas y dictado)", owns: [src/frances/study/quiz.py, src/frances/study/quiz_rules.py]}
+  - {id: AI-09, plan: P10, human: false, deps: [CHG-04, CHG-06], title: "Corrección de quizzes en el servidor", owns: [src/frances/study/grading.py]}
+  - {id: AI-10, plan: P10, human: false, deps: [CHG-03, CHG-04, CHG-06], title: "Plan de estudio diario por usuario, por reglas", owns: [src/frances/study/plan.py]}
+  - {id: AI-11, plan: P10, human: false, deps: [AI-10, AI-01, AI-03], title: "«Por qué» del plan, redactado por el LLM (opcional)", owns: [src/frances/study/plan_why.py]}
+  - {id: AI-12, plan: P10, human: false, deps: [AI-05, AI-01, AI-03, CHG-09], title: "Chat con el material: recuperación, prompt, citas y persistencia", owns: [src/frances/study/chat.py, src/frances/study/chat_repo.py]}
+  - {id: AI-13, plan: P10, human: false, deps: [AI-04, AI-06, AI-07, AI-08, AI-10, AI-11, SRV-07], title: "Handlers de los trabajos de estudio, encadenados tras el pipeline", owns: [src/frances/study/jobs.py]}
+  - {id: AI-14, plan: P10, human: false, deps: [AI-07, AI-08, AI-09, AI-10, CHG-11, SRV-09, SRV-05], title: "API de estudio: temas, quizzes, intentos, plan y estado", owns: [src/frances/api/routes/study.py, src/frances/api/study_repo.py]}
+  - {id: AI-15, plan: P10, human: false, deps: [AI-12, SRV-04], title: "API del chat: hilos y respuesta en SSE por POST", owns: [src/frances/api/routes/chat.py]}
+  - {id: AI-16, plan: P10, human: false, deps: [CHG-06], title: "Cliente SSE del chat con fetch streaming (web)", owns: [web/src/study/]}
+  - {id: AI-17, plan: P10, human: false, deps: [AI-06, AI-07, AI-08, AI-11, AI-12, CHG-10], title: "Evaluación con el LLM real (heavy)", owns: [scripts/llm_eval.py, tests/study/test_llm_eval_heavy.py]}
+  - {id: AI-18, plan: P10, human: true,  deps: [SPK-06], title: "ADR del riesgo de enviar textos del curso a Kiosapi", owns: [docs/decisions/ADR-008-llm-datos-curso.md]}
+  # ================= v2 — P09 Rediseño de la web (2026-11-02-09-rediseno.md) =================
+  # CHG-12…16 cambian archivos de tareas v1 (FND-02, WEB-*, PRN-*, OPS-01/06): owns vacío y lista «Touches» en el plan (R-31).
+  # ---------- Cambios de contrato ----------
+  - {id: CHG-12, plan: P09, human: false, deps: [CHG-11], title: "Contratos de P09: estadísticas, progreso por tema, entregas próximas y reglas de repaso", owns: []}
+  - {id: CHG-13, plan: P09, human: false, deps: [WEB-06, WEB-10, PRN-02, PRN-03], title: "Núcleos v1 reutilizables sin FRB1: visores, reproductor, práctica y recognizer con token", owns: []}
+  - {id: CHG-14, plan: P09, human: false, deps: [UI-09, WEB-13, OPS-06], title: "Entrada dual v1/v2 (main.tsx por VITE_UI; e2e y Pages v1 con VITE_UI=v1)", owns: []}
+  - {id: CHG-15, plan: P09, human: false, deps: [WEB-12], title: "PWA v2: caché de la API y del demo, aviso de actualización separable", owns: []}
+  - {id: CHG-16, plan: P09, human: false, deps: [UI-22, OPS-01, OPS-06, CHG-14, CHG-15], title: "Retiro de la web v1, demo v2 en Pages y e2e v2 en CI", owns: []}
+  # ---------- Rediseño ----------
+  - {id: UI-01, plan: P09, human: true,  deps: [WEB-01], title: "Aprobación de las maquetas v2 por el dueño", owns: [docs/decisions/ADR-009-maquetas-v2.md]}
+  - {id: UI-02, plan: P09, human: false, deps: [UI-01], title: "Sistema de diseño: tokens, componentes CSS, claro/oscuro, AA, 44 px y movimiento reducido", owns: [web/src/design/]}
+  - {id: UI-03, plan: P09, human: false, deps: [UI-02], title: "Componentes base de React y textos comunes", owns: [web/src/components/, web/src/l10n/]}
+  - {id: UI-04, plan: P09, human: false, deps: [CHG-12], title: "Cliente de API tipado: transporte, cookies, CSRF, 401, errores y recursos", owns: [web/src/api/]}
+  - {id: UI-05, plan: P09, human: false, deps: [SRV-09, CHG-04, CHG-12], title: "API de repaso: cola, reseñas FSRS y banderas", owns: [src/frances/api/routes/review.py, src/frances/api/review_repo.py]}
+  - {id: UI-06, plan: P09, human: false, deps: [SRV-08, SRV-09, CHG-04, CHG-12, UI-05], title: "API de preferencias, estadísticas, progreso por tema y entregas próximas", owns: [src/frances/api/routes/prefs.py, src/frances/api/prefs_repo.py]}
+  - {id: UI-07, plan: P09, human: false, deps: [UI-04, CHG-15], title: "Sin conexión: base IndexedDB v2, cola de escrituras, purga y precarga", owns: [web/src/offline/]}
+  - {id: UI-08, plan: P09, human: false, deps: [UI-03, UI-04, UI-07], title: "Sesión: login, aceptar invitación, cerrar sesión y contraseña", owns: [web/src/auth/]}
+  - {id: UI-09, plan: P09, human: false, deps: [UI-08], title: "Shell v2: rutas, barra inferior, banner sin conexión y foco", owns: [web/src/shell/]}
+  - {id: UI-10, plan: P09, human: false, deps: [UI-04, UI-07, WEB-08], title: "Repaso FSRS sobre la API: adaptador ts-fsrs, sesión e intervalos", owns: [web/src/review/]}
+  - {id: UI-11, plan: P09, human: false, deps: [UI-03, UI-04, CHG-13], title: "Medios v2: reproductor de clips, visor PDF/imagen y token de Speech", owns: [web/src/media/]}
+  - {id: UI-12, plan: P09, human: false, deps: [UI-09], title: "Pantalla Hoy", owns: [web/src/screens/hoy/]}
+  - {id: UI-13, plan: P09, human: false, deps: [UI-09, UI-11, UI-14], title: "Temas y detalle de tema", owns: [web/src/screens/temas/]}
+  - {id: UI-14, plan: P09, human: false, deps: [UI-09, UI-11], title: "Publicación: texto, adjuntos, ficha, tarjetas y quiz", owns: [web/src/screens/publicacion/]}
+  - {id: UI-15, plan: P09, human: false, deps: [UI-09, UI-10, UI-11], title: "Repasar: sesión de tarjetas", owns: [web/src/screens/repasar/]}
+  - {id: UI-16, plan: P09, human: false, deps: [UI-09, UI-11, UI-15, CHG-13], title: "Pronunciación con token del servidor", owns: [web/src/screens/pronunciacion/]}
+  - {id: UI-17, plan: P09, human: false, deps: [UI-09, UI-11], title: "Quiz con los 5 tipos", owns: [web/src/screens/quiz/]}
+  - {id: UI-18, plan: P09, human: false, deps: [UI-09, AI-16], title: "Chat con SSE, pensando de hasta 30 s y cancelar", owns: [web/src/screens/chat/]}
+  - {id: UI-19, plan: P09, human: false, deps: [UI-09, UI-11], title: "Más: perfil, progreso, ajustes, voces, sesión y hueco de admin", owns: [web/src/screens/mas/]}
+  - {id: UI-20, plan: P09, human: false, deps: [UI-05, UI-06, AI-05, AI-13, AI-14, AI-15, SRV-10, BND-04], title: "Instantánea del demo generada con la API real", owns: [scripts/demo_api_snapshot.py]}
+  - {id: UI-21, plan: P09, human: false, deps: [UI-04], title: "Modo demo: transporte simulado sobre la instantánea", owns: [web/src/demo/, web/scripts/check-no-demo.mjs]}
+  - {id: UI-22, plan: P09, human: false, deps: [UI-12, UI-13, UI-14, UI-15, UI-16, UI-17, UI-18, UI-19, UI-20, UI-21, CHG-14, CHG-15], title: "E2E v2 sobre el build demo (Playwright + axe)", owns: [web/playwright.v2.config.ts, web/e2e-v2/]}
+  # ================= v2 — P11 Gestión (2026-11-02-11-gestion.md) =================
+  # CHG-17…20 cambian contratos (FND-02) y archivos de tareas AUD/UI: owns vacío y lista «Touches» en el plan (R-31).
+  # ---------- Cambios de contrato ----------
+  - {id: CHG-17, plan: P11, human: false, deps: [CHG-12], title: "Contratos de gestión: cuerpos de temas, voces por defecto y reglas del plan maestro", owns: []}
+  - {id: CHG-18, plan: P11, human: false, deps: [CHG-04, CHG-07, AUD-02, AUD-06], title: "Audio v2: voces por defecto desde app_settings y regeneración dirigida", owns: []}
+  - {id: CHG-19, plan: P11, human: false, deps: [UI-04, CHG-17], title: "Cliente web de gestión: admin, tarjetas, audio y temas", owns: []}
+  - {id: CHG-20, plan: P11, human: false, deps: [MGT-08, UI-13, UI-14, UI-15], title: "Integración de la gestión de tarjetas en las pantallas de P09", owns: []}
+  # ---------- Gestión ----------
+  - {id: MGT-01, plan: P11, human: false, deps: [SRV-09, SRV-05, CHG-04, CHG-06, CHG-10, CHG-17], title: "Tarjetas: copia personal, tarjetas propias y admin (editar, borrar, regenerar)", owns: [src/frances/api/routes/manage_cards.py, src/frances/manage/__init__.py, src/frances/manage/cards.py]}
+  - {id: MGT-02, plan: P11, human: false, deps: [SRV-09, SRV-05, CHG-17, CHG-18, AUD-01], title: "Audio: cola, regeneración y voces por defecto (API admin)", owns: [src/frances/api/routes/manage_audio.py, src/frances/manage/audio.py]}
+  - {id: MGT-03, plan: P11, human: false, deps: [AI-07, CHG-17], title: "Temas: renombrar, unir, dividir y mover publicaciones", owns: [src/frances/api/routes/manage_topics.py, src/frances/manage/topics.py]}
+  - {id: MGT-04, plan: P11, human: false, deps: [MGT-01, MGT-02, CHG-18, SRV-06], title: "Handlers de trabajos de gestión: regenerar tarjetas y audio", owns: [src/frances/manage/jobs.py]}
+  - {id: MGT-05, plan: P11, human: false, deps: [UI-09, UI-19, CHG-19, MGT-02, SRV-11], title: "Web admin: shell, pipeline, trabajos fallidos y audio", owns: [web/src/admin/AdminSection.tsx, web/src/admin/AdminRoutes.tsx, web/src/admin/adminNav.ts, web/src/admin/pipelineStrings.ts, web/src/admin/audioStrings.ts, web/src/admin/screens/AdminPipeline.tsx, web/src/admin/screens/AdminAudio.tsx]}
+  - {id: MGT-06, plan: P11, human: false, deps: [MGT-05, SRV-04], title: "Web admin: usuarios e invitaciones", owns: [web/src/admin/screens/AdminUsers.tsx, web/src/admin/screens/AdminInvites.tsx, web/src/admin/usersStrings.ts]}
+  - {id: MGT-07, plan: P11, human: false, deps: [MGT-05, MGT-03], title: "Web admin: temas (renombrar, unir, dividir y mover)", owns: [web/src/admin/screens/AdminTopics.tsx, web/src/admin/topicsStrings.ts]}
+  - {id: MGT-08, plan: P11, human: false, deps: [MGT-05, MGT-01, MGT-02, MGT-04, UI-11], title: "Web de tarjetas: editor compartido, acciones de usuario y pantalla admin", owns: [web/src/manage/, web/src/admin/screens/AdminCards.tsx, web/src/admin/cardsStrings.ts]}
+  # ================= v2 — P12 Go-live (2026-11-02-12-golive.md) =================
+  # GOL-01…05 son humanas: el dueño ejecuta en Oracle y firma un ADR en docs/decisions/.
+  # CHG-21 retira FRB1/R2/Worker v1 y conserva tests/fixtures/demo_state.sql y demo_audio/.
+  - {id: GOL-01, plan: P12, human: true, deps: [SRV-13, SRV-14], title: "Instancia Oracle ARM, red, puertos 80/443 y DNS del dominio", owns: [docs/decisions/ADR-010-golive-instancia-oracle.md]}
+  - {id: GOL-02, plan: P12, human: true, deps: [GOL-01, SRV-12, CHG-16, CHG-20, CHG-21, MGT-08, UI-22, AI-17, AI-18], title: "Secretos de producción: LIVE-01 (Google), Azure, Kiosapi, backup y archivos .env", owns: [docs/decisions/ADR-011-golive-secretos-produccion.md]}
+  - {id: GOL-03, plan: P12, human: true, deps: [GOL-02, CHG-21], title: "Primer despliegue en la instancia: imágenes ARM, TLS y auth check", owns: [docs/decisions/ADR-012-golive-primer-despliegue.md]}
+  - {id: GOL-04, plan: P12, human: true, deps: [GOL-03], title: "Backfill inicial, doctor, backup y restauración de prueba", owns: [docs/decisions/ADR-013-golive-backfill-inicial.md]}
+  - {id: GOL-05, plan: P12, human: true, deps: [GOL-04], title: "Checklist de aceptación del go-live (LIVE-03 v1 adaptado)", owns: [docs/decisions/ADR-014-golive-aceptacion.md]}
+  - {id: CHG-21, plan: P12, human: false, deps: [CHG-16, UI-20, CHG-20], title: "Retiro de FRB1, R2 y Worker v1 conservando los fixtures del demo", owns: []}

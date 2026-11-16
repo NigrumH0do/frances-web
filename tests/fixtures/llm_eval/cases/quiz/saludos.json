@@ -1,0 +1,288 @@
+{
+  "bad": [
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "respuesta ausente"
+            ],
+            "explanation_es": "Bonjour sirve de mañana y de tarde.",
+            "kind": "mcq",
+            "options": [
+              "Bonjour",
+              "Au revoir",
+              "Merci",
+              "Pardon"
+            ],
+            "prompt_es": "¿Cómo se dice 'buenos días' en francés?",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Bonjour"
+            ],
+            "explanation_es": "Bonjour va al principio de la frase.",
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa el saludo.",
+            "prompt_fr": "___, comment ça va aujourd’hui ?",
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Oui, ça va bien, merci."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Sí, bien, gracias.",
+            "prompt_fr": null,
+            "source_block": 3
+          },
+          {
+            "answers": [
+              "Comment",
+              "ça",
+              "va",
+              "aujourd’hui",
+              "?"
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena las palabras de la pregunta: ¿cómo estás hoy?",
+            "prompt_fr": null,
+            "source_block": 1
+          }
+        ],
+        "title_es": "Saludos sin prisa"
+      },
+      "problem": "la respuesta no es una de las opciones"
+    },
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "Bonjour"
+            ],
+            "explanation_es": "Bonjour sirve de mañana y de tarde.",
+            "kind": "mcq",
+            "options": [
+              "Bonjour",
+              "Au revoir",
+              "Merci",
+              "Pardon"
+            ],
+            "prompt_es": "¿Cómo se dice 'buenos días' en francés?",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Bonjour"
+            ],
+            "explanation_es": "Bonjour va al principio de la frase.",
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa el saludo.",
+            "prompt_fr": "___, comment ça va aujourd’hui ? ___",
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Oui, ça va bien, merci."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Sí, bien, gracias.",
+            "prompt_fr": null,
+            "source_block": 3
+          },
+          {
+            "answers": [
+              "Comment",
+              "ça",
+              "va",
+              "aujourd’hui",
+              "?"
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena las palabras de la pregunta: ¿cómo estás hoy?",
+            "prompt_fr": null,
+            "source_block": 1
+          }
+        ],
+        "title_es": "Saludos sin prisa"
+      },
+      "problem": "cloze sin exactamente un ___"
+    },
+    {
+      "output": {
+        "questions": [
+          {
+            "answers": [
+              "Bonjour"
+            ],
+            "explanation_es": "Bonjour sirve de mañana y de tarde.",
+            "kind": "mcq",
+            "options": [
+              "Bonjour",
+              "Au revoir",
+              "Merci",
+              "Pardon"
+            ],
+            "prompt_es": "¿Cómo se dice 'buenos días' en francés?",
+            "prompt_fr": null,
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Bonjour"
+            ],
+            "explanation_es": "Bonjour va al principio de la frase.",
+            "kind": "cloze",
+            "options": [],
+            "prompt_es": "Completa el saludo.",
+            "prompt_fr": "___, comment ça va aujourd’hui ?",
+            "source_block": 1
+          },
+          {
+            "answers": [
+              "Oui, ça va bien, merci."
+            ],
+            "explanation_es": null,
+            "kind": "translate",
+            "options": [],
+            "prompt_es": "Sí, bien, gracias.",
+            "prompt_fr": null,
+            "source_block": 9
+          },
+          {
+            "answers": [
+              "Comment",
+              "ça",
+              "va",
+              "aujourd’hui",
+              "?"
+            ],
+            "explanation_es": null,
+            "kind": "order",
+            "options": [],
+            "prompt_es": "Ordena las palabras de la pregunta: ¿cómo estás hoy?",
+            "prompt_fr": null,
+            "source_block": 1
+          }
+        ],
+        "title_es": "Saludos sin prisa"
+      },
+      "problem": "source_block fuera de"
+    }
+  ],
+  "case_id": "saludos",
+  "expected": {
+    "questions": [
+      {
+        "answers": [
+          "Bonjour"
+        ],
+        "explanation_es": "Bonjour sirve de mañana y de tarde.",
+        "kind": "mcq",
+        "options": [
+          "Bonjour",
+          "Au revoir",
+          "Merci",
+          "Pardon"
+        ],
+        "prompt_es": "¿Cómo se dice 'buenos días' en francés?",
+        "prompt_fr": null,
+        "source_block": 1
+      },
+      {
+        "answers": [
+          "Bonjour"
+        ],
+        "explanation_es": "Bonjour va al principio de la frase.",
+        "kind": "cloze",
+        "options": [],
+        "prompt_es": "Completa el saludo.",
+        "prompt_fr": "___, comment ça va aujourd’hui ?",
+        "source_block": 1
+      },
+      {
+        "answers": [
+          "Oui, ça va bien, merci."
+        ],
+        "explanation_es": null,
+        "kind": "translate",
+        "options": [],
+        "prompt_es": "Sí, bien, gracias.",
+        "prompt_fr": null,
+        "source_block": 3
+      },
+      {
+        "answers": [
+          "Comment",
+          "ça",
+          "va",
+          "aujourd’hui",
+          "?"
+        ],
+        "explanation_es": null,
+        "kind": "order",
+        "options": [],
+        "prompt_es": "Ordena las palabras de la pregunta: ¿cómo estás hoy?",
+        "prompt_fr": null,
+        "source_block": 1
+      }
+    ],
+    "title_es": "Saludos sin prisa"
+  },
+  "input": {
+    "cards": [
+      {
+        "back_es": "buenos días",
+        "front_fr": "bonjour",
+        "kind": "vocab"
+      },
+      {
+        "back_es": "¿Cómo estás hoy?",
+        "front_fr": "Comment ça va aujourd’hui ?",
+        "kind": "phrase"
+      },
+      {
+        "back_es": "Muy bien, gracias",
+        "front_fr": "Très bien, merci",
+        "kind": "drill"
+      }
+    ],
+    "fragments": [
+      {
+        "label": "Saludos sin prisa, p. 1",
+        "n": 1,
+        "text": "Bonjour, comment ça va aujourd’hui ? Très bien, merci !"
+      },
+      {
+        "label": "Saludos sin prisa, p. 2",
+        "n": 2,
+        "text": "Esta lección presenta los saludos formales e informales."
+      },
+      {
+        "label": "Saludos sin prisa, p. 3",
+        "n": 3,
+        "text": "Salut ! Ça va ? Oui, ça va bien, merci."
+      }
+    ],
+    "summaries": [
+      "Frases para saludar y responder a cómo estás."
+    ],
+    "title": "Saludos sin prisa"
+  },
+  "synthetic": true,
+  "task": "quiz"
+}

@@ -1,0 +1,288 @@
+{
+  "bad": [
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "madre",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "mère",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Mi abuelo es muy amable.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Mon grand-père est très gentil.",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Mi madre y mi hermano viven en Lille.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Ma mère et mon frère habitent à Lille.",
+            "kind": "drill",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "pan de chocolate",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "pain au chocolat",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "mi madre",
+                  "fr": "ma mère"
+                },
+                {
+                  "es": "mi hermano",
+                  "fr": "mon frère"
+                }
+              ],
+              "explanation_es": "Mon se usa con sustantivos masculinos y ma con femeninos.",
+              "title": "Posesivos"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Mi madre y mi hermano viven en Lille.",
+              "fr": "Ma mère et mon frère habitent à Lille."
+            }
+          ],
+          "summary_es": "Vocabulario para hablar de la familia y describir a las personas. La lección usa los posesivos ma y mon.",
+          "vocab_fronts": [
+            "mère"
+          ]
+        }
+      },
+      "problem": "front_fr no aparece en el texto"
+    },
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "mère",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Mi abuelo es muy amable.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Mon grand-père est très gentil.",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Mi madre y mi hermano viven en Lille.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Ma mère et mon frère habitent à Lille.",
+            "kind": "drill",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "mi madre",
+                  "fr": "ma mère"
+                },
+                {
+                  "es": "mi hermano",
+                  "fr": "mon frère"
+                }
+              ],
+              "explanation_es": "Mon se usa con sustantivos masculinos y ma con femeninos.",
+              "title": "Posesivos"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Mi madre y mi hermano viven en Lille.",
+              "fr": "Ma mère et mon frère habitent à Lille."
+            }
+          ],
+          "summary_es": "Vocabulario para hablar de la familia y describir a las personas. La lección usa los posesivos ma y mon.",
+          "vocab_fronts": [
+            "mère"
+          ]
+        }
+      },
+      "problem": "back_es vacío"
+    },
+    {
+      "output": {
+        "cards": [
+          {
+            "back_es": "madre",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "mère",
+            "kind": "vocab",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "¿Qué tal?",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "¿Cómo estás hoy?",
+            "kind": "phrase",
+            "notes": null,
+            "tags": []
+          },
+          {
+            "back_es": "Mi madre y mi hermano viven en Lille.",
+            "example_es": null,
+            "example_fr": null,
+            "front_fr": "Ma mère et mon frère habitent à Lille.",
+            "kind": "drill",
+            "notes": null,
+            "tags": []
+          }
+        ],
+        "sheet": {
+          "grammar": [
+            {
+              "examples": [
+                {
+                  "es": "mi madre",
+                  "fr": "ma mère"
+                },
+                {
+                  "es": "mi hermano",
+                  "fr": "mon frère"
+                }
+              ],
+              "explanation_es": "Mon se usa con sustantivos masculinos y ma con femeninos.",
+              "title": "Posesivos"
+            }
+          ],
+          "key_phrases": [
+            {
+              "es": "Mi madre y mi hermano viven en Lille.",
+              "fr": "Ma mère et mon frère habitent à Lille."
+            }
+          ],
+          "summary_es": "Vocabulario para hablar de la familia y describir a las personas. La lección usa los posesivos ma y mon.",
+          "vocab_fronts": [
+            "mère"
+          ]
+        }
+      },
+      "problem": "front_fr de una frase no está en francés"
+    }
+  ],
+  "case_id": "familia",
+  "expected": {
+    "cards": [
+      {
+        "back_es": "madre",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "mère",
+        "kind": "vocab",
+        "notes": null,
+        "tags": []
+      },
+      {
+        "back_es": "Mi abuelo es muy amable.",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "Mon grand-père est très gentil.",
+        "kind": "phrase",
+        "notes": null,
+        "tags": []
+      },
+      {
+        "back_es": "Mi madre y mi hermano viven en Lille.",
+        "example_es": null,
+        "example_fr": null,
+        "front_fr": "Ma mère et mon frère habitent à Lille.",
+        "kind": "drill",
+        "notes": null,
+        "tags": []
+      }
+    ],
+    "sheet": {
+      "grammar": [
+        {
+          "examples": [
+            {
+              "es": "mi madre",
+              "fr": "ma mère"
+            },
+            {
+              "es": "mi hermano",
+              "fr": "mon frère"
+            }
+          ],
+          "explanation_es": "Mon se usa con sustantivos masculinos y ma con femeninos.",
+          "title": "Posesivos"
+        }
+      ],
+      "key_phrases": [
+        {
+          "es": "Mi madre y mi hermano viven en Lille.",
+          "fr": "Ma mère et mon frère habitent à Lille."
+        }
+      ],
+      "summary_es": "Vocabulario para hablar de la familia y describir a las personas. La lección usa los posesivos ma y mon.",
+      "vocab_fronts": [
+        "mère"
+      ]
+    }
+  },
+  "input": {
+    "generation": {
+      "blocks": [
+        {
+          "lang": "fr",
+          "page": null,
+          "source": "item",
+          "text": "Ma mère et mon frère habitent à Lille avec mon oncle."
+        },
+        {
+          "lang": "es",
+          "page": null,
+          "source": "item",
+          "text": "Vocabulario de la familia para describir a las personas."
+        },
+        {
+          "lang": "fr",
+          "page": null,
+          "source": "item",
+          "text": "Mon grand-père est très gentil et il aime le jardin."
+        }
+      ],
+      "input_hash": "fe703c57804471a6f1ebc00194e6dda43d898fc1c85f8663ab226e8b5944d91e",
+      "item_id": "syn-familia",
+      "title": "Mi familia"
+    }
+  },
+  "synthetic": true,
+  "task": "cards"
+}

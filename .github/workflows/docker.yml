@@ -1,0 +1,75 @@
+name: docker
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - "src/**"
+      - "web/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".dockerignore"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wheels:
+    name: wheels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Check aarch64 wheels
+        run: uv run --no-project python scripts/check_aarch64_wheels.py
+
+  docker:
+    name: docker
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    needs: wheels
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build app (arm64/amd64)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infra/Dockerfile
+          target: app
+          platforms: linux/arm64,linux/amd64
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha
+      - name: Build web (arm64/amd64)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infra/Dockerfile
+          target: web
+          platforms: linux/arm64,linux/amd64
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha
+      - name: Smoke arm64
+        run: |
+          docker buildx build --platform linux/arm64 --target app --load \
+            -t frances-app:ci -f infra/Dockerfile .
+          docker run --rm --platform linux/arm64 frances-app:ci --help
