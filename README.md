@@ -266,11 +266,12 @@ corren por defecto. Después de tocar modelos:
 uv run frances schema export contracts/ && npm --prefix web run gen:types
 ```
 
-## Demo
+## Demo local
 
 `npm --prefix web run build -- --mode demo` arma la web sin servidor, con una
-instantánea sintética de la API (`scripts/demo_api_snapshot.py`). El workflow
-`pages.yml` la publica en GitHub Pages al subir a `main`. Usuario del demo:
+instantánea sintética de la API (`scripts/demo_api_snapshot.py`). Sirve para
+el e2e. No se publica: la app solo se monta en el servidor
+([ADR-020](docs/decisions/ADR-020-sin-github-pages.md)). Usuario del demo:
 `demo@example.com` / `demo-demo-demo`.
 
 ## Producción

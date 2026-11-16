@@ -17,6 +17,8 @@ sigue vigente salvo que aquí se diga otra cosa.
 > - **Lectura del material:** ADR-019 cambia el OCR a RapidOCR (PP-OCRv6, sin
 >   red) con Tesseract `fra+spa` de respaldo, y agrega texto de PowerPoint y Word.
 >   `frances coverage` dice qué archivos tienen texto. Estado: propuesto.
+> - **Publicación:** ADR-020 retira GitHub Pages. El único despliegue es el
+>   servidor. El modo demo queda para el e2e y no se publica.
 
 ## 1. Intención
 

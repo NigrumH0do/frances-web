@@ -16,8 +16,10 @@ GONE = (
     ".github/workflows/auth-check.yml",
     ".github/workflows/worker.yml",
     ".github/workflows/worker-deploy.yml",
+    ".github/workflows/pages.yml",
     "tests/bundle",
     "tests/ops/test_prod_workflows.py",
+    "tests/ops/test_pages.py",
     "tests/fixtures/frb1_vectors.json",
 )
 

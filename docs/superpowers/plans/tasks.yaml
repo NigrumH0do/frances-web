@@ -96,7 +96,8 @@ tasks:
   - {id: OPS-03, plan: P07, human: false, deps: [FND-03, FND-04], title: "Almacén R2: pull, push con lease e If-Match, publicación del bundle", owns: [src/frances/ops/r2.py]}
   - {id: OPS-04, plan: P07, human: false, deps: [FND-04], title: "frances report-failure (issues idempotentes)", owns: [src/frances/ops/report.py]}
   - {id: OPS-05, plan: P07, human: false, deps: [OPS-02, OPS-03, OPS-04, OPS-07, AUD-01], title: "Workflows de producción (daily, reconcile) y configuración de despliegue", owns: [.github/workflows/daily.yml, .github/workflows/reconcile.yml, deploy/]}
-  - {id: OPS-06, plan: P07, human: false, deps: [OPS-01], title: "Pages: app real y demo sintético", owns: [.github/workflows/pages.yml]}
+  # OPS-06 queda CANCELADA (ADR-020, 2026-11-16): no hay GitHub Pages; el único despliegue es el servidor.
+  - {id: OPS-06, plan: P07, human: false, deps: [OPS-01], title: "CANCELADA (v2): Pages: app real y demo sintético", owns: []}
   - {id: OPS-07, plan: P07, human: false, deps: [FND-03, AUD-01], title: "frances doctor (tamaños, cuotas, token, voces)", owns: [src/frances/ops/doctor.py]}
   - {id: OPS-09, plan: P07, human: false, deps: [FND-01], title: "Worker de Cloudflare que sirve el bundle cifrado", owns: [worker/, .github/workflows/worker.yml, .github/workflows/worker-deploy.yml]}
   # ---------- Puesta en marcha (humano + agente) ----------

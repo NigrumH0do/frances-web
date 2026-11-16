@@ -4,7 +4,9 @@ Lo que falta para producción, lo que solo decide el dueño y los límites conoc
 Actualizado el 2026-11-16. Marca cada casilla al resolverla y anota la decisión.
 
 La lista de la v1 (R2, Worker de Cloudflare, GitHub Pages con bundle cifrado) quedó
-sin efecto con la spec v2; su historia está en el git.
+sin efecto con la spec v2; su historia está en el git. El demo v2 tampoco se
+publica en Pages ([ADR-020](decisions/ADR-020-sin-github-pages.md)): la app solo
+vive en el servidor.
 
 ## 1. Go-live (tareas humanas del plan P12)
 

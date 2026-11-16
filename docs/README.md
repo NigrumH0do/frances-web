@@ -45,6 +45,7 @@ Cloudflare), retirada en CHG-16 y CHG-21; se guarda como registro de decisiones.
 | [017](decisions/ADR-017-ai17-rules-cards-quiz.md) | Evaluación del LLM sin tarjetas ni quiz | Aceptado |
 | [018](decisions/ADR-018-cahier-y-texto-libre.md) | Sistema visual «Cahier» y Texto libre | Propuesto |
 | [019](decisions/ADR-019-ocr-rapidocr-y-office.md) | RapidOCR y lectura de Office | Propuesto |
+| [020](decisions/ADR-020-sin-github-pages.md) | Sin GitHub Pages; solo el servidor | Aceptado |
 
 ## Otros
 
