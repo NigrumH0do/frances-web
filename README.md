@@ -133,8 +133,14 @@ RapidOCR y sus modelos se instalan con las dependencias de Python; no necesitan 
    cp frances.example.toml ../frances-data/frances.toml
    ```
 
-3. Crea un archivo `.env` **fuera del repo** con las variables de
-   [Configuración](#variables-de-entorno). En local, el origen es el de Vite:
+3. Copia el ejemplo de variables y llena los valores
+   ([Configuración](#variables-de-entorno)). Git ignora `.env`:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   En local, el origen es el de Vite y la carpeta de datos es la del paso 2:
 
    ```bash
    FRANCES_PUBLIC_ORIGIN=http://localhost:5173
@@ -142,7 +148,7 @@ RapidOCR y sus modelos se instalan con las dependencias de Python; no necesitan 
    FRANCES_STATE_DB=/ruta/a/frances-data/state.db
    ```
 
-4. En una terminal por proceso, con el `.env` cargado (`set -a; . /ruta/.env; set +a`):
+4. En una terminal por proceso, con el `.env` cargado (`set -a; . ./.env; set +a`):
 
    ```bash
    uv run frances serve --host 127.0.0.1 --port 8765        # API
@@ -197,7 +203,8 @@ El ejemplo comentado es [`frances.example.toml`](frances.example.toml).
 ### Variables de entorno
 
 Los secretos **solo** van en variables de entorno; se leen en `frances.config` y
-nunca se escriben en logs. Lista completa: [`infra/env.example`](infra/env.example).
+nunca se escriben en logs. Ejemplos: [`.env.example`](.env.example) para local e
+[`infra/env.example`](infra/env.example) para producción.
 
 | Variable | Para qué |
 |---|---|
