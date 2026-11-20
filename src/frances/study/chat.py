@@ -10,7 +10,7 @@ ninguna transacción abierta mientras espera al LLM.
 import re
 import sqlite3
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 from frances.cards.llm import (
@@ -48,10 +48,13 @@ class Retrieved:
 
     hits: list[SearchHit]
     fragments: list[PromptFragment]
+    titles: dict[int, str] = field(default_factory=dict)
 
 
-def _fragment(conn: sqlite3.Connection, hit: SearchHit, n: int) -> PromptFragment:
-    """Fragmento con etiqueta de publicación, página y adjunto si aplica."""
+def _fragment_with_title(
+    conn: sqlite3.Connection, hit: SearchHit, n: int
+) -> tuple[PromptFragment, str]:
+    """Fragmento con etiqueta y el título legible de su publicación."""
     row = conn.execute(
         "SELECT i.title, b.text, a.title FROM text_blocks b"
         " JOIN items i ON i.id = b.item_id"
@@ -66,19 +69,30 @@ def _fragment(conn: sqlite3.Connection, hit: SearchHit, n: int) -> PromptFragmen
         label += f", p. {hit.page}"
     if row is not None and hit.source != "item" and row[2]:
         label += f" · {row[2]}"
-    return PromptFragment(n=n, label=label, text=text[:MAX_FRAGMENT_CHARS])
+    return PromptFragment(n=n, label=label, text=text[:MAX_FRAGMENT_CHARS]), item_title
+
+
+def _fragment(conn: sqlite3.Connection, hit: SearchHit, n: int) -> PromptFragment:
+    """Fragmento con etiqueta de publicación, página y adjunto si aplica."""
+    return _fragment_with_title(conn, hit, n)[0]
 
 
 def retrieve(conn: sqlite3.Connection, question: str) -> Retrieved:
     """Fragmentos mejor rankeados para la pregunta (BM25 de AI-05)."""
     hits = search_blocks(conn, question, limit=MAX_FRAGMENTS)
-    fragments = [_fragment(conn, hit, n) for n, hit in enumerate(hits, start=1)]
-    return Retrieved(hits=hits, fragments=fragments)
+    fragments: list[PromptFragment] = []
+    titles: dict[int, str] = {}
+    for n, hit in enumerate(hits, start=1):
+        frag, title = _fragment_with_title(conn, hit, n)
+        fragments.append(frag)
+        titles[hit.block_id] = title
+    return Retrieved(hits=hits, fragments=fragments, titles=titles)
 
 
-def _citation(hit: SearchHit) -> Citation:
+def _citation(hit: SearchHit, item_title: str | None = None) -> Citation:
     return Citation(
         item_id=hit.item_id,
+        item_title=item_title,
         source=hit.source,
         page=hit.page,
         block_id=hit.block_id,
@@ -96,7 +110,8 @@ def parse_citations(text: str, retrieved: Retrieved) -> list[Citation]:
             if not 1 <= n <= len(retrieved.hits) or n in seen:
                 continue
             seen.add(n)
-            citations.append(_citation(retrieved.hits[n - 1]))
+            hit = retrieved.hits[n - 1]
+            citations.append(_citation(hit, retrieved.titles.get(hit.block_id)))
     return citations
 
 
@@ -312,7 +327,10 @@ def answer_events(
             yield ChatEvent(kind="done", message_id=assistant_id)
             return
 
-        fallback = [_citation(hit) for hit in retrieved.hits[:FALLBACK_CITATIONS]]
+        fallback = [
+            _citation(hit, retrieved.titles.get(hit.block_id))
+            for hit in retrieved.hits[:FALLBACK_CITATIONS]
+        ]
         assistant_id = _save_assistant(
             store,
             thread_id,

@@ -34,6 +34,8 @@ def test_data_paths_and_env_files() -> None:
         assert svc["env_file"] == ["/srv/frances/.env"] or svc["env_file"] == "/srv/frances/.env"
         assert svc["environment"]["FRANCES_STATE_DB"] == "/data/state.db"
         assert "/srv/frances/data:/data" in svc["volumes"]
+    assert C["services"]["api"]["environment"]["FRANCES_FORWARDED_ALLOW_IPS"] == "172.28.0.0/24"
+    assert C["networks"]["edge"]["ipam"]["config"][0]["subnet"] == "172.28.0.0/24"
     assert "/srv/frances/.env" not in str(C["services"]["caddy"])  # caddy no recibe secretos
 
 
@@ -41,9 +43,14 @@ def test_examples_have_every_variable_and_no_real_values() -> None:
     env = Path("infra/env.example").read_text()
     for v in (
         "FRANCES_PUBLIC_ORIGIN",
+        "FRANCES_FORWARDED_ALLOW_IPS",
+        "FRANCES_ADMIN_EMAILS",
+        "FRANCES_SECRETS_KEY",
         "FRANCES_BACKUP_ENDPOINT",
         "FRANCES_BACKUP_SECRET_ACCESS_KEY",
         "GOOGLE_REFRESH_TOKEN",
+        "GOOGLE_LOGIN_CLIENT_ID",
+        "GOOGLE_LOGIN_CLIENT_SECRET",
         "AZURE_SPEECH_KEY",
         "LLM_API_KEY",
     ):

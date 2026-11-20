@@ -22,6 +22,8 @@ from frances.models.content import CardDraft, GenerationInput, GenerationOutput
 
 #: Presupuesto máximo de caracteres que se envía en el mensaje de usuario.
 MAX_INPUT_CHARS = 12_000
+#: Tope de caracteres reservados para bloques `[es]` cuando existe texto en francés.
+MAX_ES_INPUT_CHARS = 2_000
 
 #: Recortes post-validación (plan CRD-04).
 MAX_VOCAB = 25
@@ -29,7 +31,7 @@ MAX_PHRASES = 10
 MAX_GRAMMAR_POINTS = 5
 
 #: Versión de los prompts de tarjetas (clave de caché, R-43).
-CARDS_PROMPT_VERSION = "cards-1"
+CARDS_PROMPT_VERSION = "cards-3"
 
 _TEMPERATURE = 0.2
 _TIMEOUT_S = 30.0
@@ -49,43 +51,56 @@ USER_AGENT = (
     "(KHTML, like Gecko) Chrome/131.0 Safari/537.36"
 )
 
-#: Texto fijado por el plan CRD-04 (copy exacta; no parafrasear). El guion de
-#: «A1-A2» va escapado para no disparar RUF001: el valor en tiempo de
-#: ejecución es idéntico al del plan.
+#: Prompt v3 (ADR-024): alinea tarjetas al tema y exige notas pedagógicas y ejemplos útiles.
+#: El guion de «A1-A2» va escapado para no disparar RUF001.
 SYSTEM_PROMPT = (
     "Eres un asistente que prepara material de estudio de francés para un estudiante "
     "universitario hispanohablante de nivel A1\u2013A2.\n"
-    "Recibes una publicación de su profesora: un título y bloques de texto etiquetados "
-    "con su idioma ([fr], [es], [mixed]).\n"
+    "Recibes una publicación de su profesora: título, tema de Classroom/estudio cuando "
+    "existen y bloques de texto etiquetados con su idioma ([fr], [es], [mixed]).\n"
     "Devuelve solo un objeto JSON que cumpla el esquema generation_output. No escribas "
     "nada fuera del JSON.\n"
     "Reglas:\n"
-    "1. Usa únicamente palabras, frases y temas que aparecen en el texto. Jamás inventes "
-    "contenido que no esté en el texto.\n"
-    '2. Tarjetas "vocab": máximo 25. front_fr es la palabra en forma de diccionario; '
-    "los sustantivos llevan artículo (le, la, l', les). back_es es su traducción al "
-    "español.\n"
-    '3. Tarjetas "phrase": máximo 10 frases útiles copiadas del texto, de 3 a 14 '
-    "palabras, con su traducción en back_es.\n"
-    '4. Tarjetas "grammar" o "conjugation" solo si el texto trabaja ese punto: front_fr '
-    "nombra la estructura en francés y back_es la explica en español en una o dos "
-    "oraciones.\n"
-    "5. Si una oración del texto usa la palabra, ponla en example_fr y su traducción en "
-    "example_es; si no, déjalos en null.\n"
-    '6. Nunca crees tarjetas de tipo "drill".\n'
-    "7. Ficha (sheet): summary_es resume la publicación en español en 2 a 4 oraciones.\n"
-    "8. vocab_fronts repite exactamente el front_fr de las tarjetas vocab más "
+    "1. Prioriza el vocabulario, las expresiones y las estructuras clave para preparar "
+    "evaluaciones sobre el Tema Classroom y el Tema de estudio indicados, usando "
+    "únicamente contenido que aparezca en el texto. Jamás inventes palabras o temas "
+    "ausentes.\n"
+    '2. Tarjetas "vocab": máximo 25. front_fr es la palabra en forma de diccionario '
+    "(infinitivo para verbos, artículo le/la/l'/les para sustantivos). back_es es su "
+    "traducción precisa al español.\n"
+    '3. Tarjetas "phrase": máximo 10 frases realmente útiles o evaluables del texto '
+    "(preguntas modelo, respuestas comunicativas, modismos o estructuras clave), de 3 "
+    "a 14 palabras, con su traducción natural en back_es. Evita oraciones sueltas "
+    "triviales que no ilustren una regla o uso concreto del tema.\n"
+    '4. Tarjetas "grammar" o "conjugation" cuando la publicación enseñe o practique '
+    "una regla gramatical o tiempos verbales: front_fr nombra la estructura en francés "
+    "y back_es la explica en español de forma clara y accionable.\n"
+    "5. Ejemplos (example_fr y example_es): para vocab, grammar y conjugation, incluye "
+    "siempre que el texto lo permita una oración del texto que use la palabra o regla "
+    'junto con su traducción; para "phrase", incluye una respuesta breve, variante de '
+    "género/registro o continuación presente en el texto cuando exista, y si no, "
+    "déjalos en null.\n"
+    "6. Notas (notes): en cada tarjeta, escribe 1 o 2 oraciones cortas y útiles en "
+    "español con el punto clave de examen para un hispanohablante (concordancia de "
+    "género/número como chinois/chinoise, conjugación irregular, elisión/contracción, "
+    "falso amigo, registro tu/vous o pista de pronunciación como letras mudas, liaison "
+    "o vocales nasales). Usa null solo si no hay nada útil que aclarar.\n"
+    '7. Nunca crees tarjetas de tipo "drill".\n'
+    "8. Ficha (sheet): summary_es resume la publicación y su objetivo de examen en "
+    "español en 2 a 4 oraciones.\n"
+    "9. vocab_fronts repite exactamente el front_fr de las tarjetas vocab más "
     "importantes.\n"
-    "9. grammar tiene máximo 5 puntos; cada uno con título, explicación en español y "
+    "10. grammar tiene máximo 5 puntos; cada uno con título, explicación en español y "
     "exactamente 2 ejemplos (fr y es) tomados o adaptados del texto.\n"
-    "10. key_phrases repite las frases útiles con su traducción.\n"
-    "11. Conserva la ortografía francesa (tildes, cedillas, apóstrofos) tal como "
+    "11. key_phrases repite las frases útiles con su traducción.\n"
+    "12. Conserva la ortografía francesa (tildes, cedillas, apóstrofos) tal como "
     "aparece en el texto.\n"
-    "12. tags: como máximo 3 etiquetas cortas en español y en minúsculas, por ejemplo "
-    '"saludos" o "familia".\n'
-    "13. Si el texto no contiene francés, devuelve listas vacías y un resumen breve en "
+    "13. tags: de 1 a 3 etiquetas cortas en español y en minúsculas del tema, por "
+    'ejemplo "nacionalidades" o "saludos".\n'
+    "14. Si el texto no contiene francés, devuelve listas vacías y un resumen breve en "
     "español.\n"
-    "Escribe todas las traducciones y explicaciones en español neutro, claras y breves."
+    "Escribe todas las traducciones, notas y explicaciones en español neutro, claras "
+    "y breves."
 )
 
 _META_KEYS = ("default", "title", "description")
@@ -138,32 +153,70 @@ class DailyCallMeter:
         return max(self._cap - used, 0)
 
 
-def render_input(inp: GenerationInput) -> str:
-    """Título y bloques ``[lang] texto``, con ``fr`` y ``mixed`` primero.
+def _append_within_budget(parts: list[str], chunk: str, budget: int) -> int:
+    """Agrega ``chunk`` (o su prefijo) a ``parts`` respetando ``budget``."""
+    separator = 1 if parts else 0
+    available = budget - separator
+    if available <= 0:
+        return 0
+    if len(chunk) <= available:
+        parts.append(chunk)
+        return len(chunk) + separator
+    parts.append(chunk[:available])
+    return budget
 
-    Los grupos conservan su orden original. Si el resultado supera
-    :data:`MAX_INPUT_CHARS`, se corta el último bloque incluido para no
-    superar el presupuesto.
+
+def render_input(inp: GenerationInput) -> str:
+    """Encabezado con tema y bloques ``[lang] texto``, priorizando ``fr``/``mixed``.
+
+    Reserva hasta :data:`MAX_ES_INPUT_CHARS` para consignas en español cuando hay
+    material en francés, de modo que un PDF largo en francés no tape las indicaciones
+    de la profesora ni los bloques ``[es]`` desplacen al texto francés.
     """
-    blocks = sorted(inp.blocks, key=lambda block: _LANG_PRIORITY.get(block.lang, 2))
-    chunks: list[str] = []
+    headers: list[str] = []
     if inp.title:
-        chunks.append(f"Título: {inp.title}")
-    chunks.extend(f"[{block.lang}] {block.text.strip()}" for block in blocks)
+        headers.append(f"Título: {inp.title}")
+    if inp.classroom_topic:
+        headers.append(f"Tema Classroom: {inp.classroom_topic}")
+    if inp.study_topic:
+        headers.append(f"Tema de estudio: {inp.study_topic}")
+
+    ordered = sorted(inp.blocks, key=lambda block: _LANG_PRIORITY.get(block.lang, 2))
+    fr_chunks = [
+        f"[{block.lang}] {block.text.strip()}" for block in ordered if block.lang in ("fr", "mixed")
+    ]
+    es_chunks = [
+        f"[{block.lang}] {block.text.strip()}"
+        for block in ordered
+        if block.lang not in ("fr", "mixed")
+    ]
 
     parts: list[str] = []
     remaining = MAX_INPUT_CHARS
-    for chunk in chunks:
-        separator = 1 if parts else 0
-        available = remaining - separator
-        if available <= 0:
+    for chunk in headers:
+        used = _append_within_budget(parts, chunk, remaining)
+        remaining -= used
+        if remaining <= 0:
+            return "\n".join(parts)
+
+    es_total = sum(len(chunk) + 1 for chunk in es_chunks)
+    es_budget_cap = MAX_ES_INPUT_CHARS if fr_chunks else remaining
+    es_reserve = min(es_total, es_budget_cap)
+    fr_budget = max(0, remaining - es_reserve)
+    for chunk in fr_chunks:
+        used = _append_within_budget(parts, chunk, fr_budget)
+        fr_budget -= used
+        remaining -= used
+        if fr_budget <= 0:
             break
-        if len(chunk) <= available:
-            parts.append(chunk)
-            remaining -= len(chunk) + separator
-        else:
-            parts.append(chunk[:available])
-            remaining = 0
+
+    es_budget = min(remaining, es_budget_cap)
+    for chunk in es_chunks:
+        used = _append_within_budget(parts, chunk, es_budget)
+        es_budget -= used
+        remaining -= used
+        if es_budget <= 0:
+            break
     return "\n".join(parts)
 
 
@@ -337,7 +390,7 @@ class LlmGenerator:
     """Cliente ``chat/completions`` con salida JSON validada."""
 
     name = "llm"
-    version = "1"
+    version = CARDS_PROMPT_VERSION
 
     def __init__(
         self,
@@ -473,6 +526,24 @@ class LlmGenerator:
             CARDS_PROMPT_VERSION,
         )
         return _apply_caps(GenerationOutput.model_validate(data))
+
+    def generate_cached(
+        self, store: Store, inp: GenerationInput, now: Callable[[], datetime]
+    ) -> GenerationOutput:
+        """Como ``generate``, reutilizando respuestas previas de ``llm_cache``."""
+        from frances.study.llm_cache import cached_json
+
+        result = cached_json(
+            store,
+            self,
+            task="cards",
+            system=SYSTEM_PROMPT,
+            user=render_input(inp),
+            schema=GenerationOutput,
+            prompt_version=CARDS_PROMPT_VERSION,
+            now=now,
+        )
+        return _apply_caps(GenerationOutput.model_validate(result.data))
 
     def stream_chat(
         self,

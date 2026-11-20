@@ -38,6 +38,13 @@ export const chatStrings = {
   citation: 'Fuente {n}',
   copy: 'Copiar',
   copied: 'Copiado',
+  createCard: '+ Crear tarjeta',
+  startersTitle: 'Ideas para empezar',
+  starters: [
+    '¿Cómo se forma el passé composé?',
+    'Resume los puntos clave para el examen',
+    'Dame ejemplos con vocabulario de la clase',
+  ] as const,
   offline: 'El chat necesita conexión',
   inFlight: 'Ya hay una pregunta en curso',
   llmLimit: 'Se alcanzó el límite de IA de hoy',

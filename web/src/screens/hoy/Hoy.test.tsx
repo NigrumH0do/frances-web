@@ -346,4 +346,9 @@ test('muestra saludo, racha, primera entrega y la semana', async () => {
   expect(screen.getByText(/Actividad de la semana/)).toHaveTextContent(
     'viernes',
   );
+  const weekCounts = document.querySelector('.week-counts');
+  expect(weekCounts).not.toBeNull();
+  expect(
+    Array.from(weekCounts?.children ?? []).map((el) => el.textContent),
+  ).toEqual(['3', '4', '1', '3', '6', '0', '0']);
 });

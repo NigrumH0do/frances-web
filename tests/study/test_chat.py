@@ -455,3 +455,10 @@ def test_assistant_error_message_is_persisted(chat_env: ChatEnv) -> None:
     assert events[-1].code == "llm_unavailable"
     stored = last_assistant(chat_env)
     assert stored.status == "error" and stored.content == ""
+
+
+def test_citations_include_item_title(chat_env: ChatEnv) -> None:
+    retrieved = _retrieved(chat_env, "pommier")
+    citations = parse_citations("Mira [1].", retrieved)
+    assert len(citations) == 1
+    assert citations[0].item_title == "Leçon 1"

@@ -211,6 +211,7 @@ class Citation(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     item_id: str
+    item_title: str | None = None
     source: str
     page: int | None
     block_id: int

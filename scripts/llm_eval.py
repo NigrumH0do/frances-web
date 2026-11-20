@@ -1,12 +1,12 @@
-"""Evaluación de calidad de las salidas del LLM de estudio (AI-17).
+"""Evaluación de calidad de las salidas del LLM de estudio (AI-17 / ADR-024).
 
 Uso::
 
-    uv run python scripts/llm_eval.py --task {sheet,topics,plan_why,chat,all} \
+    uv run python scripts/llm_eval.py --task {cards,sheet,topics,plan_why,chat,all} \
         [--out DIR] [--max-cases N]
 
-Las tareas ``cards`` y ``quiz`` se evalúan con reglas y sus tests propios
-(``tests/cards`` y ``tests/study/test_quiz_rules.py``); no se piden al LLM.
+La tarea ``quiz`` se evalúa con reglas (ADR-017) y sus tests propios
+(``tests/study/test_quiz_rules.py``); ``cards`` sí evalúa al LLM (ADR-024).
 Lee ``LLM_BASE_URL``, ``LLM_API_KEY`` y ``LLM_MODEL`` del entorno a través de
 :mod:`frances.config` (``Settings.optional_secret``). Si falta alguna, sale con
 2 sin crear el cliente ni tocar la red. Los casos salen de
@@ -65,8 +65,8 @@ from frances.study.schemas import (
     TopicsLlmOut,
 )
 
-TASKS: tuple[str, ...] = ("sheet", "topics", "plan_why", "chat")
-RULES_TASKS: tuple[str, ...] = ("cards", "quiz")
+TASKS: tuple[str, ...] = ("cards", "sheet", "topics", "plan_why", "chat")
+RULES_TASKS: tuple[str, ...] = ("quiz",)
 ALL_TASKS: tuple[str, ...] = RULES_TASKS + TASKS
 PASS_RATE = 0.8
 REQUIRED_ENV: tuple[str, ...] = ("LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL")

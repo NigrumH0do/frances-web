@@ -1,5 +1,12 @@
 import type {
   AcceptInviteRequest,
+  AuthProvidersOut,
+  AzureAccountIn,
+  AzureAccountOut,
+  AzureAccountPatch,
+  AzurePoolSummary,
+  AzureStrategyPatch,
+  AzureTestResult,
   CardFlagsIn,
   CardOverrideIn,
   CardPage,
@@ -35,6 +42,7 @@ import type {
   ReviewIn,
   SearchHit,
   SpeechToken,
+  SpeechUsageIn,
   StudyPlanDay,
   StudyStatus,
   StudySheet,
@@ -199,13 +207,52 @@ export function endpoints(c: ApiClient) {
     deleteThread: (threadId: string) =>
       c.send<void>('DELETE', `/api/chat/threads/${enc(threadId)}`),
 
-    // Gestión (P11): admin, tarjetas, audio y temas.
+    // Gestión (P11): admin, tarjetas, audio, temas y pool Azure.
+    authProviders: (o?: RequestOpts) =>
+      c.get<AuthProvidersOut>('/api/auth/providers', undefined, o),
     adminUsers: (o?: RequestOpts) =>
       c.get<UserOut[]>('/api/admin/users', undefined, o),
+    adminUsersByStatus: (
+      status?: NonNullable<UserOut['status']>,
+      o?: RequestOpts,
+    ) =>
+      c.get<UserOut[]>(
+        '/api/admin/users',
+        status === undefined ? undefined : { status },
+        o,
+      ),
+    approveUser: (userId: string) =>
+      c.send<UserOut>('POST', `/api/admin/users/${enc(userId)}/approve`),
     disableUser: (userId: string) =>
       c.send<UserOut>('POST', `/api/admin/users/${enc(userId)}/disable`),
     enableUser: (userId: string) =>
       c.send<UserOut>('POST', `/api/admin/users/${enc(userId)}/enable`),
+    speechUsage: (body: SpeechUsageIn) =>
+      c.send<{ ok: boolean }>('POST', '/api/speech/usage', body),
+    adminAzureAccounts: (o?: RequestOpts) =>
+      c.get<AzureAccountOut[]>('/api/admin/azure/accounts', undefined, o),
+    adminAzureCreate: (body: AzureAccountIn) =>
+      c.send<AzureAccountOut>('POST', '/api/admin/azure/accounts', body),
+    adminAzureUpdate: (accountId: string, body: AzureAccountPatch) =>
+      c.send<AzureAccountOut>(
+        'PATCH',
+        `/api/admin/azure/accounts/${enc(accountId)}`,
+        body,
+      ),
+    adminAzureDelete: (accountId: string) =>
+      c.send<{ ok: boolean }>(
+        'DELETE',
+        `/api/admin/azure/accounts/${enc(accountId)}`,
+      ),
+    adminAzureTest: (accountId: string) =>
+      c.send<AzureTestResult>(
+        'POST',
+        `/api/admin/azure/accounts/${enc(accountId)}/test`,
+      ),
+    adminAzureSummary: (o?: RequestOpts) =>
+      c.get<AzurePoolSummary>('/api/admin/azure/summary', undefined, o),
+    adminAzureSetStrategy: (body: AzureStrategyPatch) =>
+      c.send<AzurePoolSummary>('PATCH', '/api/admin/azure/strategy', body),
     adminInvites: (o?: RequestOpts) =>
       c.get<InviteOut[]>('/api/admin/invites', undefined, o),
     createInvite: (body: CreateInviteRequest) =>

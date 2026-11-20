@@ -2,6 +2,8 @@
 
 from frances.models.accounts import (
     AcceptInviteRequest,
+    AuthProvider,
+    AuthProvidersOut,
     ChangePasswordRequest,
     CreateInviteRequest,
     InviteCheckRequest,
@@ -12,6 +14,7 @@ from frances.models.accounts import (
     Me,
     Role,
     UserOut,
+    UserStatus,
 )
 from frances.models.api import (
     ApiError,
@@ -32,6 +35,19 @@ from frances.models.audio import (
     EngineFamily,
     Voice,
     VoiceAge,
+)
+from frances.models.azure import (
+    AzureAccountIn,
+    AzureAccountKind,
+    AzureAccountOut,
+    AzureAccountPatch,
+    AzureAccountSource,
+    AzureAccountUsage,
+    AzurePoolStrategy,
+    AzurePoolSummary,
+    AzureStrategyPatch,
+    AzureTestResult,
+    SpeechUsageIn,
 )
 from frances.models.bundle import (
     AttachmentOut,
@@ -172,6 +188,18 @@ __all__ = [
     "AudioPending",
     "AudioRef",
     "AudioRequest",
+    "AuthProvider",
+    "AuthProvidersOut",
+    "AzureAccountIn",
+    "AzureAccountKind",
+    "AzureAccountOut",
+    "AzureAccountPatch",
+    "AzureAccountSource",
+    "AzureAccountUsage",
+    "AzurePoolStrategy",
+    "AzurePoolSummary",
+    "AzureStrategyPatch",
+    "AzureTestResult",
     "BundleManifest",
     "CardDraft",
     "CardFlagsIn",
@@ -250,6 +278,7 @@ __all__ = [
     "SheetDraft",
     "SpeechCredentials",
     "SpeechToken",
+    "SpeechUsageIn",
     "StudyJobKind",
     "StudyPlanDay",
     "StudyRunRequest",
@@ -269,6 +298,7 @@ __all__ = [
     "UserOut",
     "UserPrefs",
     "UserStats",
+    "UserStatus",
     "Voice",
     "VoiceAge",
     "VoiceOut",

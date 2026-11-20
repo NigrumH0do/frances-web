@@ -3,15 +3,19 @@
 import logging
 import os
 import re
+import threading
 from collections.abc import Mapping
 
 SENSITIVE_ENV: tuple[str, ...] = (
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
     "GOOGLE_REFRESH_TOKEN",
+    "GOOGLE_LOGIN_CLIENT_ID",
+    "GOOGLE_LOGIN_CLIENT_SECRET",
     "AZURE_SPEECH_KEY",
     "AZURE_TRANSLATOR_KEY",
     "FRANCES_PASSPHRASE",
+    "FRANCES_SECRETS_KEY",
     "LLM_BASE_URL",
     "LLM_API_KEY",
     "R2_ACCESS_KEY_ID",
@@ -28,20 +32,33 @@ _PATTERNS: tuple[re.Pattern[str], ...] = (
 )
 
 _LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+_runtime_lock = threading.Lock()
+_runtime_secrets: set[str] = set()
+
+
+def register_runtime_secret(value: str) -> None:
+    """Registra en memoria un secreto descifrado (p. ej. de Azure DB) para redactarlo en logs."""
+    cleaned = value.strip()
+    if len(cleaned) < 8:
+        return
+    with _runtime_lock:
+        if len(_runtime_secrets) < 256:
+            _runtime_secrets.add(cleaned)
 
 
 def redact(text: str, env: Mapping[str, str] | None = None) -> str:
-    """Reemplaza por ``[REDACTED]`` los valores sensibles (≥ 8 caracteres) y patrones.
+    """Reemplaza por ``[REDACTED]`` los valores sensibles (>= 8 caracteres) y patrones.
 
     Sin patrón genérico de hex (R-07): claves de caché, sha256 e ids no se tocan.
     ``env=None`` lee ``os.environ``.
     """
     source = os.environ if env is None else env
-    values = sorted(
-        {value for key, value in source.items() if key in SENSITIVE_ENV and len(value) >= 8},
-        key=len,
-        reverse=True,
-    )
+    secret_set = {
+        value for key, value in source.items() if key in SENSITIVE_ENV and len(value) >= 8
+    }
+    with _runtime_lock:
+        secret_set.update(_runtime_secrets)
+    values = sorted(secret_set, key=len, reverse=True)
     out = text
     for value in values:
         out = out.replace(value, "[REDACTED]")

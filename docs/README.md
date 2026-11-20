@@ -1,8 +1,9 @@
 # Documentación de Frances Classroom
 
-Qué leer según lo que necesites. Lo **vigente** describe la app v2 (servidor propio).
-Lo **histórico** describe la v1 (sitio estático con bundle cifrado en R2 y Worker de
-Cloudflare), retirada en CHG-16 y CHG-21; se guarda como registro de decisiones.
+Qué leer según lo que necesites. Lo **vigente** describe la app v2 y su evolución v3
+(servidor propio, `ADRs 021–024`). Lo **histórico** describe la v1 (sitio estático
+con bundle cifrado en R2 y Worker de Cloudflare), retirada en CHG-16 y CHG-21; se
+guarda como registro de decisiones.
 
 ## Empezar
 
@@ -43,13 +44,18 @@ Cloudflare), retirada en CHG-16 y CHG-21; se guarda como registro de decisiones.
 | [015](decisions/ADR-015-groq-llm.md) | LLM en Groq | Reemplazado por 016 |
 | [016](decisions/ADR-016-onerouter-llm.md) | LLM en OneRouter | Aceptado |
 | [017](decisions/ADR-017-ai17-rules-cards-quiz.md) | Evaluación del LLM sin tarjetas ni quiz | Aceptado |
-| [018](decisions/ADR-018-cahier-y-texto-libre.md) | Sistema visual «Cahier» y Texto libre | Propuesto |
-| [019](decisions/ADR-019-ocr-rapidocr-y-office.md) | RapidOCR y lectura de Office | Propuesto |
+| [018](decisions/ADR-018-cahier-y-texto-libre.md) | Sistema visual «Cahier» y Texto libre | Aceptado |
+| [019](decisions/ADR-019-ocr-rapidocr-y-office.md) | RapidOCR y lectura de Office | Aceptado |
 | [020](decisions/ADR-020-sin-github-pages.md) | Sin GitHub Pages; solo el servidor | Aceptado |
+| [021](decisions/ADR-021-login-google-y-aprobacion-admin.md) | Login web con Google y aprobación admin | Aceptado |
+| [022](decisions/ADR-022-pool-multicuenta-azure.md) | Pool multicuenta Azure Speech y Translator | Aceptado |
+| [023](decisions/ADR-023-cahier-atelier-3d-y-animaciones.md) | Sistema visual «Cahier Atelier 3D» y animaciones WebGL | Aceptado |
+| [024](decisions/ADR-024-tarjetas-ia-lematizacion-y-temas.md) | Tarjetas IA v2/v3 (`cards-3` con notas pedagógicas), lematización y temas | Aceptado |
 
 ## Otros
 
 | Documento | Para qué |
 |---|---|
+| [`../.agents/skills/cahier-3d-atelier/SKILL.md`](../.agents/skills/cahier-3d-atelier/SKILL.md) | Sistema visual «Cahier Atelier 3D», escenas Three.js y reglas de CSS/movimiento |
 | [`../tests/fixtures/llm_eval/README.md`](../tests/fixtures/llm_eval/README.md) | Set sintético para evaluar las salidas del LLM |
 | [`../contracts/`](../contracts/) | JSON Schema de la API y de los modelos (`frances schema export`) |

@@ -12,10 +12,12 @@ export function NewCardDialog({
   open,
   onClose,
   onCreated,
+  initial,
 }: {
   open: boolean;
   onClose: () => void;
   onCreated?: (card: CardView) => void;
+  initial?: Partial<CardEditorValues>;
 }) {
   const api = useApi();
 
@@ -35,7 +37,12 @@ export function NewCardDialog({
   return (
     <Dialog open={open} title={s.editor.titleOwn} onClose={onClose}>
       {open ? (
-        <CardEditor mode="own" onSave={create} onCancel={onClose} />
+        <CardEditor
+          mode="own"
+          initial={initial}
+          onSave={create}
+          onCancel={onClose}
+        />
       ) : null}
     </Dialog>
   );

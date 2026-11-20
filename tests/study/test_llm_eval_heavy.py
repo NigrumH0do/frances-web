@@ -18,7 +18,7 @@ import pytest
 from frances.config import process_env
 
 _SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "llm_eval.py"
-_TASKS = ("sheet", "topics", "plan_why", "chat")
+_TASKS = ("cards", "sheet", "topics", "plan_why", "chat")
 _REQUIRED_ENV = ("LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL")
 _GENERATED_SENTINEL = "TEXTO-GENERADO-QUE-NO-DEBE-GUARDARSE"
 
@@ -66,17 +66,16 @@ def test_chat_first_token_under_30s(
     assert first_token_p95 < 30
 
 
-def test_cards_and_quiz_are_rules_only(
+def test_quiz_is_rules_only(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     def _no_client(*args: Any, **kwargs: Any) -> None:
-        raise AssertionError("cards/quiz no deben construir el cliente del LLM")
+        raise AssertionError("quiz no debe construir el cliente del LLM")
 
     monkeypatch.setattr(llm_eval, "llm_from_env", _no_client)
-    for task in ("cards", "quiz"):
-        assert llm_eval.main(["--task", task, "--out", str(tmp_path)], env={}) == 0
-        assert "reglas" in capsys.readouterr().out
-        assert not (tmp_path / f"{task}.json").exists()
+    assert llm_eval.main(["--task", "quiz", "--out", str(tmp_path)], env={}) == 0
+    assert "reglas" in capsys.readouterr().out
+    assert not (tmp_path / "quiz.json").exists()
 
 
 def test_missing_env_exits_2(

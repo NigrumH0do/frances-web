@@ -148,3 +148,30 @@ def test_summary_excludes_errors(tmp_path: Path) -> None:
 
 def test_default_stages_names() -> None:
     assert [n for n, _ in default_stages()] == list(DAILY_STAGES)
+
+
+def test_default_cards_stage_respects_llm_mode_off(
+    ctx: StageContext, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dataclasses import replace
+
+    seen: dict[str, object] = {}
+    new_settings = ctx.settings.model_copy(
+        update={
+            "llm": ctx.settings.llm.model_copy(update={"mode": "off"}),
+            "cards": ctx.settings.cards.model_copy(update={"llm": "auto"}),
+        }
+    )
+    local_ctx = replace(ctx, settings=new_settings)
+    monkeypatch.setitem(local_ctx.env, "LLM_BASE_URL", "https://llm.example/v1")
+    monkeypatch.setitem(local_ctx.env, "LLM_API_KEY", "test-key")
+
+    def fake_run_cards(_ctx: StageContext, llm: bool | None = None) -> StageReport:
+        seen["llm"] = llm
+        return StageReport(stage="cards", status="ok")
+
+    monkeypatch.setattr("frances.cards.run.run_cards", fake_run_cards)
+    cards_stage = dict(default_stages())["cards"]
+    report = cards_stage(local_ctx)
+    assert report.status == "ok"
+    assert seen["llm"] is False

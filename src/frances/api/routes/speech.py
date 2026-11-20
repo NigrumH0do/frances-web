@@ -5,6 +5,7 @@ La clave de Azure se queda en el servidor (R-42): el navegador solo recibe un to
 hora. Red sin respuesta o respuesta no-200 → 503 ``speech_unavailable``.
 """
 
+import sqlite3
 import threading
 import time
 from collections import deque
@@ -16,11 +17,13 @@ import httpx
 from fastapi import APIRouter, Depends, Request
 
 from frances.api.app import ApiContext
-from frances.api.deps import ApiErrorResponse, get_ctx
+from frances.api.deps import ApiErrorResponse, get_conn, get_ctx
 from frances.api.security import CurrentUser, require_user
-from frances.errors import ConfigError
+from frances.azure.pool import candidate_accounts, clear_cooldown, record_failure, record_usage
+from frances.db.usage import current_month
 from frances.log import get_logger, redact
 from frances.models.api import SpeechToken
+from frances.models.azure import SpeechUsageIn
 from frances.timeutil import format_ts
 
 ISSUE_URL = "https://{region}.api.cognitive.microsoft.com/sts/v1.0/issueToken"
@@ -37,8 +40,17 @@ _PURGE_EVERY = 512
 _MAX_KEYS = 10_000
 
 
+class _TokenFetchError(Exception):
+    """Fallo recuperable al pedir token STS de Azure Speech para intentar failover."""
+
+    def __init__(self, status_code: int | None, detail: str) -> None:
+        super().__init__(detail)
+        self.status_code = status_code
+        self.detail = detail
+
+
 class TokenIssuer:
-    """Pide tokens a Azure y los cachea ``CACHE_S`` segundos por región.
+    """Pide tokens a Azure y los cachea ``CACHE_S`` segundos por cuenta y región.
 
     ``clock`` devuelve segundos epoch: el valor de emisión se usa tanto para la caché
     como para calcular ``expires_at``. El cliente lo inyecta la app (``httpx.Client``).
@@ -47,14 +59,15 @@ class TokenIssuer:
     def __init__(self, client: httpx.Client, clock: Callable[[], float]) -> None:
         self._client = client
         self._clock = clock
-        self._cache: dict[str, tuple[str, float]] = {}
+        self._cache: dict[tuple[str, str], tuple[str, float]] = {}
         self._lock = threading.Lock()
 
-    def get(self, region: str, key: str) -> tuple[str, float]:
+    def get(self, region: str, key: str, *, account_id: str = "") -> tuple[str, float]:
         """Devuelve ``(token, emitido_en)``; reusa la caché si aún es válida."""
+        cache_key = (account_id, region)
         with self._lock:
             now = self._clock()
-            cached = self._cache.get(region)
+            cached = self._cache.get(cache_key)
             if cached is not None and now - cached[1] < CACHE_S:
                 return cached
             try:
@@ -67,16 +80,16 @@ class TokenIssuer:
             except httpx.HTTPError as exc:
                 # Sin cuerpo de la respuesta ni cabeceras: el cuerpo puede traer la clave.
                 _log.warning("Azure Speech no disponible: %s", redact(str(exc)))
-                raise ApiErrorResponse(503, "speech_unavailable", _UNAVAILABLE) from exc
+                raise _TokenFetchError(None, type(exc).__name__) from exc
             if response.status_code != 200:
                 _log.warning("Azure Speech devolvió %s", response.status_code)
-                raise ApiErrorResponse(503, "speech_unavailable", _UNAVAILABLE)
+                raise _TokenFetchError(response.status_code, f"HTTP {response.status_code}")
             token = response.text.strip()
             if not token:
                 _log.warning("Azure Speech devolvió un token vacío")
-                raise ApiErrorResponse(503, "speech_unavailable", _UNAVAILABLE)
+                raise _TokenFetchError(None, "empty_token")
             issued_at = self._clock()
-            self._cache[region] = (token, issued_at)
+            self._cache[cache_key] = (token, issued_at)
             return token, issued_at
 
 
@@ -165,23 +178,54 @@ def issue_token(
     request: Request,
     user: Annotated[CurrentUser, Depends(require_user)],
     ctx: Annotated[ApiContext, Depends(get_ctx)],
+    conn: Annotated[sqlite3.Connection, Depends(get_conn)],
 ) -> SpeechToken:
-    """Emite un token de Azure para el navegador; nunca devuelve la clave."""
-    try:
-        key = ctx.settings.secret("AZURE_SPEECH_KEY")
-        region = ctx.settings.secret("AZURE_SPEECH_REGION")
-    except ConfigError as exc:
-        _log.error("falta la configuración de Azure Speech")
-        raise ApiErrorResponse(503, "speech_unavailable", _UNAVAILABLE) from exc
+    """Emite un token de Azure del pool activo con failover; nunca devuelve la clave."""
+    now = ctx.now()
+    candidates = candidate_accounts(
+        conn,
+        ctx.env,
+        kind="speech",
+        meter="stt_seconds",
+        needed=1,
+        now=now,
+    )
+    if not candidates:
+        _log.error("no hay cuentas de Azure Speech disponibles")
+        raise ApiErrorResponse(503, "speech_unavailable", _UNAVAILABLE)
 
     if not _limiter(request).hit(user.id):
         raise ApiErrorResponse(429, "rate_limited", _RATE_LIMITED)
 
-    token, issued_at = _issuer(request).get(region, key)
-    expires_at = datetime.fromtimestamp(issued_at, UTC) + timedelta(seconds=TOKEN_TTL_S)
-    return SpeechToken(
-        token=token,
-        region=region,
-        locale="fr-FR",
-        expires_at=format_ts(expires_at),
-    )
+    issuer = _issuer(request)
+    for account in candidates:
+        try:
+            token, issued_at = issuer.get(account.region, account.api_key, account_id=account.id)
+        except _TokenFetchError as exc:
+            record_failure(conn, account.id, exc.status_code, exc.detail, now)
+            continue
+        clear_cooldown(conn, account.id, now)
+        expires_at = datetime.fromtimestamp(issued_at, UTC) + timedelta(seconds=TOKEN_TTL_S)
+        return SpeechToken(
+            token=token,
+            region=account.region,
+            locale="fr-FR",
+            expires_at=format_ts(expires_at),
+            account_id=account.id,
+            account_label=account.label,
+        )
+
+    raise ApiErrorResponse(503, "speech_unavailable", _UNAVAILABLE)
+
+
+@router.post("/speech/usage")
+def report_speech_usage(
+    body: SpeechUsageIn,
+    _user: Annotated[CurrentUser, Depends(require_user)],
+    ctx: Annotated[ApiContext, Depends(get_ctx)],
+    conn: Annotated[sqlite3.Connection, Depends(get_conn)],
+) -> dict[str, bool]:
+    """Registra segundos de STT consumidos en el cliente contra la cuenta usada."""
+    now = ctx.now()
+    record_usage(conn, body.account_id, current_month(now), "stt_seconds", body.seconds, now)
+    return {"ok": True}

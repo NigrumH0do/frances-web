@@ -2,7 +2,14 @@ import { useState } from 'react';
 import { useApi } from '../../api/ApiContext';
 import { toUiError } from '../../api/client';
 import { useResource } from '../../api/useResource';
-import { Button, Card, Chip, StateView, Switch } from '../../components';
+import {
+  AppBar,
+  Button,
+  Card,
+  Chip,
+  StateView,
+  Switch,
+} from '../../components';
 import type { ChipTone } from '../../components';
 import type { JobOut, VoiceOut } from '../../contracts/generated';
 import { messageFor } from '../../l10n/errors';
@@ -120,7 +127,7 @@ export function AdminAudio() {
 
   return (
     <div className="stack-lg">
-      <h1>{strings.title}</h1>
+      <AppBar title={strings.title} back={{ to: '/mas', label: 'Más' }} />
 
       {notice !== null ? (
         <p className="callout info" role="status">

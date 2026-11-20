@@ -700,3 +700,48 @@ test('carga las conversaciones y abre la última sin threadId', async () => {
   expect(within(list).getByText('5 nov 05:01')).toBeVisible();
   expect(await screen.findByText(/Con être…/)).toBeVisible();
 });
+
+test('chips iniciales envían pregunta en hilo vacío y Crear tarjeta abre diálogo prellenado', async () => {
+  let sent = false;
+  const { transport } = renderChatScreen({
+    path: '/chat/th_1',
+    pattern: '/chat/:threadId',
+    routes: {
+      'GET /api/chat/threads': [THREAD],
+      'GET /api/chat/threads/th_1': () =>
+        jsonResponse(sent ? DETAIL : EMPTY_THREAD),
+      'POST /api/chat/threads/th_1/messages': () => {
+        sent = true;
+        return sseResponse([
+          { kind: 'meta', message_id: 1 },
+          { kind: 'token', text: 'Con être… [1]' },
+          { kind: 'citation', citation: CITATION },
+          { kind: 'done', message_id: 2 },
+        ]);
+      },
+    },
+  });
+
+  const starter = await screen.findByRole('button', {
+    name: '¿Cómo se forma el passé composé?',
+  });
+  await userEvent.click(starter);
+
+  await waitFor(() =>
+    expect(
+      transport.calls.find(
+        (c) =>
+          c.method === 'POST' && c.url === '/api/chat/threads/th_1/messages',
+      )?.body,
+    ).toEqual({ question: '¿Cómo se forma el passé composé?' }),
+  );
+
+  const createBtn = await screen.findByRole('button', {
+    name: '+ Crear tarjeta',
+  });
+  await userEvent.click(createBtn);
+
+  const dialog = await screen.findByRole('dialog');
+  expect(within(dialog).getByLabelText('Español')).toHaveValue('Con être…');
+  expect(within(dialog).getByLabelText('Notas')).toHaveValue('Con être…');
+});

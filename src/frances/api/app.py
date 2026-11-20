@@ -25,6 +25,7 @@ from frances.timeutil import now_utc
 ROUTER_MODULES: tuple[str, ...] = (
     "frances.api.routes.health",
     "frances.api.routes.auth",
+    "frances.api.routes.auth_google",
     "frances.api.routes.admin_users",
     "frances.api.routes.content",
     "frances.api.routes.cards",
@@ -39,6 +40,7 @@ ROUTER_MODULES: tuple[str, ...] = (
     "frances.api.routes.manage_audio",
     "frances.api.routes.manage_topics",
     "frances.api.routes.practice",
+    "frances.api.routes.admin_azure",
 )
 
 

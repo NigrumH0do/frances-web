@@ -14,6 +14,8 @@ export const repasarStrings = {
   progress: '{i}/{total}',
   showAnswer: 'Mostrar respuesta',
   answer: 'Respuesta',
+  exampleLabel: 'Ejemplo',
+  noteLabel: 'Nota',
   hardChip: 'Difícil',
   source: 'Fuente: {title}',
   ratingLabel: '¿Qué tal la recordaste?',
@@ -39,6 +41,7 @@ export const repasarStrings = {
   reviewed: 'Repasadas: {n}',
   again: 'Otra vez: {n}',
   pending: 'Guardadas sin conexión: {n}',
+  kbdHint: 'Atajos: Espacio girar · 1–4 calificar · A audio',
   kinds: {
     vocab: 'Vocabulario',
     phrase: 'Frase',

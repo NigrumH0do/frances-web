@@ -115,6 +115,7 @@ class CardView(BaseModel):
     tags: list[str]
     stale: bool
     source_item_ids: list[str]
+    source_titles: dict[str, str] = Field(default_factory=dict)
     audio: list[AudioClip]
     audio_pending: list[AudioPending]
     owner: Literal["shared", "mine"]
@@ -139,6 +140,8 @@ class SpeechToken(BaseModel):
     region: str
     locale: Literal["fr-FR"] = "fr-FR"
     expires_at: str
+    account_id: str | None = None
+    account_label: str | None = None
 
 
 #: Tope de caracteres de un texto de práctica libre (PRACTICE-01).

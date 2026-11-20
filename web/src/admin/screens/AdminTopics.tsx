@@ -2,7 +2,15 @@ import { useState, type ReactNode } from 'react';
 import { useApi } from '../../api/ApiContext';
 import { toUiError } from '../../api/client';
 import { useResource } from '../../api/useResource';
-import { Button, Card, Chip, Dialog, Field, StateView } from '../../components';
+import {
+  AppBar,
+  Button,
+  Card,
+  Chip,
+  Dialog,
+  Field,
+  StateView,
+} from '../../components';
 import type { UiError } from '../../components';
 import type {
   ItemPage,
@@ -593,7 +601,7 @@ export function AdminTopics() {
   return (
     <div className="stack-lg">
       <div className="stack">
-        <h1>{s.title}</h1>
+        <AppBar title={s.title} back={{ to: '/mas', label: 'Más' }} />
         <p className="small muted">{s.intro}</p>
       </div>
 

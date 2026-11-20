@@ -7,6 +7,7 @@
 @import './components.css';
 @import './legacy.css';
 @import './screens.css';
+@import './motion.css';
 
 /* Base: elementos y el francés de estudio. Los valores vienen de tokens.css. */
 

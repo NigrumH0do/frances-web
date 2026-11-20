@@ -7,7 +7,7 @@ invitación nunca queda consumida a medias.
 
 import re
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -23,7 +23,7 @@ from frances.accounts.passwords import (
     verify_password,
 )
 from frances.errors import FrancesError
-from frances.models.accounts import InviteOut, Role, UserOut
+from frances.models.accounts import AuthProvider, InviteOut, Role, UserOut, UserStatus
 from frances.models.ids import new_invite_id, new_secret_token, new_user_id
 from frances.models.ids import token_sha256 as _sha256
 from frances.textnorm import display_clean
@@ -31,10 +31,16 @@ from frances.timeutil import format_ts, parse_ts
 
 AccountCode = Literal["email_taken", "invite_invalid", "last_admin", "max_users", "not_found"]
 
+#: Marcador de password_hash para cuentas creadas exclusivamente con Google OIDC.
+OAUTH_ONLY_PASSWORD_HASH = "!oauth-only"
+
 _EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 _NAME_MAX = 80
 
-_USER_COLUMNS = "id, email, display_name, role, created_at, last_login_at, disabled_at"
+_USER_COLUMNS = (
+    "id, email, display_name, role, created_at, last_login_at, disabled_at,"
+    " status, auth_provider, avatar_url"
+)
 _INVITE_COLUMNS = "id, role, note, created_at, expires_at, used_at, revoked_at"
 
 
@@ -94,6 +100,11 @@ def _clean_name(raw: str) -> str:
 
 
 def _user(row: tuple[object, ...]) -> UserOut:
+    disabled_at = row[6]
+    status: UserStatus = row[7]  # type: ignore[assignment]
+    if disabled_at is not None and status == "active":
+        status = "disabled"
+    provider: AuthProvider = row[8]  # type: ignore[assignment]
     return UserOut(
         id=str(row[0]),
         email=str(row[1]),
@@ -101,7 +112,10 @@ def _user(row: tuple[object, ...]) -> UserOut:
         role=row[3],  # type: ignore[arg-type]
         created_at=str(row[4]),
         last_login_at=None if row[5] is None else str(row[5]),
-        disabled=row[6] is not None,
+        disabled=disabled_at is not None or status == "disabled",
+        status=status,
+        auth_provider=provider,
+        avatar_url=None if row[9] is None else str(row[9]),
     )
 
 
@@ -164,8 +178,14 @@ def get_user_by_email(conn: sqlite3.Connection, email: str) -> UserOut | None:
     return None if row is None else _user(tuple(row))
 
 
-def list_users(conn: sqlite3.Connection) -> list[UserOut]:
-    rows = conn.execute(f"SELECT {_USER_COLUMNS} FROM users ORDER BY created_at, id").fetchall()
+def list_users(conn: sqlite3.Connection, status: UserStatus | None = None) -> list[UserOut]:
+    if status is not None:
+        rows = conn.execute(
+            f"SELECT {_USER_COLUMNS} FROM users WHERE status = ? ORDER BY created_at, id",
+            (status,),
+        ).fetchall()
+    else:
+        rows = conn.execute(f"SELECT {_USER_COLUMNS} FROM users ORDER BY created_at, id").fetchall()
     return [_user(tuple(row)) for row in rows]
 
 
@@ -175,20 +195,21 @@ def authenticate(
     """Devuelve el usuario si el correo y la contraseña coinciden y la cuenta está activa.
 
     Siempre hace exactamente una verificación argon2: contra el hash del usuario o contra
-    un hash ficticio si el correo no existe, para que el tiempo no revele cuentas.
+    un hash ficticio si el correo no existe o es cuenta solo OAuth, para no revelar cuentas.
     """
     clean = _clean_email_or_none(email)
     row = None
     if clean is not None:
         row = conn.execute(
-            "SELECT id, password_hash, disabled_at FROM users WHERE email = ?", (clean,)
+            "SELECT id, password_hash, disabled_at, status FROM users WHERE email = ?",
+            (clean,),
         ).fetchone()
-    if row is None:
+    if row is None or str(row[1]) == OAUTH_ONLY_PASSWORD_HASH:
         verify_password(_DUMMY_HASH, password)
         return None
-    user_id, stored, disabled_at = str(row[0]), str(row[1]), row[2]
+    user_id, stored, disabled_at, status = str(row[0]), str(row[1]), row[2], str(row[3])
     ok = verify_password(stored, password)
-    if not ok or disabled_at is not None:
+    if not ok or disabled_at is not None or status != "active":
         return None
     with _write(conn):
         normalized = _normalize(password)
@@ -205,15 +226,16 @@ def set_disabled(conn: sqlite3.Connection, user_id: str, disabled: bool, now: da
     """Deshabilita o reactiva una cuenta. Deshabilitar revoca sus sesiones."""
     with _write(conn):
         row = conn.execute(
-            "SELECT role, disabled_at FROM users WHERE id = ?", (user_id,)
+            "SELECT role, disabled_at, status FROM users WHERE id = ?", (user_id,)
         ).fetchone()
         if row is None:
             raise AccountError("not_found", "usuario no encontrado")
-        role, current = str(row[0]), row[1]
+        role, current, cur_status = str(row[0]), row[1], str(row[2])
         if disabled:
-            if role == "admin" and current is None:
+            if role == "admin" and current is None and cur_status == "active":
                 others = conn.execute(
-                    "SELECT COUNT(*) FROM users WHERE role = 'admin' AND disabled_at IS NULL"
+                    "SELECT COUNT(*) FROM users"
+                    " WHERE role = 'admin' AND disabled_at IS NULL AND status = 'active'"
                     " AND id <> ?",
                     (user_id,),
                 ).fetchone()[0]
@@ -221,16 +243,160 @@ def set_disabled(conn: sqlite3.Connection, user_id: str, disabled: bool, now: da
                     raise AccountError(
                         "last_admin", "no se puede deshabilitar al último administrador activo"
                     )
-            if current is None:
+            if current is None or cur_status != "disabled":
                 conn.execute(
-                    "UPDATE users SET disabled_at = ? WHERE id = ?", (format_ts(now), user_id)
+                    "UPDATE users SET disabled_at = COALESCE(disabled_at, ?), status = 'disabled'"
+                    " WHERE id = ?",
+                    (format_ts(now), user_id),
                 )
             revoke_user_sessions(conn, user_id, now)
         else:
-            conn.execute("UPDATE users SET disabled_at = NULL WHERE id = ?", (user_id,))
+            conn.execute(
+                "UPDATE users SET disabled_at = NULL, status = 'active' WHERE id = ?",
+                (user_id,),
+            )
     user = get_user(conn, user_id)
     assert user is not None
     return user
+
+
+def approve_user(conn: sqlite3.Connection, user_id: str, now: datetime) -> UserOut:
+    """Aprueba y activa una cuenta pendiente o deshabilitada."""
+    del now
+    with _write(conn):
+        cur = conn.execute(
+            "UPDATE users SET disabled_at = NULL, status = 'active' WHERE id = ?",
+            (user_id,),
+        )
+        if cur.rowcount == 0:
+            raise AccountError("not_found", "usuario no encontrado")
+    user = get_user(conn, user_id)
+    assert user is not None
+    return user
+
+
+def _safe_google_name(raw_name: str, email: str) -> str:
+    cleaned = display_clean(raw_name)[:_NAME_MAX].strip()
+    if cleaned:
+        return cleaned
+    fallback = display_clean(email.split("@", 1)[0])[:_NAME_MAX].strip()
+    return fallback or "Usuario"
+
+
+def login_or_register_google(
+    conn: sqlite3.Connection,
+    *,
+    email: str,
+    google_sub: str,
+    display_name: str,
+    avatar_url: str | None,
+    admin_emails: Collection[str],
+    now: datetime,
+) -> tuple[UserOut, bool]:
+    """Inicia sesión o registra con Google (cualquier cuenta válida).
+
+    Nuevos usuarios quedan ``pending`` salvo correos incluidos en ``admin_emails``
+    que se activan automáticamente como ``admin``.
+    """
+    clean_email = _clean_email(email).lower()
+    name = _safe_google_name(display_name, clean_email)
+    is_bootstrap_admin = clean_email in {item.strip().lower() for item in admin_emails}
+    stamp = format_ts(now)
+    avatar = avatar_url.strip()[:512] if avatar_url and avatar_url.strip() else None
+
+    with _write(conn):
+        existing = conn.execute(
+            "SELECT id, password_hash, role, status, disabled_at FROM users WHERE google_sub = ?",
+            (google_sub,),
+        ).fetchone()
+        if existing is None:
+            existing = conn.execute(
+                "SELECT id, password_hash, role, status, disabled_at FROM users"
+                " WHERE LOWER(email) = ?",
+                (clean_email,),
+            ).fetchone()
+
+        if existing is not None:
+            user_id = str(existing[0])
+            pwd_hash = str(existing[1])
+            provider: AuthProvider = "google" if pwd_hash == OAUTH_ONLY_PASSWORD_HASH else "both"
+            if is_bootstrap_admin:
+                conn.execute(
+                    "UPDATE users SET google_sub = ?, auth_provider = ?, display_name = ?,"
+                    " avatar_url = ?, role = 'admin', status = 'active', disabled_at = NULL"
+                    " WHERE id = ?",
+                    (google_sub, provider, name, avatar, user_id),
+                )
+            else:
+                conn.execute(
+                    "UPDATE users SET google_sub = ?, auth_provider = ?, display_name = ?,"
+                    " avatar_url = ? WHERE id = ?",
+                    (google_sub, provider, name, avatar, user_id),
+                )
+        else:
+            user_id = new_user_id()
+            role: Role = "admin" if is_bootstrap_admin else "user"
+            status: UserStatus = "active" if is_bootstrap_admin else "pending"
+            conn.execute(
+                "INSERT INTO users (id, email, display_name, password_hash, role, invited_by,"
+                " created_at, last_login_at, disabled_at, status, auth_provider, google_sub,"
+                " avatar_url) VALUES (?, ?, ?, ?, ?, NULL, ?, NULL, NULL, ?, 'google', ?, ?)",
+                (
+                    user_id,
+                    clean_email,
+                    name,
+                    OAUTH_ONLY_PASSWORD_HASH,
+                    role,
+                    stamp,
+                    status,
+                    google_sub,
+                    avatar,
+                ),
+            )
+
+        row_status = conn.execute("SELECT status FROM users WHERE id = ?", (user_id,)).fetchone()
+        if row_status is not None and str(row_status[0]) == "active":
+            conn.execute("UPDATE users SET last_login_at = ? WHERE id = ?", (stamp, user_id))
+
+    user = get_user(conn, user_id)
+    assert user is not None
+    return user, user.status == "active" and not user.disabled
+
+
+def save_oauth_state(
+    conn: sqlite3.Connection,
+    *,
+    state: str,
+    code_verifier: str,
+    next_path: str,
+    created_at: str,
+    expires_at: str,
+) -> None:
+    """Guarda un estado PKCE de un solo uso para el callback de Google."""
+    with _write(conn):
+        conn.execute("DELETE FROM oauth_states WHERE expires_at <= ?", (created_at,))
+        conn.execute(
+            "INSERT INTO oauth_states (state, code_verifier, next_path, created_at, expires_at)"
+            " VALUES (?, ?, ?, ?, ?)",
+            (state, code_verifier, next_path, created_at, expires_at),
+        )
+
+
+def consume_oauth_state(
+    conn: sqlite3.Connection, state: str, now: datetime
+) -> tuple[str, str] | None:
+    """Consume y borra el estado OAuth; ``None`` si falta, venció o ya se usó."""
+    stamp = format_ts(now)
+    with _write(conn):
+        conn.execute("DELETE FROM oauth_states WHERE expires_at <= ?", (stamp,))
+        row = conn.execute(
+            "SELECT code_verifier, next_path, expires_at FROM oauth_states WHERE state = ?",
+            (state,),
+        ).fetchone()
+        conn.execute("DELETE FROM oauth_states WHERE state = ?", (state,))
+    if row is None or str(row[2]) <= stamp:
+        return None
+    return str(row[0]), str(row[1])
 
 
 def change_password(
@@ -372,7 +538,7 @@ def create_session(
 ) -> tuple[str, SessionRow]:
     """Crea una sesión. El token en claro se devuelve una vez; en la base solo su hash."""
     user = get_user(conn, user_id)
-    if user is None or user.disabled:
+    if user is None or user.disabled or user.status != "active":
         raise AccountError("not_found", "usuario no encontrado")
     token = new_secret_token()
     csrf = new_secret_token()
@@ -390,13 +556,13 @@ def create_session(
 
 def lookup_session(conn: sqlite3.Connection, token: str, now: datetime) -> SessionRow | None:
     """La sesión vigente del token, o None si no existe, está revocada, vencida o el
-    usuario está deshabilitado. La búsqueda es por hash (índice), no por comparación."""
+    usuario está inactivo. La búsqueda es por hash (índice), no por comparación."""
     row = conn.execute(
         "SELECT s.token_sha256, s.csrf_token, s.expires_at, u.id, u.email, u.display_name,"
-        " u.role, u.created_at, u.last_login_at"
+        " u.role, u.created_at, u.last_login_at, u.status, u.auth_provider, u.avatar_url"
         " FROM sessions s JOIN users u ON u.id = s.user_id"
         " WHERE s.token_sha256 = ? AND s.revoked_at IS NULL AND s.expires_at > ?"
-        " AND u.disabled_at IS NULL",
+        " AND u.disabled_at IS NULL AND u.status = 'active'",
         (_sha256(token), format_ts(now)),
     ).fetchone()
     if row is None:
@@ -409,6 +575,9 @@ def lookup_session(conn: sqlite3.Connection, token: str, now: datetime) -> Sessi
         created_at=str(row[7]),
         last_login_at=None if row[8] is None else str(row[8]),
         disabled=False,
+        status=row[9],
+        auth_provider=row[10],
+        avatar_url=None if row[11] is None else str(row[11]),
     )
     return SessionRow(
         token_sha256=str(row[0]), user=user, csrf_token=str(row[1]), expires_at=str(row[2])

@@ -1,7 +1,7 @@
 // Hooks compartidos por las pantallas de práctica oral (UI-16 y texto libre):
 // cuota de Azure Speech del dispositivo y recognizer con token del servidor.
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useApi } from '../api/ApiContext';
 import { HttpError, OfflineError } from '../api/client';
 import { speechTokenSource } from '../media/speech';
@@ -73,7 +73,14 @@ export function usePracticeRecognizer(): {
 } {
   const api = useApi();
   const [speechError, setSpeechError] = useState<string | null>(null);
-  const tokenSource = useMemo(() => speechTokenSource(api), [api]);
+  const lastAccountId = useRef<string | null>(null);
+  const tokenSource = useMemo(
+    () =>
+      speechTokenSource(api, (tok) => {
+        lastAccountId.current = tok.account_id ?? null;
+      }),
+    [api],
+  );
   const base = useMemo(() => getTokenRecognizer(tokenSource), [tokenSource]);
 
   const recognizer = useMemo<Recognizer | null>(() => {
@@ -84,7 +91,18 @@ export function usePracticeRecognizer(): {
       async assess(referenceText, signal) {
         setSpeechError(null);
         try {
-          return await base.assess(referenceText, signal);
+          const out = await base.assess(referenceText, signal);
+          const accId = lastAccountId.current;
+          if (accId !== null && typeof api.speechUsage === 'function') {
+            const seconds = Math.max(
+              1,
+              Math.min(600, Math.ceil((out.durationMs || 1000) / 1000)),
+            );
+            void api
+              .speechUsage({ account_id: accId, seconds })
+              .catch(() => undefined);
+          }
+          return out;
         } catch (error) {
           const message = speechErrorMessage(error);
           if (message === null) {

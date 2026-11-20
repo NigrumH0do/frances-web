@@ -36,8 +36,34 @@ def build_input(store: Store, paths: DataPaths, item_id: str) -> GenerationInput
     parts = [str(item[3])]
     parts.extend(f"{sha}:{ver}" for sha, ver in versions)
     return GenerationInput(
-        item_id=item_id, title=title, blocks=blocks, input_hash=content_hash(*parts)
+        item_id=item_id,
+        title=title,
+        blocks=blocks,
+        input_hash=content_hash(*parts),
+        classroom_topic=_q_classroom_topic(conn, item_id),
+        study_topic=_q_study_topic(conn, item_id),
     )
+
+
+def _q_classroom_topic(conn: sqlite3.Connection, item_id: str) -> str | None:
+    """Nombre del tema de Classroom asignado al ítem, si existe."""
+    row = conn.execute(
+        "SELECT t.name FROM items i JOIN topics t ON t.id = i.topic_id WHERE i.id = ?",
+        (item_id,),
+    ).fetchone()
+    return str(row[0]) if row is not None and row[0] else None
+
+
+def _q_study_topic(conn: sqlite3.Connection, item_id: str) -> str | None:
+    """Título del tema de estudio vivo asociado al ítem, si existe."""
+    row = conn.execute(
+        "SELECT st.title FROM study_topic_items sti"
+        " JOIN study_topics st ON st.id = sti.topic_id"
+        " WHERE sti.item_id = ? AND st.removed_at IS NULL"
+        " ORDER BY sti.position, st.position LIMIT 1",
+        (item_id,),
+    ).fetchone()
+    return str(row[0]) if row is not None and row[0] else None
 
 
 def input_hash_for(conn: sqlite3.Connection, item_id: str) -> str:

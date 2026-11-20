@@ -14,6 +14,8 @@ import { AppBar, Button, Icon, IconButton, StateView } from '../../components';
 import type { ChatThreadOut } from '../../contracts/generated';
 import { common } from '../../l10n/es';
 import { messageFor } from '../../l10n/errors';
+import type { CardEditorValues } from '../../manage/CardEditor';
+import { NewCardDialog } from '../../manage/NewCardDialog';
 import { useOffline } from '../../offline/OfflineContext';
 import { Composer } from './Composer';
 import { MessageList, type PendingAsk } from './MessageList';
@@ -60,6 +62,23 @@ export default function Chat(): JSX.Element {
   const [question, setQuestion] = useState('');
   const [actionError, setActionError] = useState<UiError | null>(null);
   const [creating, setCreating] = useState(false);
+  const [cardDraft, setCardDraft] = useState<Partial<CardEditorValues> | null>(
+    null,
+  );
+
+  const openCardFromMessage = useCallback((content: string) => {
+    const cleaned = content
+      .replace(/\[\d+\]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const firstSentence = cleaned.split(/(?<=[.!?])\s+/)[0] ?? cleaned;
+    setCardDraft({
+      kind: 'phrase',
+      front_fr: '',
+      back_es: firstSentence.slice(0, 200),
+      notes: cleaned.slice(0, 1500),
+    });
+  }, []);
 
   const reloadThread = useRef(detail.reload);
   reloadThread.current = detail.reload;
@@ -201,6 +220,18 @@ export default function Chat(): JSX.Element {
     question,
   ]);
 
+  const showStarters =
+    online &&
+    !asking &&
+    !creating &&
+    ((threadId === undefined &&
+      threads.status === 'ready' &&
+      threads.data.length === 0) ||
+      (activeId !== null &&
+        detail.status === 'ready' &&
+        detail.data.messages.length === 0 &&
+        pending === null));
+
   return (
     <div className="stack">
       <AppBar
@@ -273,11 +304,41 @@ export default function Chat(): JSX.Element {
           emptyText={chatStrings.emptyThread}
           onRetry={detail.reload}
         >
-          {(data) => <MessageList messages={data.messages} pending={pending} />}
+          {(data) => (
+            <MessageList
+              messages={data.messages}
+              pending={pending}
+              onCreateCard={openCardFromMessage}
+            />
+          )}
         </StateView>
       ) : null}
 
+      {showStarters ? (
+        <div className="stack" aria-label={chatStrings.startersTitle}>
+          <p className="xs muted">{chatStrings.startersTitle}</p>
+          <div className="starter-chips">
+            {chatStrings.starters.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                className="starter-chip"
+                onClick={() => void handleSend(prompt)}
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <Composer disabled={!canAsk} reason={reason} onSend={handleSend} />
+
+      <NewCardDialog
+        open={cardDraft !== null}
+        initial={cardDraft ?? undefined}
+        onClose={() => setCardDraft(null)}
+      />
     </div>
   );
 }

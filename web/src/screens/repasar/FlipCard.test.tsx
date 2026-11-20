@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { MemoryRouter } from 'react-router';
@@ -254,4 +254,95 @@ test('los atajos 1–4 y Espacio no se disparan dentro de campos de texto ni con
   await userEvent.click(input);
   await userEvent.keyboard('4');
   expect(onRate).toHaveBeenCalledTimes(1);
+});
+
+test('usa source_titles legible en el enlace a la publicación cuando existe', () => {
+  render(
+    <MemoryRouter>
+      <FlipCard
+        card={{
+          ...CARD,
+          source_item_ids: ['i-a'],
+          source_titles: { 'i-a': 'Leçon 4 · Les métiers' },
+        }}
+        flipped
+        onFlip={vi.fn()}
+      />
+    </MemoryRouter>,
+  );
+
+  expect(
+    screen.getByRole('link', { name: 'Fuente: Leçon 4 · Les métiers' }),
+  ).toHaveAttribute('href', '/publicaciones/i-a');
+});
+
+test('al voltear muestra recordatorio en francés, IPA, audio y secciones de ejemplo y nota', async () => {
+  const fullCard = card('rich', {
+    kind: 'phrase',
+    front_fr: 'Elle est chinoise.',
+    back_es: 'Ella es china.',
+    ipa: 'ɛl ɛ ʃinwaz',
+    example_fr: 'Il est chinois, mais elle est chinoise.',
+    example_es: 'Él es chino, pero ella es china.',
+    notes:
+      'Concordancia de género: masculino «chinois» (s muda) y femenino «chinoise» (-oise).',
+    tags: ['nacionalidades'],
+    source_titles: { 'i-rich': 'Leçon 1 · Nationalités' },
+    audio: [
+      {
+        field: 'front',
+        voice_id: 'voice-a',
+        url: '/api/audio/front-rich',
+        duration_ms: 950,
+      },
+    ],
+  });
+
+  renderScreen(<FlipCard card={fullCard} flipped onFlip={vi.fn()} />, {
+    routes: {
+      'GET /api/voices': VOICES,
+      'GET /api/me/prefs': PREFS,
+    },
+  });
+
+  await screen.findByText('Ella es china.');
+  const back = document.querySelector('.flip-back');
+  expect(back).not.toBeNull();
+  const scoped = within(back as HTMLElement);
+  expect(await scoped.findByLabelText('Voz')).toBeVisible();
+  expect(back!.querySelector('.flip-recap')).not.toBeNull();
+  expect(scoped.getByText('Elle est chinoise.')).toBeVisible();
+  expect(scoped.getByText('/ɛl ɛ ʃinwaz/')).toBeVisible();
+  expect(scoped.getByText('Ejemplo')).toBeVisible();
+  expect(scoped.getByText('Nota')).toBeVisible();
+  expect(scoped.getByText(/Concordancia de género: masculino/)).toBeVisible();
+});
+
+test('al voltear sin ejemplo ni nota igual muestra el recordatorio en francés en el reverso', () => {
+  const minimalCard = card('minimal', {
+    kind: 'phrase',
+    front_fr: 'Elle est chinoise.',
+    back_es: 'Ella es china.',
+    ipa: 'ɛl ɛ ʃinwaz',
+    example_fr: null,
+    example_es: null,
+    notes: null,
+    source_titles: { 'i-minimal': 'Leçon 1 · Nationalités' },
+  });
+
+  const { container } = render(
+    <MemoryRouter>
+      <FlipCard card={minimalCard} flipped onFlip={vi.fn()} />
+    </MemoryRouter>,
+  );
+
+  const back = container.querySelector('.flip-back');
+  expect(back).not.toBeNull();
+  const scoped = within(back as HTMLElement);
+  expect(back!.querySelector('.flip-recap')).not.toBeNull();
+  expect(scoped.getByText('Elle est chinoise.')).toBeVisible();
+  expect(scoped.getByText('/ɛl ɛ ʃinwaz/')).toBeVisible();
+  expect(scoped.getByText('Ella es china.')).toBeVisible();
+  expect(scoped.queryByText('Ejemplo')).not.toBeInTheDocument();
+  expect(scoped.queryByText('Nota')).not.toBeInTheDocument();
 });

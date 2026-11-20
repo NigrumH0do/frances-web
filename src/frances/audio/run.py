@@ -17,7 +17,7 @@ from typing import Annotated, Literal, Protocol
 
 import typer
 
-from frances.audio.azure_tts import AzureTtsEngine, CapExceeded
+from frances.audio.azure_tts import CapExceeded, PooledAzureTtsEngine
 from frances.audio.edge import EdgeEngine, EngineError
 from frances.audio.policy import plan_audio
 from frances.audio.post import postprocess
@@ -59,13 +59,24 @@ class EngineSet:
 
 
 def make_engines(ctx: StageContext) -> EngineSet:
-    """Edge siempre; Azure solo si ``AZURE_SPEECH_KEY`` está en el entorno."""
+    """Edge siempre; Azure si hay cuentas en el pool DB o ``AZURE_SPEECH_KEY`` en el entorno."""
     azure: TtsEngine | None = None
+    has_db_speech = (
+        ctx.store.conn.execute(
+            "SELECT 1 FROM azure_accounts WHERE kind = 'speech' AND enabled = 1 LIMIT 1"
+        ).fetchone()
+        is not None
+    )
     key = ctx.env.get("AZURE_SPEECH_KEY")
-    if key:
-        region = ctx.env.get("AZURE_SPEECH_REGION") or "eastus"
-        azure = AzureTtsEngine(
-            key, region, ctx.store, ctx.settings.audio.azure_tts_monthly_char_cap
+    if has_db_speech or key:
+        effective_env = dict(ctx.env)
+        if key and not effective_env.get("AZURE_SPEECH_REGION"):
+            effective_env["AZURE_SPEECH_REGION"] = "eastus"
+        azure = PooledAzureTtsEngine(
+            effective_env,
+            ctx.store,
+            ctx.settings.audio.azure_tts_monthly_char_cap,
+            now=ctx.now,
         )
     return EngineSet(edge=EdgeEngine(), azure=azure)
 

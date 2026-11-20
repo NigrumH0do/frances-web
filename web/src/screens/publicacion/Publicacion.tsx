@@ -222,119 +222,130 @@ function ItemBody({
         ) : null}
       </div>
 
-      {paragraphs.length > 0 ? (
-        <section className="stack" aria-label={s.text}>
-          <div className="section-title">
-            <h2>{s.text}</h2>
-          </div>
-          <Card>
-            <div className="stack">
-              {paragraphs.map((paragraph, index) => (
-                <p
-                  className={langProps.className}
-                  lang={langProps.lang}
-                  key={`${index}-${paragraph}`}
+      <div className="pub-split">
+        <div className="stack-lg">
+          <section className="stack" aria-label={s.sheet}>
+            <div className="section-title">
+              <h2>{s.sheet}</h2>
+            </div>
+            {detail.sheet !== null ? (
+              <SheetView sheet={detail.sheet} cards={cards} />
+            ) : (
+              <div className="callout info" role="status">
+                <Icon name="alert" size="sm" />
+                <div className="grow">
+                  <p>
+                    <strong>{s.sheetPendingTitle}</strong>
+                  </p>
+                  <p className="small muted">{s.sheetPendingBody}</p>
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section className="stack" aria-label={s.cards}>
+            <div className="section-title">
+              <h2>{s.cards}</h2>
+              <div className="row wrap">
+                {cardsState.status === 'ready' && cards.length > 0 ? (
+                  <span className="small muted">
+                    {cards.length === 1
+                      ? s.cardsCountOne
+                      : tr(s.cardsCount, { n: cards.length })}
+                  </span>
+                ) : null}
+                <Button
+                  variant="secondary"
+                  onClick={() => setNewCardOpen(true)}
                 >
-                  {paragraph}
-                </p>
-              ))}
+                  {manageStrings.editor.titleOwn}
+                </Button>
+              </div>
             </div>
-          </Card>
-        </section>
-      ) : null}
+            <StateView
+              state={cardsState}
+              empty={(data) => data.cards.length === 0}
+              emptyText={s.cardsEmpty}
+              onRetry={cardsState.reload}
+            >
+              {(data) => (
+                <div className="stack">
+                  {data.cards.map((card) => (
+                    <CardItem card={card} key={card.id} onChanged={onReload} />
+                  ))}
+                </div>
+              )}
+            </StateView>
+            <NewCardDialog
+              open={newCardOpen}
+              onClose={() => setNewCardOpen(false)}
+              onCreated={onReload}
+            />
+          </section>
 
-      {detail.attachments.length > 0 ? (
-        <section className="stack" aria-label={s.attachments}>
-          <div className="section-title">
-            <h2>{s.attachments}</h2>
-          </div>
-          <div className="stack">
-            {detail.attachments.map((att) => (
-              <AttachmentBlock
-                key={att.id}
-                att={att}
-                initialPage={initialPageFor(att)}
-              />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <section className="stack" aria-label={s.sheet}>
-        <div className="section-title">
-          <h2>{s.sheet}</h2>
+          <section className="stack" aria-label={s.quizzes}>
+            <div className="section-title">
+              <h2>{s.quizzes}</h2>
+            </div>
+            <StateView
+              state={quizzesState}
+              empty={(quizzes) => quizzes.length === 0}
+              emptyText={s.quizzesEmpty}
+              onRetry={quizzesState.reload}
+            >
+              {(quizzes) => (
+                <div className="stack">
+                  {quizzes.map((quiz) => (
+                    <QuizItem quiz={quiz} key={quiz.id} />
+                  ))}
+                </div>
+              )}
+            </StateView>
+          </section>
         </div>
-        {detail.sheet !== null ? (
-          <SheetView sheet={detail.sheet} cards={cards} />
-        ) : (
-          <div className="callout info" role="status">
-            <Icon name="alert" size="sm" />
-            <div className="grow">
-              <p>
-                <strong>{s.sheetPendingTitle}</strong>
-              </p>
-              <p className="small muted">{s.sheetPendingBody}</p>
-            </div>
-          </div>
-        )}
-      </section>
 
-      <section className="stack" aria-label={s.cards}>
-        <div className="section-title">
-          <h2>{s.cards}</h2>
-          <div className="row wrap">
-            {cardsState.status === 'ready' && cards.length > 0 ? (
-              <span className="small muted">
-                {cards.length === 1
-                  ? s.cardsCountOne
-                  : tr(s.cardsCount, { n: cards.length })}
-              </span>
+        {paragraphs.length > 0 || detail.attachments.length > 0 ? (
+          <div className="stack-lg">
+            {paragraphs.length > 0 ? (
+              <section className="stack" aria-label={s.text}>
+                <div className="section-title">
+                  <h2>{s.text}</h2>
+                </div>
+                <Card>
+                  <div className="stack">
+                    {paragraphs.map((paragraph, index) => (
+                      <p
+                        className={langProps.className}
+                        lang={langProps.lang}
+                        key={`${index}-${paragraph}`}
+                      >
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </Card>
+              </section>
             ) : null}
-            <Button variant="secondary" onClick={() => setNewCardOpen(true)}>
-              {manageStrings.editor.titleOwn}
-            </Button>
-          </div>
-        </div>
-        <StateView
-          state={cardsState}
-          empty={(data) => data.cards.length === 0}
-          emptyText={s.cardsEmpty}
-          onRetry={cardsState.reload}
-        >
-          {(data) => (
-            <div className="stack">
-              {data.cards.map((card) => (
-                <CardItem card={card} key={card.id} onChanged={onReload} />
-              ))}
-            </div>
-          )}
-        </StateView>
-        <NewCardDialog
-          open={newCardOpen}
-          onClose={() => setNewCardOpen(false)}
-          onCreated={onReload}
-        />
-      </section>
 
-      <section className="stack" aria-label={s.quizzes}>
-        <div className="section-title">
-          <h2>{s.quizzes}</h2>
-        </div>
-        <StateView
-          state={quizzesState}
-          empty={(quizzes) => quizzes.length === 0}
-          emptyText={s.quizzesEmpty}
-          onRetry={quizzesState.reload}
-        >
-          {(quizzes) => (
-            <div className="stack">
-              {quizzes.map((quiz) => (
-                <QuizItem quiz={quiz} key={quiz.id} />
-              ))}
-            </div>
-          )}
-        </StateView>
-      </section>
+            {detail.attachments.length > 0 ? (
+              <section className="stack" aria-label={s.attachments}>
+                <div className="section-title">
+                  <h2>{s.attachments}</h2>
+                </div>
+                <div className="stack">
+                  {detail.attachments.map((att) => (
+                    <AttachmentBlock
+                      key={att.id}
+                      att={att}
+                      initialPage={initialPageFor(att)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

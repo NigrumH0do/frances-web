@@ -136,3 +136,20 @@ def test_search_blocks_limits_results_and_filters_items(indexed: Indexed) -> Non
     only = search_blocks(indexed.conn, "passé", item_ids=["cw_3"])
     assert only and all(hit.item_id == "cw_3" for hit in only)
     assert search_blocks(indexed.conn, "maison", item_ids=["cw_3"]) == []
+
+
+def test_search_expands_spanish_glossary_and_taught_cards(indexed: Indexed) -> None:
+    casa_hits = search_blocks(indexed.conn, "¿cómo se dice casa en francés?")
+    assert casa_hits and any("maison" in hit.snippet.lower() for hit in casa_hits)
+
+    pasado_hits = search_blocks(indexed.conn, "explicación del pasado")
+    assert pasado_hits and any("passé" in hit.snippet.lower() for hit in pasado_hits)
+
+    indexed.conn.execute(
+        "INSERT INTO cards (id, kind, front_fr, back_es, generator, generator_version,"
+        " stale, created_at, updated_at)"
+        " VALUES ('c_srch_1', 'vocab', 'la école', 'el colegio', 'demo', '1', 0, ?, ?)",
+        (_NOW, _NOW),
+    )
+    colegio_hits = search_blocks(indexed.conn, "colegio")
+    assert colegio_hits and any("école" in hit.snippet.lower() for hit in colegio_hits)

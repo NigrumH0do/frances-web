@@ -1,4 +1,4 @@
-# Infraestructura de Frances Classroom v2
+# Infraestructura de Frances Classroom (v2 / v3)
 
 Cuatro servicios sobre `/srv/frances`:
 
@@ -102,13 +102,18 @@ copia concreta y `--force` solo si se quiere reemplazar `state.db`.
 
 ## Proxy y X-Forwarded-For
 
-`frances serve` (SRV-02) arranca uvicorn con `proxy_headers=True`. El comando
-todavía fija `forwarded_allow_ips="*"` en el código; SRV-13 no puede cambiarlo
-porque `src/frances/api/cli.py` está fuera de sus rutas. Para que ese `*` no
-confíe en cualquier contenedor, `caddy` y `api` comparten solo la red `edge` y
-ningún otro servicio está en ella: las cabeceras `X-Forwarded-For` solo pueden
-llegar desde Caddy. Queda como seguimiento agregar `--forwarded-allow-ips` a
-`frances serve` y pasar el CIDR de esa red desde compose.
+`frances serve` arranca uvicorn con `proxy_headers=True` y
+`forwarded_allow_ips` tomado de `FRANCES_FORWARDED_ALLOW_IPS` (por defecto
+`127.0.0.1` en local). En producción, [`infra/compose.yaml`](compose.yaml) y
+[`infra/env.example`](env.example) fijan `FRANCES_FORWARDED_ALLOW_IPS=172.28.0.0/24`
+(la subred fija `edge` compartida únicamente entre `caddy` y `api`), de modo que
+los encabezados reenviados solo se aceptan desde Caddy.
+
+Si activas login web con Google OIDC o administración multicuenta de Azure desde
+la web, define también en `/srv/frances/.env`:
+
+- `GOOGLE_LOGIN_CLIENT_ID`, `GOOGLE_LOGIN_CLIENT_SECRET`, `FRANCES_ADMIN_EMAILS`
+- `FRANCES_SECRETS_KEY` (clave Fernet de 32 bytes base64 urlsafe)
 
 ## Verificación local (sin datos reales)
 
@@ -135,15 +140,14 @@ usar `--no-env-resolution` para validar solo la estructura.
 1. Tener el dominio y abrir los puertos 80/443 en la Security List de Oracle y
    en el firewall de la instancia (GOL-01).
 2. Crear el refresh token de Google (pantalla de consentimiento «In production»)
-   y las claves de Azure, OneRouter y Object Storage, y escribirlos en
-   `/srv/frances/.env` (GOL-02).
+   y las claves de Azure, LLM, Object Storage y (opcional) Google OIDC +
+   `FRANCES_SECRETS_KEY`, y escribirlos en `/srv/frances/.env` (GOL-02).
 3. Primer despliegue, primera carga, backup y restauración de prueba (GOL-03 y
    GOL-04), y el checklist de aceptación (GOL-05).
 
-Ya están aceptados el riesgo de mandar textos del curso al LLM (ADR-008) y las
-maquetas del rediseño (ADR-009). Faltan por aprobar ADR-018 (diseño «Cahier») y
-ADR-019 (RapidOCR). La lista completa está en
-[`docs/PENDIENTES.md`](../docs/PENDIENTES.md).
+Ya están aceptados `ADR-008`, `ADR-009`, `ADR-018` («Cahier»), `ADR-019`
+(`RapidOCR` y Office) y las decisiones v3 (`ADR-021`–`ADR-024`). La lista
+completa de pendientes está en [`docs/PENDIENTES.md`](../docs/PENDIENTES.md).
 
 Nunca se copian al repo ni a la imagen datos del curso, `.env`, `data/`,
 `.venv` ni `node_modules` (ver `.dockerignore`).

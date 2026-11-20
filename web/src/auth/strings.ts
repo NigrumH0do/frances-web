@@ -2,10 +2,23 @@
 
 export const authStrings = {
   login: {
+    eyebrow: 'Cahier Atelier · Français',
     title: 'Entrar',
+    subtitle: 'Tu cuaderno personal de estudio, audio y pronunciación.',
+    googleContinue: 'Continuar con Google',
+    orEmail: 'o con tu cuenta',
     email: 'Email',
     password: 'Contraseña',
     submit: 'Entrar',
+    pendingNotice:
+      'Tu cuenta de Google quedó registrada. Espera a que el administrador apruebe tu acceso.',
+    googleDenied: 'Cancelaste el inicio de sesión con Google.',
+    googleDisabled: 'El acceso con Google no está habilitado en este servidor.',
+    oauthState: 'La solicitud expiró por seguridad. Inténtalo de nuevo.',
+    googleFailed:
+      'No se pudo validar tu cuenta con Google. Inténtalo otra vez.',
+    googleUnverified: 'Tu cuenta de Google debe tener el correo verificado.',
+    accountDisabled: 'Tu cuenta está deshabilitada. Contacta al administrador.',
     badCredentials: 'Email o contraseña incorrectos.',
     rateLimited: 'Demasiados intentos; espera un minuto',
     offline: 'Sin conexión. Vuelve a intentarlo cuando tengas red.',

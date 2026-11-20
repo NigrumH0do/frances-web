@@ -7,6 +7,7 @@ from typing import Protocol
 
 import httpx
 
+from frances.azure.pool import candidate_accounts, record_failure, record_usage
 from frances.db.store import Store
 from frances.db.usage import current_month, usage_add, usage_get
 from frances.log import get_logger, redact
@@ -156,10 +157,92 @@ class AzureTranslator:
         return out
 
 
+class PooledAzureTranslator(AzureTranslator):
+    """Traductor Azure multicuenta con failover inmediato y cuotas por cuenta (ADR-022)."""
+
+    def __init__(
+        self,
+        env: Mapping[str, str],
+        store: Store,
+        monthly_cap: int,
+        client: httpx.Client | None = None,
+        now: Callable[[], datetime] = now_utc,
+    ) -> None:
+        super().__init__("", "", store, monthly_cap, client=client, now=now)
+        self._env = dict(env)
+
+    def _send_once(
+        self, batch: list[str], src: str, dst: str, key: str, region: str
+    ) -> tuple[list[str | None] | None, int | None, str]:
+        payload = [{"Text": text} for text in batch]
+        params = {"api-version": _API_VERSION, "from": src, "to": dst}
+        headers = {
+            "Ocp-Apim-Subscription-Key": key,
+            "Ocp-Apim-Subscription-Region": region,
+        }
+        try:
+            resp = self._client.post(
+                ENDPOINT,
+                params=params,
+                headers=headers,
+                json=payload,
+                timeout=_TIMEOUT_S,
+            )
+        except httpx.HTTPError as exc:
+            return None, None, redact(str(exc), self._env)
+        if resp.status_code == 200:
+            return _parse_response(resp, len(batch)), 200, ""
+        return None, resp.status_code, redact(resp.text, self._env)
+
+    def translate(self, texts: list[str], src: str = "fr", dst: str = "es") -> list[str | None]:
+        out: list[str | None] = [None] * len(texts)
+        offset = 0
+        for batch in _split_batches(texts):
+            chars = sum(len(text) for text in batch)
+            moment = self._now()
+            month = current_month(moment)
+            candidates = candidate_accounts(
+                self._store.conn,
+                self._env,
+                kind="translator",
+                meter="translator_chars",
+                needed=chars,
+                now=moment,
+                env_cap_override=self._monthly_cap,
+            )
+            if not candidates:
+                break
+            batch_result: list[str | None] | None = None
+            for account in candidates:
+                parsed, status_code, detail = self._send_once(
+                    batch, src, dst, account.api_key, account.region
+                )
+                if parsed is not None:
+                    with self._store.tx() as conn:
+                        record_usage(
+                            conn, account.id, month, "translator_chars", chars, self._now()
+                        )
+                    batch_result = parsed
+                    break
+                with self._store.tx() as conn:
+                    record_failure(conn, account.id, status_code, detail, self._now())
+            if batch_result is None:
+                break
+            out[offset : offset + len(batch)] = batch_result
+            offset += len(batch)
+        return out
+
+
 def translator_from_env(env: Mapping[str, str], store: Store, monthly_cap: int) -> Translator:
-    """`NullTranslator` si falta `AZURE_TRANSLATOR_KEY` o `AZURE_TRANSLATOR_REGION`."""
+    """`NullTranslator` si faltan credenciales; si no, :class:`PooledAzureTranslator`."""
+    has_db_translator = (
+        store.conn.execute(
+            "SELECT 1 FROM azure_accounts WHERE kind = 'translator' AND enabled = 1 LIMIT 1"
+        ).fetchone()
+        is not None
+    )
     key = env.get("AZURE_TRANSLATOR_KEY")
     region = env.get("AZURE_TRANSLATOR_REGION")
-    if not key or not region:
+    if not has_db_translator and (not key or not region):
         return NullTranslator()
-    return AzureTranslator(key, region, store, monthly_cap)
+    return PooledAzureTranslator(env, store, monthly_cap)

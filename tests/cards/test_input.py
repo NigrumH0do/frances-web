@@ -56,3 +56,28 @@ def test_needs_generation_rules(store: Store) -> None:
     assert "mt_A" not in items_needing_generation(store, False, v)
     assert "mt_A" in items_needing_generation(store, True, v)
     assert "mt_A" in items_needing_generation(store, False, {"rules": "2", "llm": "1"})
+
+
+def test_build_input_injects_classroom_and_study_topics(store: Store, paths: DataPaths) -> None:
+    conn = store.conn
+    conn.execute(
+        "INSERT INTO topics (id, course_id, name, update_time)"
+        " VALUES ('tp_cls', 'crd01-course', 'Unité 1 : Saluer', '2026-10-01T10:00:00Z')"
+    )
+    conn.execute("UPDATE items SET topic_id = 'tp_cls' WHERE id = 'mt_A'")
+    conn.execute(
+        "INSERT INTO study_topics (id, course_id, title, description_es, position,"
+        " generator, generator_version, input_hash, created_at, updated_at)"
+        " VALUES ('st_1', 'crd01-course', 'Saludos formales', 'Desc', 1, 'llm', '1', 'h',"
+        " '2026-10-01T10:00:00Z', '2026-10-01T10:00:00Z')"
+    )
+    conn.execute(
+        "INSERT INTO study_topic_items (topic_id, item_id, position) VALUES ('st_1', 'mt_A', 1)"
+    )
+
+    inp = build_input(store, paths, "mt_A")
+    assert inp.classroom_topic == "Unité 1 : Saluer"
+    assert inp.study_topic == "Saludos formales"
+    assert inp.input_hash == input_hash_for(conn, "mt_A")
+    inp_b = build_input(store, paths, "mt_B")
+    assert inp_b.classroom_topic is None and inp_b.study_topic is None

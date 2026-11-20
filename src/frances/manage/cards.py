@@ -19,6 +19,7 @@ from frances.cards.llm import DailyCallMeter, LlmUnavailable, llm_from_env
 from frances.cards.merge import merge_output
 from frances.cards.repo import llm_items_since
 from frances.cards.rules import CardGenerator, RulesGenerator
+from frances.cards.run import _drop_ungrounded_llm_cards, generate_with_llm
 from frances.cards.translate import translator_from_env
 from frances.db.usage import current_month, usage_add
 from frances.jobs.queue import enqueue, get_job, to_out
@@ -33,7 +34,6 @@ from frances.models import (
 )
 from frances.models.jobs import JobOut
 from frances.stage import StageContext
-from frances.study.quality import card_problems
 from frances.textnorm import display_clean
 from frances.timeutil import BOGOTA, format_ts, norm_ts
 
@@ -291,7 +291,11 @@ def regenerate_item(
 
     dropped = 0
     if chosen.name == "llm":
-        output, dropped = _drop_ungrounded_llm_cards(output, inp)
+        translator = translator_from_env(
+            ctx.env, ctx.store, ctx.settings.translator.monthly_char_cap
+        )
+        rules = RulesGenerator(translator, vocab_max=ctx.settings.cards.vocab_per_item_max)
+        output, dropped = _drop_ungrounded_llm_cards(output, inp, rules)
 
     stats = merge_output(
         ctx.store, item_id, output, chosen.name, chosen.version, format_ts(ctx.now())
@@ -318,7 +322,7 @@ def _generate_with_defaults(
     llm = llm_from_env(ctx.env, timeout_s=float(ctx.settings.llm.timeout_s), meter=meter)
     if llm is not None and _llm_has_room(ctx):
         try:
-            output = llm.generate(inp)
+            output = generate_with_llm(ctx, llm, inp)
         except LlmUnavailable:
             pass
         else:
@@ -334,14 +338,3 @@ def _llm_has_room(ctx: StageContext) -> bool:
     midnight = local.replace(hour=0, minute=0, second=0, microsecond=0)
     since = norm_ts(midnight.isoformat())
     return llm_items_since(ctx.store.conn, since) < ctx.settings.cards.llm_daily_item_limit
-
-
-def _drop_ungrounded_llm_cards(
-    output: GenerationOutput, inp: GenerationInput
-) -> tuple[GenerationOutput, int]:
-    """Quita del LLM las tarjetas que no apuntan a un fragmento real (AI-03)."""
-    kept = [draft for draft in output.cards if not card_problems(draft, inp)]
-    dropped = len(output.cards) - len(kept)
-    if dropped == 0:
-        return output, 0
-    return GenerationOutput(cards=kept, sheet=output.sheet), dropped

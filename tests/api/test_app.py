@@ -23,13 +23,13 @@ def test_router_modules_contract() -> None:
     assert ROUTER_MODULES[:7] == (
         "frances.api.routes.health",
         "frances.api.routes.auth",
+        "frances.api.routes.auth_google",
         "frances.api.routes.admin_users",
         "frances.api.routes.content",
         "frances.api.routes.cards",
         "frances.api.routes.speech",
-        "frances.api.routes.admin_pipeline",
     )
-    assert len(ROUTER_MODULES) == 16
+    assert len(ROUTER_MODULES) == 18
 
 
 def test_missing_router_modules_are_skipped_but_broken_ones_raise(
@@ -179,6 +179,7 @@ def test_serve_calls_uvicorn_with_single_worker(
     assert seen["workers"] == 1
     assert seen["access_log"] is False
     assert seen["server_header"] is False
+    assert seen["forwarded_allow_ips"] == "127.0.0.1"
     assert seen["port"] == 8001
     assert seen["host"] == "127.0.0.1"
 

@@ -138,6 +138,26 @@ def test_render_input_truncates_prioritizing_fr() -> None:
     assert len(s) <= MAX_INPUT_CHARS and s.count("f") > s.count("e")
 
 
+def test_render_input_includes_topics_and_reserves_concise_es_context() -> None:
+    inp = GenerationInput(
+        item_id="i",
+        title="Leçon 4",
+        classroom_topic="Unité 4 : Les aliments",
+        study_topic="La comida y las compras",
+        blocks=[
+            TextBlock(text="Vocabulario para el examen parcial.", lang="es", source="item"),
+            TextBlock(text="Voici du pain " + ("f" * 15000), lang="fr", source="sha256:x"),
+        ],
+        input_hash="h",
+    )
+    rendered = render_input(inp)
+    assert len(rendered) <= MAX_INPUT_CHARS
+    assert "Tema Classroom: Unité 4 : Les aliments" in rendered
+    assert "Tema de estudio: La comida y las compras" in rendered
+    assert "Vocabulario para el examen parcial." in rendered
+    assert rendered.count("f") > 8000
+
+
 def test_strict_schema_requires_all_properties() -> None:
     card = strict_schema()["$defs"]["CardDraft"]
     assert (

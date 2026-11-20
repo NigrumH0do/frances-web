@@ -12,20 +12,27 @@ function expiryOf(token: SpeechToken): number {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-export function speechTokenSource(api: {
-  speechToken: () => Promise<SpeechToken>;
-}): SpeechTokenSource {
+export function speechTokenSource(
+  api: {
+    speechToken: () => Promise<SpeechToken>;
+  },
+  onToken?: (token: SpeechToken) => void,
+): SpeechTokenSource {
   let cached: SpeechTokenValue | null = null;
+  let lastRaw: SpeechToken | null = null;
   let pending: Promise<SpeechTokenValue> | null = null;
 
   return async () => {
     if (cached !== null && cached.expiresAt - EXPIRY_MARGIN_MS > Date.now()) {
+      if (lastRaw !== null) onToken?.(lastRaw);
       return cached;
     }
     if (pending === null) {
       pending = api
         .speechToken()
         .then((token) => {
+          lastRaw = token;
+          onToken?.(token);
           const value: SpeechTokenValue = {
             token: token.token,
             region: token.region,

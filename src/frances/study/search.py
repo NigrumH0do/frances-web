@@ -218,6 +218,117 @@ _STOPWORD_WORDS: tuple[str, ...] = (
 
 STOPWORDS: frozenset[str] = frozenset(_strip_accents(norm_key(word)) for word in _STOPWORD_WORDS)
 
+#: Equivalencias pedagógicas ES->FR (sin tildes) para recuperar bloques en francés.
+_ES_FR_GLOSSARY: dict[str, tuple[str, ...]] = {
+    "agua": ("eau",),
+    "alimento": ("aliment", "nourriture"),
+    "alimentos": ("aliments", "nourriture"),
+    "amigo": ("ami",),
+    "amigos": ("amis",),
+    "ano": ("an", "annee"),
+    "anos": ("ans", "annees"),
+    "articulo": ("article",),
+    "articulos": ("articles",),
+    "ayer": ("hier",),
+    "beber": ("boire",),
+    "blanco": ("blanc", "blanche"),
+    "buenas": ("bonjour", "bonsoir"),
+    "bueno": ("bon",),
+    "buenos": ("bonjour", "bons"),
+    "cafe": ("cafe",),
+    "calle": ("rue",),
+    "camisa": ("chemise",),
+    "casa": ("maison",),
+    "ciudad": ("ville",),
+    "clase": ("classe", "cours"),
+    "color": ("couleur",),
+    "colores": ("couleurs",),
+    "comer": ("manger",),
+    "comida": ("nourriture", "repas", "cuisine"),
+    "compras": ("achats", "courses"),
+    "conjugacion": ("conjugaison",),
+    "cuerpo": ("corps",),
+    "desayuno": ("petit", "dejeuner"),
+    "dia": ("jour", "journee"),
+    "dias": ("jours",),
+    "dinero": ("argent",),
+    "dormir": ("dormir",),
+    "escuela": ("ecole",),
+    "escribir": ("ecrire",),
+    "espanol": ("espagnol",),
+    "estar": ("etre",),
+    "estudiar": ("etudier",),
+    "examen": ("examen",),
+    "familia": ("famille",),
+    "fecha": ("date",),
+    "feliz": ("heureux", "heureuse"),
+    "flor": ("fleur",),
+    "fruta": ("fruit",),
+    "futuro": ("futur",),
+    "gato": ("chat",),
+    "gatos": ("chats", "chat"),
+    "gracias": ("merci",),
+    "grande": ("grand", "grande"),
+    "hablar": ("parler",),
+    "hacer": ("faire",),
+    "hermana": ("soeur",),
+    "hermano": ("frere",),
+    "hola": ("bonjour", "salut"),
+    "hora": ("heure",),
+    "horas": ("heures",),
+    "hoy": ("aujourd", "hui"),
+    "invierno": ("hiver",),
+    "ir": ("aller",),
+    "jardin": ("jardin",),
+    "leccion": ("lecon",),
+    "leer": ("lire",),
+    "libro": ("livre",),
+    "lluvia": ("pluie",),
+    "madre": ("mere",),
+    "manana": ("demain", "matin"),
+    "manzana": ("pomme",),
+    "manzanas": ("pommes",),
+    "mes": ("mois",),
+    "mesa": ("table",),
+    "meses": ("mois",),
+    "negacion": ("negation",),
+    "nino": ("enfant", "garcon"),
+    "noche": ("nuit", "soir"),
+    "nombre": ("nom", "prenom"),
+    "numero": ("nombre", "numero", "chiffre"),
+    "numeros": ("nombres", "numeros", "chiffres"),
+    "padre": ("pere",),
+    "pan": ("pain",),
+    "pasado": ("passe", "compose", "imparfait"),
+    "perro": ("chien",),
+    "pequeno": ("petit", "petite"),
+    "pregunta": ("question",),
+    "preguntas": ("questions",),
+    "presente": ("present",),
+    "primavera": ("printemps",),
+    "pronombre": ("pronom",),
+    "pronombres": ("pronoms",),
+    "queso": ("fromage",),
+    "rojo": ("rouge",),
+    "ropa": ("vetements",),
+    "saludo": ("salut", "bonjour"),
+    "saludos": ("salutations", "bonjour", "salut"),
+    "semana": ("semaine",),
+    "ser": ("etre",),
+    "sol": ("soleil",),
+    "tarde": ("apres", "midi", "soir"),
+    "tener": ("avoir",),
+    "tiempo": ("temps",),
+    "trabajo": ("travail",),
+    "universidad": ("universite",),
+    "verano": ("ete",),
+    "verbo": ("verbe",),
+    "verbos": ("verbes",),
+    "viajar": ("voyager",),
+    "viaje": ("voyage",),
+    "vivir": ("habiter", "vivre"),
+}
+
 
 def query_tokens(q: str) -> list[str]:
     """Tokens ``\\w+`` útiles de ``q``: sin tildes, sin palabras vacías y sin repetir."""
@@ -248,6 +359,43 @@ def fts_query(q: str) -> str | None:
     return " OR ".join(_quote_token(token) for token in tokens)
 
 
+def _expanded_tokens(conn: sqlite3.Connection, base_tokens: list[str]) -> list[str]:
+    """Amplía consultas en español con el glosario A1-A2 y las tarjetas ya enseñadas."""
+    max_expanded = MAX_QUERY_TOKENS * 2
+    expanded: list[str] = list(base_tokens)
+    seen = set(base_tokens)
+
+    def add_token(candidate: str) -> None:
+        if len(expanded) >= max_expanded or candidate in seen or candidate in STOPWORDS:
+            return
+        if len(candidate) < MIN_TOKEN_LENGTH and not any(ch.isdigit() for ch in candidate):
+            return
+        seen.add(candidate)
+        expanded.append(candidate)
+
+    for token in base_tokens:
+        for fr in _ES_FR_GLOSSARY.get(token, ()):
+            add_token(fr)
+
+    if len(expanded) < max_expanded and base_tokens:
+        try:
+            card_rows = conn.execute(
+                "SELECT front_fr, back_es FROM cards WHERE removed_at IS NULL"
+            ).fetchall()
+        except sqlite3.OperationalError:
+            card_rows = []
+        base_set = set(base_tokens)
+        for front_fr, back_es in card_rows:
+            back_tokens = _TOKEN_RE.findall(_strip_accents(norm_key(str(back_es))))
+            if not any(tok in base_set for tok in back_tokens):
+                continue
+            for fr_tok in _TOKEN_RE.findall(_strip_accents(norm_key(str(front_fr)))):
+                add_token(fr_tok)
+            if len(expanded) >= max_expanded:
+                break
+    return expanded
+
+
 def search_blocks(
     conn: sqlite3.Connection,
     q: str,
@@ -261,9 +409,10 @@ def search_blocks(
     ``item_ids``, las de esa colección. El texto del usuario nunca se interpola:
     los tokens van entre comillas y los ids como parámetros ``?``.
     """
-    query = fts_query(q)
-    if query is None:
+    tokens = query_tokens(q)
+    if not tokens:
         return []
+    query = " OR ".join(_quote_token(token) for token in _expanded_tokens(conn, tokens))
     bounded = max(0, min(int(limit), MAX_SEARCH_RESULTS))
     if bounded == 0:
         return []

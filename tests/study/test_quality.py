@@ -129,6 +129,30 @@ def test_grounded_rejects_empty_phrase_after_article() -> None:
     assert not grounded("   ", BLOCKS)
 
 
+def test_grounded_lemmatizes_inflections_and_extended_articles() -> None:
+    blocks = [
+        TextBlock(
+            text="Nous voyageons demain avec un croissant chaud. Je suis heureux d'eau fraîche.",
+            lang="fr",
+            source="item",
+        )
+    ]
+    assert grounded("voyager", blocks)
+    assert grounded("les croissants", blocks)
+    assert grounded("heureuse", blocks)
+    assert grounded("de l'eau", [TextBlock(text="Je bois de l'eau.", lang="fr", source="item")])
+    assert not grounded("du chocolat", blocks)
+    assert not grounded("voyager à Paris", blocks)
+
+
+def test_is_french_rejects_short_spanish_markers() -> None:
+    assert not is_french("¿hola?")
+    assert not is_french("mañana")
+    assert not is_french("canción")
+    assert is_french("l'école")
+    assert is_french("pomme")
+
+
 def test_card_problems_accepts_grounded_card() -> None:
     assert card_problems(_card("vocab", "Bonjour"), INP) == []
 

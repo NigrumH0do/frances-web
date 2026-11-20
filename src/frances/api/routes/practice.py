@@ -49,6 +49,8 @@ _SPACES = re.compile(r"\s+")
 router = APIRouter(prefix="/api", dependencies=[Depends(require_user)])
 
 _state_lock = threading.Lock()
+_synth_semaphore = threading.Semaphore(2)
+_SYNTH_ACQUIRE_TIMEOUT_S = 6.0
 
 
 def clean_practice_text(text: str) -> str:
@@ -75,8 +77,11 @@ def _enabled_voice(ctx: ApiContext, voice_id: str) -> Voice:
 
 def _synthesize(ctx: ApiContext, cache_key: str) -> None:
     """Sintetiza un clip ``pending`` con su propia conexión, fuera de toda transacción."""
-    store = Store.open(ctx.db_path)
+    if not _synth_semaphore.acquire(timeout=_SYNTH_ACQUIRE_TIMEOUT_S):
+        raise ApiErrorResponse(503, "tts_unavailable", _UNAVAILABLE)
+    store: Store | None = None
     try:
+        store = Store.connect(ctx.db_path)
         stage = StageContext(
             settings=ctx.settings,
             paths=ctx.paths,
@@ -86,7 +91,9 @@ def _synthesize(ctx: ApiContext, cache_key: str) -> None:
         )
         run_audio_keys(stage, [cache_key])
     finally:
-        store.close()
+        if store is not None:
+            store.close()
+        _synth_semaphore.release()
 
 
 def _ready(
@@ -136,6 +143,8 @@ def practice_tts(
 
     try:
         _synthesize(ctx, req.cache_key)
+    except ApiErrorResponse:
+        raise
     except Exception as exc:
         # Solo el tipo y la clave: el mensaje puede traer el texto del usuario.
         _log.warning(

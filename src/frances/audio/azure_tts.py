@@ -6,7 +6,7 @@ lanza peticiones cuando el tope mensual ya se agotaría. La clave de Azure
 nunca aparece en los mensajes de error (R-07).
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -14,6 +14,7 @@ from xml.sax.saxutils import escape
 import httpx
 
 from frances.audio.edge import EngineError
+from frances.azure.pool import candidate_accounts, record_failure, record_usage
 from frances.db.store import Store
 from frances.db.usage import current_month, usage_add, usage_get
 from frances.models.audio import EngineFamily, Voice
@@ -105,3 +106,71 @@ class AzureTtsEngine:
             raise EngineError(
                 f"azure tts: error de red ({type(exc).__name__})", retryable=True
             ) from exc
+
+
+class PooledAzureTtsEngine(AzureTtsEngine):
+    """Motor Azure TTS multicuenta con failover inmediato y cuotas por cuenta (ADR-022)."""
+
+    def __init__(
+        self,
+        env: Mapping[str, str],
+        store: Store,
+        monthly_cap: int,
+        client: httpx.AsyncClient | None = None,
+        now: Callable[[], datetime] = now_utc,
+    ) -> None:
+        super().__init__("", "", store, monthly_cap, client=client, now=now)
+        self._env = dict(env)
+
+    async def synthesize(self, text: str, voice: Voice, out_wav_or_mp3: Path) -> None:
+        moment = self._now()
+        month = current_month(moment)
+        candidates = candidate_accounts(
+            self._store.conn,
+            self._env,
+            kind="speech",
+            meter="tts_chars",
+            needed=len(text),
+            now=moment,
+            env_cap_override=self._monthly_cap,
+        )
+        if not candidates:
+            raise CapExceeded("tope mensual de Azure TTS agotado en todas las cuentas")
+
+        body = build_ssml(text, voice)
+        last_error: EngineError | None = None
+        for account in candidates:
+            headers = {
+                "Ocp-Apim-Subscription-Key": account.api_key,
+                "Content-Type": "application/ssml+xml",
+                "X-Microsoft-OutputFormat": _OUTPUT_FORMAT,
+                "User-Agent": "frances",
+            }
+            url = _ENDPOINT.format(region=account.region)
+            try:
+                response = await self._post(url, headers, body)
+            except EngineError as exc:
+                with self._store.tx() as conn:
+                    record_failure(conn, account.id, None, str(exc), self._now())
+                last_error = exc
+                continue
+            if response.status_code == 200:
+                out_wav_or_mp3.write_bytes(response.content)
+                with self._store.tx() as conn:
+                    record_usage(conn, account.id, month, "tts_chars", len(text), self._now())
+                return
+            with self._store.tx() as conn:
+                record_failure(
+                    conn,
+                    account.id,
+                    response.status_code,
+                    f"azure tts HTTP {response.status_code}",
+                    self._now(),
+                )
+            retryable = response.status_code == 429 or response.status_code >= 500
+            last_error = EngineError(
+                f"azure tts HTTP {response.status_code} con voz {voice.derived_from or voice.id}",
+                retryable=retryable,
+            )
+        assert last_error is not None
+        raise last_error

@@ -5,6 +5,8 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 Role = Literal["admin", "user"]
+UserStatus = Literal["active", "pending", "disabled"]
+AuthProvider = Literal["local", "google", "both"]
 
 
 class UserOut(BaseModel):
@@ -17,6 +19,18 @@ class UserOut(BaseModel):
     created_at: str
     last_login_at: str | None
     disabled: bool
+    status: UserStatus = "active"
+    auth_provider: AuthProvider = "local"
+    avatar_url: str | None = None
+
+
+class AuthProvidersOut(BaseModel):
+    """Proveedores de autenticación habilitados en este despliegue."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    google_enabled: bool
+    password_enabled: bool = True
 
 
 class Me(BaseModel):

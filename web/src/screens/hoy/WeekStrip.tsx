@@ -57,6 +57,16 @@ export function WeekStrip({ week }: { week: readonly DayCount[] }) {
         <h2>{hoyStrings.weekTitle}</h2>
       </div>
       <div className="card">
+        <div className="week-counts" aria-hidden="true">
+          {week.map((day) => {
+            const total = day.reviews + day.quiz_attempts;
+            return (
+              <span key={day.day} className={total === 0 ? 'off' : undefined}>
+                {total}
+              </span>
+            );
+          })}
+        </div>
         <div className="bars" aria-hidden="true">
           {week.map((day) => {
             const total = day.reviews + day.quiz_attempts;

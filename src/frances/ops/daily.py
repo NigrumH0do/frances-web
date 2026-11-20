@@ -54,6 +54,7 @@ def default_stages() -> list[tuple[str, StageFn]]:
     """Etapas reales del día, con imports perezosos para no cargar la CLI entera."""
     from frances.audio.run import run_audio
     from frances.cards.drills import seed_drills
+    from frances.cards.llm import llm_from_env
     from frances.cards.phonemes import run_phonemize
     from frances.cards.run import run_cards
     from frances.extract.run import run_extract
@@ -61,7 +62,11 @@ def default_stages() -> list[tuple[str, StageFn]]:
     from frances.sync.run import run_sync
 
     def cards(ctx: StageContext) -> StageReport:
-        llm = ctx.settings.cards.llm == "auto" and bool(ctx.env.get("LLM_BASE_URL"))
+        llm = (
+            ctx.settings.llm.mode == "auto"
+            and ctx.settings.cards.llm == "auto"
+            and llm_from_env(ctx.env) is not None
+        )
         return run_cards(ctx, llm)
 
     def drills(ctx: StageContext) -> StageReport:

@@ -1,6 +1,8 @@
 import type { InviteOut, UserOut } from '../contracts/generated';
 
 export type Role = UserOut['role'];
+export type AuthProvider = NonNullable<UserOut['auth_provider']>;
+export type UserStatus = NonNullable<UserOut['status']>;
 export type InviteState = 'active' | 'used' | 'revoked' | 'expired';
 
 // Textos de las pantallas de usuarios e invitaciones del admin (MGT-06).
@@ -10,10 +12,26 @@ export const usersStrings = {
   users: {
     title: 'Usuarios',
     empty: 'No hay usuarios',
+    filterLabel: 'Filtrar usuarios',
+    filters: {
+      all: 'Todos',
+      pending: 'Pendientes',
+      active: 'Activos',
+      disabled: 'Deshabilitados',
+    },
     lastLogin: (date: string) => `Último acceso: ${date}`,
     neverLoggedIn: 'Nunca ha iniciado sesión',
     active: 'Activo',
+    pending: 'Pendiente',
     disabled: 'Deshabilitado',
+    providerGoogle: 'Google',
+    providerBoth: 'Google + local',
+    providerLocal: 'Cuenta local',
+    approve: (name: string) => `Aprobar ${name}`,
+    approveTitle: 'Aprobar usuario',
+    approveConfirm: (name: string) =>
+      `¿Aprobar a ${name}? Podrá entrar con su cuenta.`,
+    approvedNotice: (name: string) => `${name} quedó aprobado.`,
     disable: (name: string) => `Deshabilitar ${name}`,
     enable: (name: string) => `Habilitar ${name}`,
     disableTitle: 'Deshabilitar usuario',
@@ -69,6 +87,12 @@ export function roleLabel(role: Role): string {
 
 export function userStatusLabel(disabled: boolean): string {
   return disabled ? usersStrings.users.disabled : usersStrings.users.active;
+}
+
+export function authProviderLabel(provider: AuthProvider): string {
+  if (provider === 'google') return usersStrings.users.providerGoogle;
+  if (provider === 'both') return usersStrings.users.providerBoth;
+  return usersStrings.users.providerLocal;
 }
 
 // El estado se deriva de las fechas del contrato; el servidor lista también

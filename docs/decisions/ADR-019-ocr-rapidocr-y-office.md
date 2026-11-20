@@ -1,6 +1,6 @@
 # ADR-019: RapidOCR como OCR principal y lectura de PowerPoint y Word
 
-**Estado:** Propuesto (pendiente de revisión del dueño, 2026-11-15)
+**Estado:** Aceptado (aprobado por el dueño, 2026-11-19)
 **Tareas:** EXT-05 (motores OCR), EXT-06 (Office), EXT-07 (cobertura)
 **Cambia:** EXT-02 (OCR solo con Tesseract)
 

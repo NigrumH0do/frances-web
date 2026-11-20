@@ -29,6 +29,10 @@ export const masStrings = {
     offlineAudio: 'Guardar audios sin conexión',
     offlineAudioHint:
       'Descarga los audios de tu cola de repaso en este dispositivo.',
+    motion3d: 'Animaciones 3D y transiciones',
+    motion3dHint: 'Escenas WebGL y transiciones suaves en este dispositivo.',
+    motion3dReducedHint:
+      'Tu sistema tiene «reducir movimiento» activo; las animaciones permanecen desactivadas.',
     offlineAudioError: 'No se pudo guardar el ajuste de audios.',
     offlineSaved: 'Sin conexión: el tema queda solo en este dispositivo.',
     saved: 'Ajustes guardados.',

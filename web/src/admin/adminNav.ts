@@ -48,6 +48,11 @@ export const ADMIN_SCREENS: readonly AdminScreen[] = [
     file: './screens/AdminCards.tsx',
     title: 'Tarjetas',
   },
+  {
+    path: 'azure',
+    file: './screens/AdminAzure.tsx',
+    title: 'Azure',
+  },
 ];
 
 // El patrón negativo es parte del contrato: un `*.test.tsx` dentro de

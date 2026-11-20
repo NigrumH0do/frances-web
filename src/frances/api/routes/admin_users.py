@@ -4,10 +4,11 @@ import sqlite3
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Query, Response
 
 from frances.accounts.repo import (
     AccountError,
+    approve_user,
     create_invite,
     list_invites,
     list_users,
@@ -24,6 +25,7 @@ from frances.models.accounts import (
     InviteCreated,
     InviteOut,
     UserOut,
+    UserStatus,
 )
 
 router = APIRouter(prefix="/api/admin", dependencies=[Depends(require_admin)])
@@ -33,8 +35,11 @@ MAX_INVITE_TTL_HOURS = 24 * 30
 
 
 @router.get("/users", response_model=list[UserOut])
-def list_all_users(conn: Annotated[sqlite3.Connection, Depends(get_conn)]) -> list[UserOut]:
-    return list_users(conn)
+def list_all_users(
+    conn: Annotated[sqlite3.Connection, Depends(get_conn)],
+    status: Annotated[UserStatus | None, Query()] = None,
+) -> list[UserOut]:
+    return list_users(conn, status=status)
 
 
 def _set_user_disabled(
@@ -65,6 +70,18 @@ def enable_user(
     conn: Annotated[sqlite3.Connection, Depends(get_conn)],
 ) -> UserOut:
     return _set_user_disabled(user_id, False, ctx, conn)
+
+
+@router.post("/users/{user_id}/approve", response_model=UserOut)
+def approve_pending_user(
+    user_id: str,
+    ctx: Annotated[ApiContext, Depends(get_ctx)],
+    conn: Annotated[sqlite3.Connection, Depends(get_conn)],
+) -> UserOut:
+    try:
+        return approve_user(conn, user_id, ctx.now())
+    except AccountError as exc:
+        raise account_failure(exc) from None
 
 
 @router.get("/invites", response_model=list[InviteOut])

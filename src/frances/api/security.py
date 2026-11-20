@@ -27,6 +27,9 @@ from frances.models.accounts import Role
 PUBLIC_ROUTES: frozenset[tuple[str, str]] = frozenset(
     {
         ("GET", "/api/health"),
+        ("GET", "/api/auth/providers"),
+        ("GET", "/api/auth/google/start"),
+        ("GET", "/api/auth/google/callback"),
         ("POST", "/api/auth/login"),
         ("POST", "/api/auth/invite/check"),
         ("POST", "/api/auth/invite/accept"),

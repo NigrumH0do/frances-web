@@ -5,19 +5,30 @@
 // con un chip por fonema («<fonema> <puntaje>»). El tipo de error de la
 // palabra (si lo hay) va fuera del botón.
 
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { JSX } from 'react';
+import { Icon } from '../../components';
 import type { WordScore } from '../../contracts/generated';
+import {
+  cancelBrowserSpeech,
+  speakWithBrowser,
+  useBrowserFrenchVoice,
+} from '../../media/browserTts';
 import { ERROR_LABEL, formatScore, scoreBand } from './score';
 
 export const WORD_LIST_LABELS = {
   list: 'Palabras',
   phonemesOf: (word: string): string => `Fonemas de ${word}`,
+  speakWord: (word: string): string => `Escuchar ${word}`,
 } as const;
 
 export function WordList({ words }: { words: WordScore[] }): JSX.Element {
   const [open, setOpen] = useState<number | null>(null);
   const baseId = useId();
+  const canSpeak = useBrowserFrenchVoice();
+
+  useEffect(() => () => cancelBrowserSpeech(), []);
+
   return (
     <ul aria-label={WORD_LIST_LABELS.list} className="pron-words">
       {words.map((word, i) => {
@@ -37,7 +48,20 @@ export function WordList({ words }: { words: WordScore[] }): JSX.Element {
               onClick={() => setOpen(expanded ? null : i)}
             >
               {word.word}
-            </button>{' '}
+            </button>
+            {canSpeak ? (
+              <>
+                {' '}
+                <button
+                  type="button"
+                  className="word-play-btn"
+                  aria-label={WORD_LIST_LABELS.speakWord(word.word)}
+                  onClick={() => void speakWithBrowser(word.word)}
+                >
+                  <Icon name="play" size="sm" />
+                </button>
+              </>
+            ) : null}{' '}
             <span className="pron-word-score">
               {formatScore(word.accuracy)}
             </span>

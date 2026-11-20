@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo, type ComponentType } from 'react';
 import { Route, Routes } from 'react-router';
 import { useAuth } from '../auth/AuthContext';
-import { Skeleton } from '../components';
+import { AppBar, Skeleton } from '../components';
 import { common } from '../l10n/es';
 import { NotFound } from '../shell/NotFound';
 import AdminSection from './AdminSection';
@@ -56,7 +56,10 @@ export function AdminRoutes({
         index
         element={
           <>
-            <h1>{adminNavStrings.title}</h1>
+            <AppBar
+              title={adminNavStrings.title}
+              back={{ to: '/mas', label: 'Más' }}
+            />
             <AdminSection modules={modules} />
           </>
         }

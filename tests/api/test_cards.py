@@ -395,3 +395,12 @@ def test_cards_list_under_300ms(seeded: Seeded) -> None:
     assert response.status_code == 200
     assert len(response.json()["cards"]) == 200
     assert elapsed < 0.3
+
+
+def test_card_view_includes_human_source_titles(seeded: Seeded) -> None:
+    view = seeded.client.get(f"/api/cards/{CARD_ID}").json()
+    src_ids = view["source_item_ids"]
+    assert src_ids
+    assert view["source_titles"]
+    for iid in src_ids:
+        assert iid in view["source_titles"] and view["source_titles"][iid]

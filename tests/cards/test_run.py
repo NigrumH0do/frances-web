@@ -146,3 +146,59 @@ def test_item_error_is_partial(ctx: StageContext) -> None:
     assert report.status == "partial"
     assert report.errors
     assert [generation["item_id"] for generation in _generations(ctx)] == ["mt_B"]
+
+
+def test_run_cards_falls_back_to_rules_when_zero_llm_cards_grounded(ctx: StageContext) -> None:
+    class HallucinatingLlm:
+        name = "llm"
+        version = "cards-3"
+
+        def generate(self, inp: GenerationInput) -> GenerationOutput:
+            return _out("mot totalement inexistant")
+
+    report = run_cards_with(ctx, RULES, HallucinatingLlm(), FakeTranslator())
+    assert report.counts["cards.generated"] == 2
+    assert report.counts["cards.llm_dropped"] > 0
+    rows = ctx.store.conn.execute("SELECT COUNT(*) FROM cards WHERE removed_at IS NULL").fetchone()
+    assert rows is not None and rows[0] >= 2
+
+
+def test_llm_generator_uses_llm_cache_on_repeat(ctx: StageContext, respx_mock: object) -> None:
+    import json
+
+    import httpx
+    import respx
+
+    from frances.cards.llm import LlmGenerator
+
+    assert isinstance(respx_mock, respx.Router)
+    url = "https://llm.test/v1/chat/completions"
+    payload = {
+        "choices": [
+            {
+                "message": {
+                    "content": json.dumps(
+                        {
+                            "cards": [
+                                {"kind": "vocab", "front_fr": "Bonjour", "back_es": "Buenos días"}
+                            ],
+                            "sheet": {
+                                "summary_es": "Saludo básico.",
+                                "vocab_fronts": ["Bonjour"],
+                                "grammar": [],
+                                "key_phrases": [],
+                            },
+                        }
+                    )
+                }
+            }
+        ]
+    }
+    route = respx_mock.post(url).mock(return_value=httpx.Response(200, json=payload))
+    gen = LlmGenerator("https://llm.test/v1", "k", "m")
+    run_cards_with(ctx, RULES, gen, FakeTranslator())
+    first_calls = route.call_count
+    assert first_calls == 2  # mt_A y mt_B en primer run
+    ctx.store.conn.execute("DELETE FROM generations")
+    run_cards_with(ctx, RULES, gen, FakeTranslator())
+    assert route.call_count == first_calls  # segundo run lee caché llm_cache sin tocar HTTP

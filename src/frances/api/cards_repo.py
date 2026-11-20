@@ -148,6 +148,19 @@ def _sources_by_card(conn: sqlite3.Connection, card_ids: Sequence[str]) -> dict[
     return sources
 
 
+def _titles_by_item(conn: sqlite3.Connection, sources: dict[str, list[str]]) -> dict[str, str]:
+    """Títulos legibles de las publicaciones referenciadas por ``sources``."""
+    item_ids = sorted({item_id for ids in sources.values() for item_id in ids})
+    if not item_ids:
+        return {}
+    placeholders = ",".join("?" for _ in item_ids)
+    rows = conn.execute(
+        f"SELECT id, title FROM items WHERE id IN ({placeholders})",
+        tuple(item_ids),
+    ).fetchall()
+    return {str(row[0]): str(row[1]) for row in rows if row[1]}
+
+
 def _state_from_row(row: tuple[Any, ...], card_id: str) -> UserCardStateOut | None:
     if row[21] is None:
         return None
@@ -178,6 +191,7 @@ def card_view_from_row(
     audio: list[AudioClip],
     audio_pending: list[AudioPending],
     source_item_ids: list[str],
+    source_titles: dict[str, str] | None = None,
 ) -> CardView:
     """Vista de una tarjeta con la copia personal aplicada solo a su dueño."""
     card_id = str(row[0])
@@ -206,6 +220,7 @@ def card_view_from_row(
         tags=_json_list(row[9]),
         stale=bool(row[10]),
         source_item_ids=source_item_ids,
+        source_titles=source_titles or {},
         audio=audio,
         audio_pending=audio_pending,
         owner="mine" if row[11] == user_id else "shared",
@@ -264,6 +279,7 @@ def page_cards(
     card_ids = [str(row[0]) for row in visible]
     audio, pending = _audio_by_card(conn, card_ids)
     sources = _sources_by_card(conn, card_ids)
+    titles = _titles_by_item(conn, sources)
     cards = [
         card_view_from_row(
             row,
@@ -271,6 +287,9 @@ def page_cards(
             audio=audio.get(str(row[0]), []),
             audio_pending=pending.get(str(row[0]), []),
             source_item_ids=sources.get(str(row[0]), []),
+            source_titles={
+                iid: titles[iid] for iid in sources.get(str(row[0]), []) if iid in titles
+            },
         )
         for row in visible
     ]
@@ -291,12 +310,15 @@ def get_card_view(conn: sqlite3.Connection, user_id: str, card_id: str) -> CardV
     typed = cast("tuple[Any, ...]", row)
     audio, pending = _audio_by_card(conn, [card_id])
     sources = _sources_by_card(conn, [card_id])
+    titles = _titles_by_item(conn, sources)
+    src_ids = sources.get(card_id, [])
     return card_view_from_row(
         typed,
         user_id,
         audio=audio.get(card_id, []),
         audio_pending=pending.get(card_id, []),
-        source_item_ids=sources.get(card_id, []),
+        source_item_ids=src_ids,
+        source_titles={iid: titles[iid] for iid in src_ids if iid in titles},
     )
 
 

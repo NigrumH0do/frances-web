@@ -15,12 +15,14 @@
   "dependencies": {
     "@fontsource-variable/lexend": "5.3.0",
     "@fontsource/spectral": "5.3.0",
+    "@types/three": "0.187.0",
     "idb": "8.0.4",
     "microsoft-cognitiveservices-speech-sdk": "1.52.0",
     "pdfjs-dist": "6.4.299",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-router": "8.4.0",
+    "three": "0.187.0",
     "ts-fsrs": "5.4.2",
     "vite-plugin-pwa": "2.0.0"
   },

@@ -3,6 +3,7 @@ import { useApi } from '../../api/ApiContext';
 import { HttpError, toUiError } from '../../api/client';
 import { useResource } from '../../api/useResource';
 import {
+  AppBar,
   Button,
   Card,
   Chip,
@@ -206,7 +207,7 @@ export function AdminInvites() {
 
   return (
     <div className="stack-lg">
-      <h1>{strings.title}</h1>
+      <AppBar title={strings.title} back={{ to: '/mas', label: 'Más' }} />
 
       {notice !== null ? (
         <p className="callout info" role="status">

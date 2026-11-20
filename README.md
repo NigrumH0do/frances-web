@@ -8,27 +8,32 @@ pronunciación sonido por sonido.
 
 Corre en un servidor propio (API + worker) y se usa desde el teléfono como PWA.
 
-> **Estado (2026-11-16):** la v2 funciona completa en local. El despliegue en el
-> servidor de producción está pendiente: son las tareas humanas GOL-01 a GOL-05.
-> Lo que falta está en [`docs/PENDIENTES.md`](docs/PENDIENTES.md).
+> **Estado (2026-11-19):** la v3 («Cahier Atelier 3D», tarjetas IA `cards-3` con
+> notas pedagógicas, login Google con aprobación admin y pool multicuenta Azure)
+> funciona y está verificada en local. El despliegue en el servidor de
+> producción está pendiente: son las tareas humanas GOL-01 a GOL-05. Lo que
+> falta está en [`docs/PENDIENTES.md`](docs/PENDIENTES.md).
 
 ## Qué tiene la app
 
 | Sección | Qué hace |
 |---|---|
-| **Hoy** | Plan del día (repasar, quiz, leer), próxima entrega de Classroom, racha y actividad de la semana |
+| **Hoy** | Plan del día (repasar, quiz, leer), próxima entrega de Classroom, brújula 3D de racha y actividad de la semana con cifras diarias |
 | **Temas** | El curso agrupado en temas por el LLM. Cada tema tiene resumen, clases, tarjetas y quiz |
 | **Publicación** | Texto de la clase, adjuntos (visor de PDF), ficha de estudio y tarjetas |
-| **Repasar → Tarjetas** | Repaso espaciado con FSRS, audio en varias voces, «Más lento», editar tu copia |
-| **Repasar → Pronunciación** | Frases del repaso de hoy o palabras por sonido (/ɑ̃/, /e/, /ʁ/…). Nota por frase, palabra y sonido; «Escucharme» |
+| **Repasar → Tarjetas** | Repaso espaciado con FSRS, audio en varias voces, «Más lento», reverso con recordatorio en francés/IPA/audio, ejemplos, notas pedagógicas (`cards-3`), editar tu copia y confeti WebGL al acertar |
+| **Repasar → Pronunciación** | Orbe acústico 3D, frases del repaso de hoy o palabras por sonido (/ɑ̃/, /e/, /ʁ/…), anillo de puntaje, botón de audio por palabra y «Escucharme» |
 | **Repasar → Texto libre** | Escribes en francés, el audio modelo se genera solo y te grabas para ver tu nota |
-| **Chat** | Preguntas sobre el material; cada respuesta cita la clase y la página |
-| **Más** | Tema claro u oscuro, tarjetas nuevas por día, voces preferidas, cuenta; **Administración** para el admin |
+| **Chat** | Chips de inicio rápido y preguntas sobre el material (búsqueda con glosario ES→FR y citas con título legible de clase y página) |
+| **Más** | Tema claro/oscuro, escenas 3D, tarjetas nuevas por día, voces preferidas, cuenta; **Administración** (usuarios/aprobaciones Google, invitaciones, pool Azure, pipeline, tarjetas, temas y audio) |
 
-La interfaz usa el sistema visual «Cahier»: papel de cuaderno Seyès, tinta azul y
-pizarra en modo oscuro ([ADR-018](docs/decisions/ADR-018-cahier-y-texto-libre.md)).
-Funciona sin conexión para lo ya guardado y cumple contraste AA y objetivos táctiles
-de 44 px.
+La interfaz usa el sistema visual **«Cahier Atelier 3D»**
+([ADR-018](docs/decisions/ADR-018-cahier-y-texto-libre.md),
+[ADR-023](docs/decisions/ADR-023-cahier-atelier-3d-y-animaciones.md)): papel
+de cuaderno Seyès con tinta azul en claro, pizarra en oscuro y escenas WebGL
+ligeras (`Three.js`, carga diferida con degradación limpia en CSS bajo
+`prefers-reduced-motion` o sin WebGL). Funciona sin conexión para lo ya guardado y
+cumple contraste AA y objetivos táctiles de 44 px.
 
 ## Cómo funciona
 
@@ -87,15 +92,18 @@ Internet ──HTTPS──▶ Caddy ──┬──▶ /        web (estáticos 
 | Carpeta | Qué hay |
 |---|---|
 | `src/frances/sync`, `fetch`, `extract` | Classroom, Drive, lectura de archivos y OCR |
-| `src/frances/cards`, `audio` | Tarjetas, fonemas, voces y síntesis |
+| `src/frances/cards`, `audio` | Tarjetas (`cards-3`), fonemas, voces y síntesis |
+| `src/frances/azure` | Pool multicuenta Azure (cifrado Fernet, balanceo y failover Speech/Translator) |
 | `src/frances/study` | Fichas, temas, quizzes, plan, chat, búsqueda y controles de calidad del LLM |
-| `src/frances/api` | API REST + SSE, sesiones, cuentas y rutas de admin |
+| `src/frances/api` | API REST + SSE, sesiones, login Google OIDC, cuentas y rutas de admin |
 | `src/frances/jobs` | Cola, worker y programador |
 | `src/frances/manage`, `accounts`, `backup`, `ops` | Gestión, usuarios, respaldo, `doctor` |
-| `src/frances/models`, `db/migrations` | Contratos Pydantic y esquema SQLite |
+| `src/frances/models`, `db/migrations` | Contratos Pydantic y esquema SQLite (`0001`–`0006`) |
 | `web/src/screens` | Pantallas de la PWA |
-| `web/src/design` | Tokens y componentes CSS del sistema «Cahier» |
+| `web/src/design` | Tokens, componentes y movimiento GPU (`motion.css`) de «Cahier Atelier 3D» |
+| `web/src/three` | Escenas Three.js ligeras y carga diferida (`LazyScenes`) |
 | `web/src/pron`, `media` | Grabación, evaluación, voces y reproductor |
+| `.agents/skills/cahier-3d-atelier/` | Guía y restricciones del sistema visual y Three.js |
 | `contracts/` | JSON Schema exportados; de ahí salen los tipos TypeScript |
 | `infra/` | Dockerfile, compose y Caddy para producción |
 | `deploy/` | `frances.toml` y `voices.yaml` de producción |
@@ -210,10 +218,14 @@ nunca se escriben en logs. Ejemplos: [`.env.example`](.env.example) para local e
 |---|---|
 | `FRANCES_PUBLIC_ORIGIN` | Origen público de la web (`https://…`; `http` solo en `localhost`) |
 | `FRANCES_DATA_DIR`, `FRANCES_STATE_DB` | Carpeta de datos y base SQLite |
+| `FRANCES_FORWARDED_ALLOW_IPS` | IPs/CIDR de proxy de confianza (`172.28.0.0/24` en Compose; `127.0.0.1` en local) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | Lectura de Classroom y Drive |
+| `GOOGLE_LOGIN_CLIENT_ID`, `GOOGLE_LOGIN_CLIENT_SECRET` | Login web opcional con Google OIDC (flujo PKCE en servidor) |
+| `FRANCES_ADMIN_EMAILS` | Lista separada por comas de correos Google promovidos automáticamente a admin |
+| `FRANCES_SECRETS_KEY` | Clave Fernet (32 bytes base64 urlsafe) para cifrar cuentas del pool Azure |
 | `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` | LLM con API compatible con OpenAI; sin ellas, todo usa reglas |
-| `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` | Evaluación de pronunciación y TTS de respaldo |
-| `AZURE_TRANSLATOR_KEY`, `AZURE_TRANSLATOR_REGION` | Traducción de las tarjetas por reglas |
+| `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` | Evaluación de pronunciación y TTS de respaldo (o pool en Admin) |
+| `AZURE_TRANSLATOR_KEY`, `AZURE_TRANSLATOR_REGION` | Traducción de las tarjetas por reglas (o pool en Admin) |
 | `FRANCES_BACKUP_*` | Bucket compatible con S3 para el backup (Oracle Object Storage) |
 
 ## Comandos
@@ -241,25 +253,27 @@ lee `FRANCES_DATA_DIR`.
 | Servicio | Qué recibe |
 |---|---|
 | Google Classroom y Drive | Solo lectura del curso |
-| Proveedor del LLM | Textos del curso (fichas, temas, quizzes, chat) — [ADR-008](docs/decisions/ADR-008-llm-datos-curso.md) |
+| Google OIDC (opcional) | Autenticación web con cualquier cuenta verificada; los registros nuevos quedan `pending` hasta aprobación admin ([ADR-021](docs/decisions/ADR-021-login-google-y-aprobacion-admin.md)) |
+| Proveedor del LLM | Textos del curso (tarjetas, fichas, temas, quizzes, chat) — [ADR-008](docs/decisions/ADR-008-llm-datos-curso.md) |
 | Edge TTS (Microsoft) | Texto de tarjetas y del «Texto libre» para hacer el audio |
-| Azure Speech | Tu voz al evaluar la pronunciación (token de 10 min; la clave queda en el servidor) |
-| Azure Translator | Texto de las tarjetas hechas por reglas |
+| Azure Speech / Translator (pool) | Tu voz al evaluar la pronunciación (token temporal) y traducción/TTS de respaldo con failover entre cuentas ([ADR-022](docs/decisions/ADR-022-pool-multicuenta-azure.md)) |
 | Oracle Object Storage | Copia diaria de la base y los archivos |
 
 El OCR, el repaso FSRS y la búsqueda del chat corren en el servidor. Las notas de
 pronunciación y la grabación de «Escucharme» se quedan en el navegador. El material
-solo lo ven las cuentas que invita el admin. El repo nunca tiene datos reales del
-curso: los fixtures salen de `tests/fixtures/make_fixtures.py`.
+solo lo ven las cuentas activas invitadas o aprobadas por el admin. El repo nunca
+tiene datos reales del curso: los fixtures salen de `tests/fixtures/make_fixtures.py`.
 
 ## Pruebas
 
 ```bash
 # Python: sin red, cobertura mínima 85 %
 uv run ruff check . && uv run ruff format --check . && uv run mypy src && uv run pytest
+uv run python scripts/check_aarch64_wheels.py
 
-# Web
+# Web y verificación de build productivo sin código demo
 npm --prefix web run lint && npm --prefix web run typecheck && npm --prefix web test
+npm --prefix web run build && node web/scripts/check-no-demo.mjs web/dist
 
 # e2e sobre el demo (Chromium y WebKit)
 npx --prefix web playwright install chromium webkit

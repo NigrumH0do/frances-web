@@ -19,7 +19,9 @@ def store(tmp_path: Path) -> Iterator[Store]:
 @pytest.fixture
 def store_with_user_and_card(store: Store) -> Store:
     store.conn.execute(
-        "INSERT INTO users VALUES ('u_1', 'ana@ex.org', 'Ana', 'h', 'user', NULL, 't', NULL, NULL)"
+        "INSERT INTO users (id, email, display_name, password_hash, role, invited_by,"
+        " created_at, last_login_at, disabled_at)"
+        " VALUES ('u_1', 'ana@ex.org', 'Ana', 'h', 'user', NULL, 't', NULL, NULL)"
     )
     store.conn.execute(
         "INSERT INTO cards (id, kind, front_fr, back_es, generator, generator_version,"

@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
 import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -163,4 +163,32 @@ test('la contraseña no se guarda fuera del estado del formulario', async () => 
 
   view.unmount();
   expect(localStorage.getItem('fc-last-me')).not.toContain(password);
+});
+
+test('muestra botón de Google si está habilitado y avisos de callback OAuth', async () => {
+  const transport = fakeTransport({
+    'GET /api/auth/me': () => jsonResponse(UNAUTHENTICATED, 401),
+    'GET /api/auth/providers': {
+      google_enabled: true,
+      password_enabled: true,
+    },
+  });
+  renderLogin(transport, '/entrar?next=%2Frepasar&status=pending');
+
+  expect(screen.getByRole('status')).toHaveTextContent(
+    'Espera a que el administrador apruebe tu acceso.',
+  );
+  const googleLink = await screen.findByRole('link', {
+    name: /Continuar con Google/,
+  });
+  expect(googleLink).toHaveAttribute(
+    'href',
+    '/api/auth/google/start?next=%2Frepasar',
+  );
+
+  cleanup();
+  renderLogin(transport, '/entrar?error=account_disabled');
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    'Tu cuenta está deshabilitada. Contacta al administrador.',
+  );
 });

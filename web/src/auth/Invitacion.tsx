@@ -126,7 +126,7 @@ export default function Invitacion() {
   }
 
   return (
-    <div className="stack-lg">
+    <div className="auth-wrap stack-lg">
       <h1>{authStrings.invite.title}</h1>
 
       {check.status === 'checking' ? (

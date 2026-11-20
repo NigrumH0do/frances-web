@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, type PointerEvent } from 'react';
 import { Link } from 'react-router';
 import { Button, Chip } from '../../components';
 import { cx } from '../../components/cx';
 import type { CardView } from '../../contracts/generated';
 import { CardAudio } from '../../media/CardAudio';
 import { tr } from '../../l10n/es';
+import { prefersReducedMotion } from '../../three/motionPref';
 import { repasarStrings } from './strings';
 
 function isTextEntry(target: EventTarget | null): boolean {
@@ -46,7 +47,28 @@ export function FlipCard({
   const notes = personal?.notes ?? card.notes;
   const theme = card.tags[0];
   const sourceId = card.source_item_ids[0];
+  const sourceTitle =
+    sourceId !== undefined
+      ? (card.source_titles?.[sourceId] ?? sourceId)
+      : undefined;
   const flagged = card.state?.flagged_hard ?? false;
+  const tiltRef = useRef<HTMLDivElement>(null);
+
+  function handleTiltMove(event: PointerEvent<HTMLDivElement>): void {
+    if (prefersReducedMotion() || tiltRef.current === null) return;
+    const rect = tiltRef.current.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const dx = (event.clientX - rect.left) / rect.width - 0.5;
+    const dy = (event.clientY - rect.top) / rect.height - 0.5;
+    tiltRef.current.style.setProperty('--rx', `${(-dy * 4).toFixed(2)}deg`);
+    tiltRef.current.style.setProperty('--ry', `${(dx * 5).toFixed(2)}deg`);
+  }
+
+  function handleTiltLeave(): void {
+    if (tiltRef.current === null) return;
+    tiltRef.current.style.setProperty('--rx', '0deg');
+    tiltRef.current.style.setProperty('--ry', '0deg');
+  }
 
   useEffect(() => {
     if (flipped) return undefined;
@@ -81,68 +103,114 @@ export function FlipCard({
 
   return (
     <>
-      <div className={cx('flip', flipped && 'is-flipped')}>
-        <div className="flip-inner">
-          <div
-            className="flip-face flip-front paper"
-            aria-hidden={flipped}
-            inert={flipped}
-          >
-            <div className="row-between">
-              <span className="kind">
-                {repasarStrings.kinds[card.kind]}
-                {theme !== undefined ? (
-                  <span className="kind-topic" lang="fr">
-                    {theme}
+      <div
+        ref={tiltRef}
+        className="flip-tilt"
+        onPointerMove={handleTiltMove}
+        onPointerLeave={handleTiltLeave}
+      >
+        <div className={cx('flip', flipped && 'is-flipped')}>
+          <div className="flip-inner">
+            <div
+              className="flip-face flip-front paper"
+              aria-hidden={flipped}
+              inert={flipped}
+            >
+              <div className="row-between">
+                <span className="kind">
+                  {repasarStrings.kinds[card.kind]}
+                  {theme !== undefined ? (
+                    <span className="kind-topic" lang="fr">
+                      {theme}
+                    </span>
+                  ) : null}
+                </span>
+                {flagged ? (
+                  <Chip tone="danger">{repasarStrings.hardChip}</Chip>
+                ) : null}
+              </div>
+              <div className="spacer" />
+              <p className="front-fr fr" lang="fr">
+                {front}
+              </p>
+              {card.ipa !== null ? (
+                <p className="ipa" lang="fr">
+                  /{card.ipa}/
+                </p>
+              ) : null}
+              {hasAudio(card, 'front') ? (
+                <CardAudio card={card} field="front" />
+              ) : null}
+              <div className="spacer" />
+            </div>
+
+            <div
+              className="flip-face flip-back paper"
+              aria-hidden={!flipped}
+              inert={!flipped}
+            >
+              <div className="row-between">
+                <span className="kind">{repasarStrings.answer}</span>
+                {flipped ? (
+                  <span className="xs muted">
+                    {repasarStrings.kinds[card.kind]}
+                    {theme !== undefined ? ` · ${theme}` : ''}
                   </span>
                 ) : null}
-              </span>
-              {flagged ? (
-                <Chip tone="danger">{repasarStrings.hardChip}</Chip>
+              </div>
+              {flipped ? (
+                <div className="flip-recap">
+                  <div className="flip-recap-head">
+                    <p className="flip-recap-fr fr" lang="fr">
+                      {front}
+                    </p>
+                    {card.ipa !== null ? (
+                      <p className="flip-recap-ipa" lang="fr">
+                        /{card.ipa}/
+                      </p>
+                    ) : null}
+                  </div>
+                  {hasAudio(card, 'front') ? (
+                    <CardAudio card={card} field="front" />
+                  ) : null}
+                </div>
+              ) : null}
+              <p className="back-es">{back}</p>
+              {exampleFr !== null ||
+              exampleEs !== null ||
+              hasAudio(card, 'example') ? (
+                <div className="flip-block">
+                  <span className="flip-label">
+                    {repasarStrings.exampleLabel}
+                  </span>
+                  {exampleFr !== null ? (
+                    <p className="example fr" lang="fr">
+                      {exampleFr}
+                    </p>
+                  ) : null}
+                  {exampleEs !== null ? (
+                    <p className="example flip-example-es">{exampleEs}</p>
+                  ) : null}
+                  {hasAudio(card, 'example') ? (
+                    <CardAudio card={card} field="example" />
+                  ) : null}
+                </div>
+              ) : null}
+              {notes !== null && notes !== '' ? (
+                <div className="flip-note">
+                  <span className="flip-label">{repasarStrings.noteLabel}</span>
+                  <p className="small">{notes}</p>
+                </div>
+              ) : null}
+              <div className="spacer" />
+              {sourceId !== undefined && sourceTitle !== undefined ? (
+                <p className="xs muted">
+                  <Link to={`/publicaciones/${encodeURIComponent(sourceId)}`}>
+                    {tr(repasarStrings.source, { title: sourceTitle })}
+                  </Link>
+                </p>
               ) : null}
             </div>
-            <div className="spacer" />
-            <p className="front-fr fr" lang="fr">
-              {front}
-            </p>
-            {card.ipa !== null ? (
-              <p className="ipa" lang="fr">
-                /{card.ipa}/
-              </p>
-            ) : null}
-            {hasAudio(card, 'front') ? (
-              <CardAudio card={card} field="front" />
-            ) : null}
-            <div className="spacer" />
-          </div>
-
-          <div
-            className="flip-face flip-back paper"
-            aria-hidden={!flipped}
-            inert={!flipped}
-          >
-            <span className="kind">{repasarStrings.answer}</span>
-            <p className="back-es">{back}</p>
-            {exampleFr !== null ? (
-              <p className="example fr" lang="fr">
-                {exampleFr}
-              </p>
-            ) : null}
-            {exampleEs !== null ? <p className="example">{exampleEs}</p> : null}
-            {hasAudio(card, 'example') ? (
-              <CardAudio card={card} field="example" />
-            ) : null}
-            {notes !== null && notes !== '' ? (
-              <p className="small muted">{notes}</p>
-            ) : null}
-            <div className="spacer" />
-            {sourceId !== undefined ? (
-              <p className="xs muted">
-                <Link to={`/publicaciones/${encodeURIComponent(sourceId)}`}>
-                  {tr(repasarStrings.source, { title: sourceId })}
-                </Link>
-              </p>
-            ) : null}
           </div>
         </div>
       </div>

@@ -13,7 +13,13 @@ from pathlib import Path
 import typer
 
 from frances.cards.input import build_input, items_needing_generation
-from frances.cards.llm import DailyCallMeter, LlmBudgetExceeded, LlmUnavailable, llm_from_env
+from frances.cards.llm import (
+    DailyCallMeter,
+    LlmBudgetExceeded,
+    LlmGenerator,
+    LlmUnavailable,
+    llm_from_env,
+)
 from frances.cards.merge import merge_output, recompute_stale, retranslate_pending
 from frances.cards.repo import llm_items_since
 from frances.cards.rules import CardGenerator, RulesGenerator
@@ -85,7 +91,9 @@ def run_cards_with(
         if generated is None:
             continue
         output, generator = generated
-        _persist(ctx, item_id, inp, output, generator, versions[generator], now, month, report)
+        _persist(
+            ctx, item_id, inp, output, generator, versions[generator], now, month, report, rules
+        )
 
     for item_id in upgrades:
         if not state.active or state.generator is None:
@@ -96,7 +104,7 @@ def run_cards_with(
         if inp is None:
             continue
         try:
-            output = state.generator.generate(inp)
+            output = generate_with_llm(ctx, state.generator, inp)
         except LlmBudgetExceeded:
             _llm_budget_hit(state, report)
             break
@@ -110,7 +118,9 @@ def run_cards_with(
             _record_error(report, ctx, item_id, exc)
             continue
         state.consecutive_failures = 0
-        _persist(ctx, item_id, inp, output, "llm", state.generator.version, now, month, report)
+        _persist(
+            ctx, item_id, inp, output, "llm", state.generator.version, now, month, report, rules
+        )
 
     report.counts["cards.stale"] = recompute_stale(ctx.store)
     report.counts["cards.retranslated"] = retranslate_pending(
@@ -157,7 +167,7 @@ def _generate_must(
     """Genera un ítem obligatorio: LLM si hay cupo, si no reglas como respaldo."""
     if state.active and state.generator is not None and _llm_has_room(ctx, since, limit):
         try:
-            output = state.generator.generate(inp)
+            output = generate_with_llm(ctx, state.generator, inp)
         except LlmBudgetExceeded:
             _llm_budget_hit(state, report)
         except LlmUnavailable as exc:
@@ -179,6 +189,15 @@ def _generate_must(
         return None
 
 
+def generate_with_llm(
+    ctx: StageContext, generator: CardGenerator, inp: GenerationInput
+) -> GenerationOutput:
+    """Ejecuta ``generator`` reutilizando ``llm_cache`` cuando es :class:`LlmGenerator`."""
+    if isinstance(generator, LlmGenerator):
+        return generator.generate_cached(ctx.store, inp, ctx.now)
+    return generator.generate(inp)
+
+
 def _persist(
     ctx: StageContext,
     item_id: str,
@@ -189,10 +208,11 @@ def _persist(
     now: str,
     month: str,
     report: StageReport,
+    rules: CardGenerator | None = None,
 ) -> None:
     """Funde la salida en el Store, cuenta y suma la cuota ``llm_items``."""
     if generator == "llm":
-        output, dropped = _drop_ungrounded_llm_cards(output, inp)
+        output, dropped = _drop_ungrounded_llm_cards(output, inp, rules)
         report.counts["cards.llm_dropped"] += dropped
     merge_output(ctx.store, item_id, output, generator, version, now)
     report.counts["cards.generated"] += 1
@@ -203,11 +223,15 @@ def _persist(
 
 
 def _drop_ungrounded_llm_cards(
-    output: GenerationOutput, inp: GenerationInput
+    output: GenerationOutput, inp: GenerationInput, rules: CardGenerator | None = None
 ) -> tuple[GenerationOutput, int]:
-    """Quita del LLM las tarjetas que no apuntan a un fragmento real (AI-03)."""
+    """Quita del LLM las tarjetas sin anclaje y respalda con reglas si no sobrevive ninguna."""
     kept = [draft for draft in output.cards if not card_problems(draft, inp)]
     dropped = len(output.cards) - len(kept)
+    if not kept and rules is not None:
+        fallback = rules.generate(inp)
+        if fallback.cards:
+            return GenerationOutput(cards=fallback.cards, sheet=output.sheet), dropped
     if dropped == 0:
         return output, 0
     return GenerationOutput(cards=kept, sheet=output.sheet), dropped

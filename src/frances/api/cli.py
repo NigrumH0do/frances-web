@@ -4,6 +4,7 @@ import typer
 import uvicorn
 
 from frances.api.app import api_context_from_env, create_app
+from frances.config import forwarded_allow_ips
 from frances.errors import FrancesError
 from frances.log import redact
 
@@ -26,7 +27,7 @@ def register(app: typer.Typer) -> None:
             port=port,
             workers=1,
             proxy_headers=True,
-            forwarded_allow_ips="*",
+            forwarded_allow_ips=forwarded_allow_ips(ctx.settings),
             access_log=False,
             server_header=False,
         )

@@ -96,6 +96,8 @@ class GenerationInput(BaseModel):
     title: str | None
     blocks: list[TextBlock]
     input_hash: str
+    classroom_topic: str | None = None
+    study_topic: str | None = None
 
 
 class GenerationOutput(BaseModel):

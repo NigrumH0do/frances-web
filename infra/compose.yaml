@@ -4,6 +4,9 @@ name: frances
 # X-Forwarded-For en la API. worker y backup viven en la red por defecto.
 networks:
   edge:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
 
 services:
   caddy:
@@ -40,6 +43,7 @@ services:
     environment:
       FRANCES_DATA_DIR: /data
       FRANCES_STATE_DB: /data/state.db
+      FRANCES_FORWARDED_ALLOW_IPS: "172.28.0.0/24"
     volumes:
       - /srv/frances/data:/data
     expose:

@@ -18,6 +18,7 @@ import { useOffline } from '../../offline/OfflineContext';
 import { PlanList } from './PlanList';
 import { UpcomingCard } from './UpcomingCard';
 import { WeekStrip } from './WeekStrip';
+import { SafeStreakCompassScene } from '../../three/LazyScenes';
 import { hoyStrings } from './strings';
 
 interface HoyData {
@@ -161,11 +162,21 @@ export function Hoy() {
           <p className="sub">{formatShort(now.toISOString())}</p>
         </div>
         {resource.status === 'ready' ? (
-          <Chip tone="streak">
-            {tr(hoyStrings.streak, {
-              n: resource.data.stats.streak_days,
-            })}
-          </Chip>
+          <div
+            className="row"
+            style={{ alignItems: 'center', gap: 'var(--s-2)' }}
+          >
+            <div className="hoy-compass-slot" aria-hidden="true">
+              <SafeStreakCompassScene
+                streak={resource.data.stats.streak_days}
+              />
+            </div>
+            <Chip tone="streak">
+              {tr(hoyStrings.streak, {
+                n: resource.data.stats.streak_days,
+              })}
+            </Chip>
+          </div>
         ) : null}
       </header>
 

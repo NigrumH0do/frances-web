@@ -177,3 +177,16 @@ def test_requires_session(tmp_path: Path, engine: _FakeEngine) -> None:
     response = anon.post("/api/practice/tts", json={"text": "Bonjour", "voice_id": VOICE})
     assert response.status_code in (401, 403)
     anon.close()
+
+
+def test_synthesize_uses_store_connect_and_returns_503_when_semaphore_busy(
+    client: TestClient, engine: _FakeEngine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import threading
+
+    monkeypatch.setattr(practice, "_synth_semaphore", threading.Semaphore(0))
+    monkeypatch.setattr(practice, "_SYNTH_ACQUIRE_TIMEOUT_S", 0.01)
+    response = client.post("/api/practice/tts", json={"text": "Bonjour", "voice_id": VOICE})
+    assert response.status_code == 503
+    assert response.json()["code"] == "tts_unavailable"
+    assert engine.calls == []

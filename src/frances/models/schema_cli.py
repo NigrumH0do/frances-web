@@ -10,6 +10,7 @@ from pydantic.json_schema import models_json_schema
 
 from frances.models.accounts import (
     AcceptInviteRequest,
+    AuthProvidersOut,
     ChangePasswordRequest,
     CreateInviteRequest,
     InviteCheckRequest,
@@ -34,6 +35,16 @@ from frances.models.api import (
     PracticeTtsIn,
     PracticeTtsOut,
     SpeechToken,
+)
+from frances.models.azure import (
+    AzureAccountIn,
+    AzureAccountOut,
+    AzureAccountPatch,
+    AzureAccountUsage,
+    AzurePoolSummary,
+    AzureStrategyPatch,
+    AzureTestResult,
+    SpeechUsageIn,
 )
 from frances.models.bundle import BundleManifest, ContentIndex
 from frances.models.content import CommonMistake
@@ -97,6 +108,7 @@ API_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     # models/accounts.py
     UserOut,
     Me,
+    AuthProvidersOut,
     LoginRequest,
     InviteCheckRequest,
     InviteStatus,
@@ -166,6 +178,15 @@ API_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     TopicSplitIn,
     TopicUpdateIn,
     TopicsMergeIn,
+    # models/azure.py (ADR-022 / CHG-24)
+    AzureAccountIn,
+    AzureAccountOut,
+    AzureAccountPatch,
+    AzureAccountUsage,
+    AzurePoolSummary,
+    AzureStrategyPatch,
+    AzureTestResult,
+    SpeechUsageIn,
 )
 
 

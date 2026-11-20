@@ -6,6 +6,7 @@ el campo y, cuando aplica, el índice.
 """
 
 import re
+import unicodedata
 from collections import Counter
 from collections.abc import Collection, Mapping, Sequence
 
@@ -15,8 +16,35 @@ from frances.study.prompts import NO_MATERIAL_TEXT
 from frances.study.schemas import PlanWhyLlmOut, QuestionLlm, SheetLlmOut, TopicsLlmOut
 from frances.textnorm import norm_key
 
-#: Artículos que se ignoran al comparar una frase con el texto del material.
-_ARTICLES = ("le ", "la ", "l'", "les ", "un ", "une ", "des ")
+#: Artículos y determinantes iniciales que se ignoran al contrastar tarjetas con el texto.
+_ARTICLES = (
+    "de la ",
+    "de l'",
+    "cette ",
+    "le ",
+    "la ",
+    "l'",
+    "les ",
+    "un ",
+    "une ",
+    "des ",
+    "du ",
+    "d'",
+    "au ",
+    "aux ",
+    "mon ",
+    "ma ",
+    "mes ",
+    "ton ",
+    "ta ",
+    "tes ",
+    "son ",
+    "sa ",
+    "ses ",
+    "ce ",
+    "cet ",
+    "ces ",
+)
 #: Tarjetas de gramática y conjugación describen reglas; no tienen que citar el texto.
 _UNANCHORED_KINDS = frozenset({"grammar", "conjugation"})
 _SENTENCE_RE = re.compile(r"(?<=[.!?\u2026])\s+")
@@ -25,6 +53,76 @@ _BLANK = "___"
 _MAX_SUMMARY_SENTENCES = 6
 _MAX_TOPICS = 30
 _MAX_PLAN_WHY_WORDS = 30
+_FRENCH_DIACRITICS = frozenset("àâçéèêëîïôùûüÿœæ")
+_SPANISH_ONLY_CHARS = frozenset("¿¡ñáíóú")
+_GROUNDING_STOPWORDS = frozenset(
+    {
+        "le",
+        "la",
+        "les",
+        "un",
+        "une",
+        "des",
+        "de",
+        "du",
+        "au",
+        "aux",
+        "a",
+        "en",
+        "et",
+        "ou",
+        "est",
+        "sont",
+        "c",
+        "d",
+        "j",
+        "l",
+        "m",
+        "n",
+        "s",
+        "t",
+        "qu",
+        "je",
+        "tu",
+        "il",
+        "elle",
+        "on",
+        "nous",
+        "vous",
+        "ils",
+        "elles",
+        "se",
+        "ne",
+        "pas",
+        "plus",
+        "tres",
+        "bien",
+        "ce",
+        "cet",
+        "cette",
+        "ces",
+        "mon",
+        "ma",
+        "mes",
+        "ton",
+        "ta",
+        "tes",
+        "son",
+        "sa",
+        "ses",
+        "avec",
+        "pour",
+        "sur",
+        "dans",
+        "par",
+    }
+)
+_MATERIAL_NLP_MAX_CHARS = 50_000
+
+
+def _strip_accents(text: str) -> str:
+    decomposed = unicodedata.normalize("NFKD", norm_key(text))
+    return "".join(ch for ch in decomposed if not unicodedata.combining(ch))
 
 
 def _sentences(text: str) -> list[str]:
@@ -32,11 +130,19 @@ def _sentences(text: str) -> list[str]:
 
 
 def _is_language(text: str, wanted: frozenset[str]) -> bool:
-    """Idioma detectado en ``wanted``. Con 1 o 2 palabras, lingua no decide: se acepta."""
+    """Idioma en ``wanted``. Frases de 1 o 2 palabras se aceptan salvo marcas ajenas."""
     lang = detect_lang(text)
     if lang in wanted:
         return True
-    return lang == "unknown" and 0 < len(text.split()) <= 2
+    if not (lang == "unknown" and 0 < len(text.split()) <= 2):
+        return False
+    if "fr" in wanted and "es" not in wanted:
+        low = text.lower()
+        has_es_marker = any(ch in _SPANISH_ONLY_CHARS for ch in low)
+        has_fr_marker = any(ch in _FRENCH_DIACRITICS for ch in low)
+        if has_es_marker and not has_fr_marker:
+            return False
+    return True
 
 
 def is_french(text: str) -> bool:
@@ -64,10 +170,53 @@ def _flat(text: str) -> str:
     return " ".join(norm_key(text).split())
 
 
+def _lemma_vocab(text: str) -> frozenset[str]:
+    """Formas superficiales y lemas franceses sin tildes ni mayúsculas."""
+    from frances.cards.rules import _load_nlp
+
+    nlp = _load_nlp()
+    doc = nlp(text[:_MATERIAL_NLP_MAX_CHARS])
+    vocab: set[str] = set()
+    for token in doc:
+        if not token.is_alpha:
+            continue
+        surf = _strip_accents(token.text)
+        lemma = _strip_accents(token.lemma_)
+        if surf:
+            vocab.add(surf)
+        if lemma:
+            vocab.add(lemma)
+    return frozenset(vocab)
+
+
 def grounded(phrase: str, blocks: Sequence[TextBlock]) -> bool:
-    """La frase, sin artículo inicial, aparece en el texto de algún bloque."""
+    """La frase (o sus lemas franceses) aparece en el texto de algún bloque."""
     core = _core(phrase)
-    return bool(core) and any(core in _flat(block.text) for block in blocks)
+    if not core:
+        return False
+    if any(core in _flat(block.text) for block in blocks):
+        return True
+
+    from frances.cards.rules import _load_nlp
+
+    nlp = _load_nlp()
+    content_pairs: list[tuple[str, str]] = []
+    for token in nlp(core):
+        if not token.is_alpha:
+            continue
+        surf = _strip_accents(token.text)
+        lemma = _strip_accents(token.lemma_)
+        if surf in _GROUNDING_STOPWORDS and lemma in _GROUNDING_STOPWORDS:
+            continue
+        if len(surf) < 2 and len(lemma) < 2:
+            continue
+        content_pairs.append((surf, lemma))
+
+    if not content_pairs:
+        return False
+    material_text = "\n".join(block.text for block in blocks)
+    vocab = _lemma_vocab(material_text)
+    return all(surf in vocab or lemma in vocab for surf, lemma in content_pairs)
 
 
 def card_problems(draft: CardDraft, inp: GenerationInput) -> list[str]:

@@ -115,3 +115,20 @@ def test_max_users_is_409(tmp_path: Path) -> None:
     )
     assert r.status_code == 409 and r.json()["code"] == "conflict"
     conn.close()
+
+
+def test_filter_users_by_status_and_approve_pending(tmp_path: Path) -> None:
+    client, conn, _, _ = _setup(tmp_path)
+    conn.execute(
+        "INSERT INTO users (id, email, display_name, password_hash, role, created_at,"
+        " status, auth_provider) VALUES ('u_pend', 'pend@gmail.com', 'Pendiente',"
+        " '!oauth-only', 'user', '2026-11-19T00:00:00Z', 'pending', 'google')"
+    )
+    pend_list = client.get("/api/admin/users", params={"status": "pending"}).json()
+    assert [u["id"] for u in pend_list] == ["u_pend"]
+
+    res = client.post("/api/admin/users/u_pend/approve")
+    assert res.status_code == 200
+    assert res.json()["status"] == "active" and res.json()["disabled"] is False
+    assert client.post("/api/admin/users/u_missing/approve").status_code == 404
+    conn.close()

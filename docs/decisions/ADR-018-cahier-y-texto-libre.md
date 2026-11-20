@@ -1,6 +1,6 @@
 # ADR-018: Sistema visual «Cahier» y práctica de texto libre
 
-**Estado:** Propuesto (pendiente de revisión del dueño, 2026-11-15)
+**Estado:** Aceptado (aprobado por el dueño, 2026-11-19)
 **Tarea:** PRACTICE-01 (texto libre) y rediseño del front v2
 **Reemplaza en parte:** ADR-009 (paleta y tipografía de las maquetas v2)
 

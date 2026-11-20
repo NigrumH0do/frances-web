@@ -2,7 +2,14 @@ import { useState } from 'react';
 import { useApi } from '../../api/ApiContext';
 import { toUiError } from '../../api/client';
 import { useResource } from '../../api/useResource';
-import { Button, Card, Chip, Dialog, StateView } from '../../components';
+import {
+  AppBar,
+  Button,
+  Card,
+  Chip,
+  Dialog,
+  StateView,
+} from '../../components';
 import type { ChipTone } from '../../components';
 import type { JobOut, PipelineStatus } from '../../contracts/generated';
 import { formatShort } from '../../i18n/dates';
@@ -202,7 +209,7 @@ export function AdminPipeline() {
 
   return (
     <div className="stack-lg">
-      <h1>{strings.title}</h1>
+      <AppBar title={strings.title} back={{ to: '/mas', label: 'Más' }} />
 
       {notice !== null ? (
         <p className="callout info" role="alert">

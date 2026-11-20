@@ -238,6 +238,10 @@ export function createDemoTransport(
     method: string,
     init: RequestInit,
   ): Response | null => {
+    if (path === '/api/auth/providers' && method === 'GET') {
+      return jsonResponse({ google_enabled: true, password_enabled: true });
+    }
+
     if (path === '/api/auth/login' && method === 'POST') {
       const body = parseBody<LoginRequest>(init);
       if (
@@ -638,6 +642,9 @@ export function createDemoTransport(
         'speech_unavailable',
         'La pronunciación no está disponible en el demo.',
       );
+    }
+    if (path === '/api/speech/usage' && method === 'POST') {
+      return jsonResponse({ ok: true });
     }
     if (path === '/api/practice/tts' && method === 'POST') {
       return errorResponse(

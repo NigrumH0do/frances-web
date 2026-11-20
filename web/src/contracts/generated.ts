@@ -160,6 +160,61 @@ export type DurationMs1 = number | null;
 export type Field2 = 'front' | 'example';
 export type Url3 = string;
 export type VoiceId2 = string;
+export type GoogleEnabled = boolean;
+export type PasswordEnabled = boolean;
+export type ApiKey = string;
+export type Enabled = boolean;
+export type Kind4 = 'speech' | 'translator';
+export type Label1 = string;
+export type MonthlySttSecondsCap = number;
+export type MonthlyTranslatorCharsCap = number;
+export type MonthlyTtsCharsCap = number;
+export type Priority = number;
+export type Region1 = string;
+export type CooldownUntil = string | null;
+export type Enabled1 = boolean;
+export type Id10 = string;
+export type KeyHint = string;
+export type Kind5 = 'speech' | 'translator';
+export type Label2 = string;
+export type LastError = string | null;
+export type LastErrorAt = string | null;
+export type LastUsedAt = string | null;
+export type MonthlySttSecondsCap1 = number;
+export type MonthlyTranslatorCharsCap1 = number;
+export type MonthlyTtsCharsCap1 = number;
+export type Priority1 = number;
+export type Region2 = string;
+export type Source = 'db' | 'env';
+export type SttSeconds = number;
+export type TranslatorChars = number;
+export type TtsChars = number;
+export type ApiKey1 = string | null;
+export type Enabled2 = boolean | null;
+export type Label3 = string | null;
+export type MonthlySttSecondsCap2 = number | null;
+export type MonthlyTranslatorCharsCap2 = number | null;
+export type MonthlyTtsCharsCap2 = number | null;
+export type Priority2 = number | null;
+export type Region3 = string | null;
+export type EncryptionReady = boolean;
+export type Month = string;
+export type SpeechAccounts = number;
+export type SpeechActive = number;
+export type Strategy = 'priority' | 'least_used';
+export type SttSecondsCap = number;
+export type SttSecondsUsed = number;
+export type TranslatorAccounts = number;
+export type TranslatorActive = number;
+export type TranslatorCharsCap = number;
+export type TranslatorCharsUsed = number;
+export type TtsCharsCap = number;
+export type TtsCharsUsed = number;
+export type Strategy1 = 'priority' | 'least_used';
+export type Detail = string;
+export type LatencyMs = number;
+export type Ok = boolean;
+export type StatusCode = number | null;
 export type FlaggedHard = boolean | null;
 export type Suspended = boolean | null;
 export type BackEs1 = string;
@@ -181,9 +236,9 @@ export type EditedByHuman = boolean;
 export type ExampleEs3 = string | null;
 export type ExampleFr3 = string | null;
 export type FrontFr3 = string;
-export type Id10 = string;
+export type Id11 = string;
 export type Ipa1 = string | null;
-export type Kind4 = 'vocab' | 'phrase' | 'grammar' | 'conjugation' | 'drill';
+export type Kind6 = 'vocab' | 'phrase' | 'grammar' | 'conjugation' | 'drill';
 export type Notes3 = string | null;
 export type Owner = 'shared' | 'mine';
 export type Phonemes2 = string[];
@@ -212,22 +267,23 @@ export type NewPassword = string;
 export type Question = string;
 export type BlockId = number;
 export type ItemId2 = string;
+export type ItemTitle = string | null;
 export type Page = number | null;
 export type Snippet = string;
-export type Source = string;
+export type Source1 = string;
 export type Code1 = string | null;
-export type Kind5 = 'meta' | 'token' | 'citation' | 'done' | 'error';
+export type Kind7 = 'meta' | 'token' | 'citation' | 'done' | 'error';
 export type MessageId = number | null;
 export type Text1 = string | null;
 export type Citations = Citation[];
 export type Content = string;
 export type CreatedAt2 = string;
-export type Id11 = number;
+export type Id12 = number;
 export type Role = 'user' | 'assistant';
 export type Status2 = 'ok' | 'no_material' | 'error' | 'partial';
 export type Messages = ChatMessageOut[];
 export type CreatedAt3 = string;
-export type Id12 = string;
+export type Id13 = string;
 export type Title4 = string;
 export type UpdatedAt3 = string;
 export type Note = string | null;
@@ -249,7 +305,7 @@ export type WorkerSeenAt = string | null;
 export type Token1 = string;
 export type CreatedAt4 = string;
 export type ExpiresAt = string;
-export type Id13 = string;
+export type Id14 = string;
 export type Note1 = string | null;
 export type RevokedAt = string | null;
 export type Role2 = 'admin' | 'user';
@@ -265,8 +321,8 @@ export type CreatedAt5 = string;
 export type DueAt1 = string | null;
 export type FirstSeenAt1 = string;
 export type HasSheet1 = boolean;
-export type Id14 = string;
-export type Kind6 = 'coursework' | 'material' | 'announcement';
+export type Id15 = string;
+export type Kind8 = 'coursework' | 'material' | 'announcement';
 export type NAttachments = number;
 export type NCards = number;
 export type TextLang1 = 'fr' | 'es' | 'en' | 'mixed' | 'unknown';
@@ -279,8 +335,8 @@ export type NextCursor1 = string | null;
 export type Attempts = number;
 export type CreatedAt6 = string;
 export type FinishedAt = string | null;
-export type Id15 = number;
-export type Kind7 =
+export type Id16 = number;
+export type Kind9 =
   | 'pipeline.daily'
   | 'pipeline.reconcile'
   | 'auth.check'
@@ -291,7 +347,7 @@ export type Kind7 =
   | 'plan.daily'
   | 'cards.regenerate_item'
   | 'audio.regenerate';
-export type LastError = string | null;
+export type LastError1 = string | null;
 export type MaxAttempts = number;
 export type RunAfter = string;
 export type State1 = 'queued' | 'running' | 'done' | 'failed';
@@ -299,32 +355,35 @@ export type UpdatedAt5 = string;
 export type Email1 = string;
 export type Password1 = string;
 export type CsrfToken = string;
+export type AuthProvider = 'local' | 'google' | 'both';
+export type AvatarUrl = string | null;
 export type CreatedAt7 = string;
 export type Disabled = boolean;
 export type DisplayName1 = string;
 export type Email2 = string;
-export type Id16 = string;
+export type Id17 = string;
 export type LastLoginAt = string | null;
 export type Role3 = 'admin' | 'user';
+export type Status4 = 'active' | 'pending' | 'disabled';
 export type BackEs4 = string;
 export type ExampleEs4 = string | null;
 export type ExampleFr4 = string | null;
 export type FrontFr4 = string;
-export type Kind8 = 'vocab' | 'phrase' | 'grammar' | 'conjugation';
+export type Kind10 = 'vocab' | 'phrase' | 'grammar' | 'conjugation';
 export type Notes4 = string | null;
-export type Kind9 = 'pipeline.daily' | 'pipeline.reconcile';
+export type Kind11 = 'pipeline.daily' | 'pipeline.reconcile';
 export type FinishedAt1 = string | null;
-export type Id17 = number;
+export type Id18 = number;
 export type Stage = string;
 export type StartedAt = string;
-export type Status4 = string | null;
+export type Status5 = string | null;
 export type LastRuns = RunOut[];
 export type NextDailyAt = string;
 export type NextReconcileAt = string;
 export type RecentFailed = JobOut[];
 export type WorkerSeenAt1 = string | null;
 export type Done = boolean;
-export type Kind10 = 'review' | 'quiz' | 'read' | 'drill';
+export type Kind12 = 'review' | 'quiz' | 'read' | 'drill';
 export type Position = number;
 export type ReasonEs = string;
 export type RefId = string | null;
@@ -334,17 +393,17 @@ export type Text3 = string;
 export type VoiceId3 = string;
 export type CacheKey = string;
 export type DurationMs2 = number | null;
-export type Status5 = 'done';
+export type Status6 = 'done';
 export type Text4 = string;
 export type Url5 = string;
 export type VoiceId4 = string;
-export type Id18 = string;
-export type Kind11 = 'mcq' | 'cloze' | 'translate' | 'order' | 'dictation';
+export type Id19 = string;
+export type Kind13 = 'mcq' | 'cloze' | 'translate' | 'order' | 'dictation';
 export type Options = string[];
 export type PromptEs = string;
 export type PromptFr = string | null;
 export type SourceItemId = string | null;
-export type Id19 = string;
+export type Id20 = string;
 export type Questions = Question1[];
 export type ScopeId = string;
 export type ScopeKind = 'topic' | 'item';
@@ -377,15 +436,19 @@ export type ItemId3 = string;
 export type Page1 = number | null;
 export type Score2 = number;
 export type Snippet1 = string;
-export type Source1 = string;
+export type Source2 = string;
+export type AccountId = string | null;
+export type AccountLabel = string | null;
 export type ExpiresAt2 = string;
 export type Locale1 = 'fr-FR';
-export type Region1 = string;
+export type Region4 = string;
 export type Token2 = string;
+export type AccountId1 = string;
+export type Seconds = number;
 export type Day1 = string;
 export type Entries = PlanEntry[];
 export type GeneratedAt1 = string;
-export type Kind12 =
+export type Kind14 =
   'index.text_blocks' | 'llm.sheet' | 'llm.topics' | 'llm.quiz' | 'plan.daily';
 export type ScopeId1 = string | null;
 export type ScopeKind1 = ('topic' | 'item') | null;
@@ -399,7 +462,7 @@ export type Cefr = ('A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2') | null;
 export type CourseId3 = string;
 export type DescriptionEs = string;
 export type EditedByHuman1 = boolean;
-export type Id20 = string;
+export type Id21 = string;
 export type ItemIds = string[];
 export type Position1 = number;
 export type SourceChanged1 = boolean;
@@ -992,6 +1055,114 @@ export interface AudioClip {
   voice_id: VoiceId2;
 }
 /**
+ * Proveedores de autenticación habilitados en este despliegue.
+ *
+ * This interface was referenced by `FrancesContracts`'s JSON-Schema
+ * via the `definition` "AuthProvidersOut".
+ */
+export interface AuthProvidersOut {
+  google_enabled: GoogleEnabled;
+  password_enabled?: PasswordEnabled;
+}
+/**
+ * This interface was referenced by `FrancesContracts`'s JSON-Schema
+ * via the `definition` "AzureAccountIn".
+ */
+export interface AzureAccountIn {
+  api_key: ApiKey;
+  enabled?: Enabled;
+  kind: Kind4;
+  label: Label1;
+  monthly_stt_seconds_cap?: MonthlySttSecondsCap;
+  monthly_translator_chars_cap?: MonthlyTranslatorCharsCap;
+  monthly_tts_chars_cap?: MonthlyTtsCharsCap;
+  priority?: Priority;
+  region: Region1;
+}
+/**
+ * Vista pública de cuenta Azure: nunca expone la clave ni el ciphertext.
+ *
+ * This interface was referenced by `FrancesContracts`'s JSON-Schema
+ * via the `definition` "AzureAccountOut".
+ */
+export interface AzureAccountOut {
+  cooldown_until?: CooldownUntil;
+  enabled: Enabled1;
+  id: Id10;
+  key_hint: KeyHint;
+  kind: Kind5;
+  label: Label2;
+  last_error?: LastError;
+  last_error_at?: LastErrorAt;
+  last_used_at?: LastUsedAt;
+  monthly_stt_seconds_cap: MonthlySttSecondsCap1;
+  monthly_translator_chars_cap: MonthlyTranslatorCharsCap1;
+  monthly_tts_chars_cap: MonthlyTtsCharsCap1;
+  priority: Priority1;
+  region: Region2;
+  source?: Source;
+  usage: AzureAccountUsage;
+}
+/**
+ * This interface was referenced by `FrancesContracts`'s JSON-Schema
+ * via the `definition` "AzureAccountUsage".
+ */
+export interface AzureAccountUsage {
+  stt_seconds?: SttSeconds;
+  translator_chars?: TranslatorChars;
+  tts_chars?: TtsChars;
+}
+/**
+ * This interface was referenced by `FrancesContracts`'s JSON-Schema
+ * via the `definition` "AzureAccountPatch".
+ */
+export interface AzureAccountPatch {
+  api_key?: ApiKey1;
+  enabled?: Enabled2;
+  label?: Label3;
+  monthly_stt_seconds_cap?: MonthlySttSecondsCap2;
+  monthly_translator_chars_cap?: MonthlyTranslatorCharsCap2;
+  monthly_tts_chars_cap?: MonthlyTtsCharsCap2;
+  priority?: Priority2;
+  region?: Region3;
+}
+/**
+ * This interface was referenced by `FrancesContracts`'s JSON-Schema
+ * via the `definition` "AzurePoolSummary".
+ */
+export interface AzurePoolSummary {
+  encryption_ready: EncryptionReady;
+  month: Month;
+  speech_accounts: SpeechAccounts;
+  speech_active: SpeechActive;
+  strategy: Strategy;
+  stt_seconds_cap: SttSecondsCap;
+  stt_seconds_used: SttSecondsUsed;
+  translator_accounts: TranslatorAccounts;
+  translator_active: TranslatorActive;
+  translator_chars_cap: TranslatorCharsCap;
+  translator_chars_used: TranslatorCharsUsed;
+  tts_chars_cap: TtsCharsCap;
+  tts_chars_used: TtsCharsUsed;
+}
+/**
+ * This interface was referenced by `FrancesContracts`'s JSON-Schema
+ * via the `definition` "AzureStrategyPatch".
+ */
+export interface AzureStrategyPatch {
+  strategy: Strategy1;
+}
+/**
+ * This interface was referenced by `FrancesContracts`'s JSON-Schema
+ * via the `definition` "AzureTestResult".
+ */
+export interface AzureTestResult {
+  detail: Detail;
+  latency_ms?: LatencyMs;
+  ok: Ok;
+  status_code?: StatusCode;
+}
+/**
  * This interface was referenced by `FrancesContracts`'s JSON-Schema
  * via the `definition` "CardFlagsIn".
  */
@@ -1043,18 +1214,22 @@ export interface CardView {
   example_es: ExampleEs3;
   example_fr: ExampleFr3;
   front_fr: FrontFr3;
-  id: Id10;
+  id: Id11;
   ipa: Ipa1;
-  kind: Kind4;
+  kind: Kind6;
   mine: CardOverride | null;
   notes: Notes3;
   owner: Owner;
   phonemes: Phonemes2;
   source_changed: SourceChanged;
   source_item_ids: SourceItemIds1;
+  source_titles?: SourceTitles;
   stale: Stale1;
   state: UserCardStateOut | null;
   tags: Tags1;
+}
+export interface SourceTitles {
+  [k: string]: string;
 }
 /**
  * This interface was referenced by `FrancesContracts`'s JSON-Schema
@@ -1109,7 +1284,7 @@ export interface ChatAskIn {
 export interface ChatEvent {
   citation?: Citation | null;
   code?: Code1;
-  kind: Kind5;
+  kind: Kind7;
   message_id?: MessageId;
   text?: Text1;
 }
@@ -1120,9 +1295,10 @@ export interface ChatEvent {
 export interface Citation {
   block_id: BlockId;
   item_id: ItemId2;
+  item_title?: ItemTitle;
   page: Page;
   snippet: Snippet;
-  source: Source;
+  source: Source1;
 }
 /**
  * This interface was referenced by `FrancesContracts`'s JSON-Schema
@@ -1132,7 +1308,7 @@ export interface ChatMessageOut {
   citations: Citations;
   content: Content;
   created_at: CreatedAt2;
-  id: Id11;
+  id: Id12;
   role: Role;
   status: Status2;
 }
@@ -1150,7 +1326,7 @@ export interface ChatThreadDetail {
  */
 export interface ChatThreadOut {
   created_at: CreatedAt3;
-  id: Id12;
+  id: Id13;
   title: Title4;
   updated_at: UpdatedAt3;
 }
@@ -1218,7 +1394,7 @@ export interface InviteCreated {
 export interface InviteOut {
   created_at: CreatedAt4;
   expires_at: ExpiresAt;
-  id: Id13;
+  id: Id14;
   note: Note1;
   revoked_at: RevokedAt;
   role: Role2;
@@ -1254,8 +1430,8 @@ export interface ItemSummary {
   due_at: DueAt1;
   first_seen_at: FirstSeenAt1;
   has_sheet: HasSheet1;
-  id: Id14;
-  kind: Kind6;
+  id: Id15;
+  kind: Kind8;
   n_attachments: NAttachments;
   n_cards: NCards;
   text_lang: TextLang1;
@@ -1279,9 +1455,9 @@ export interface JobOut {
   attempts: Attempts;
   created_at: CreatedAt6;
   finished_at: FinishedAt;
-  id: Id15;
-  kind: Kind7;
-  last_error: LastError;
+  id: Id16;
+  kind: Kind9;
+  last_error: LastError1;
   max_attempts: MaxAttempts;
   run_after: RunAfter;
   state: State1;
@@ -1308,13 +1484,16 @@ export interface Me {
  * via the `definition` "UserOut".
  */
 export interface UserOut {
+  auth_provider?: AuthProvider;
+  avatar_url?: AvatarUrl;
   created_at: CreatedAt7;
   disabled: Disabled;
   display_name: DisplayName1;
   email: Email2;
-  id: Id16;
+  id: Id17;
   last_login_at: LastLoginAt;
   role: Role3;
+  status?: Status4;
 }
 /**
  * This interface was referenced by `FrancesContracts`'s JSON-Schema
@@ -1325,7 +1504,7 @@ export interface OwnCardIn {
   example_es?: ExampleEs4;
   example_fr?: ExampleFr4;
   front_fr: FrontFr4;
-  kind: Kind8;
+  kind: Kind10;
   notes?: Notes4;
 }
 /**
@@ -1333,7 +1512,7 @@ export interface OwnCardIn {
  * via the `definition` "PipelineRunRequest".
  */
 export interface PipelineRunRequest {
-  kind: Kind9;
+  kind: Kind11;
 }
 /**
  * This interface was referenced by `FrancesContracts`'s JSON-Schema
@@ -1358,10 +1537,10 @@ export interface Jobs {
 export interface RunOut {
   counts: Counts;
   finished_at: FinishedAt1;
-  id: Id17;
+  id: Id18;
   stage: Stage;
   started_at: StartedAt;
-  status: Status4;
+  status: Status5;
 }
 export interface Counts {
   [k: string]: number;
@@ -1372,7 +1551,7 @@ export interface Counts {
  */
 export interface PlanEntry {
   done: Done;
-  kind: Kind10;
+  kind: Kind12;
   position: Position;
   reason_es: ReasonEs;
   ref_id: RefId;
@@ -1398,7 +1577,7 @@ export interface PracticeTtsIn {
 export interface PracticeTtsOut {
   cache_key: CacheKey;
   duration_ms: DurationMs2;
-  status: Status5;
+  status: Status6;
   text: Text4;
   url: Url5;
   voice_id: VoiceId4;
@@ -1411,8 +1590,8 @@ export interface PracticeTtsOut {
  */
 export interface Question1 {
   audio: AudioClip | null;
-  id: Id18;
-  kind: Kind11;
+  id: Id19;
+  kind: Kind13;
   options: Options;
   prompt_es: PromptEs;
   prompt_fr: PromptFr;
@@ -1423,7 +1602,7 @@ export interface Question1 {
  * via the `definition` "Quiz".
  */
 export interface Quiz {
-  id: Id19;
+  id: Id20;
   questions: Questions;
   scope_id: ScopeId;
   scope_kind: ScopeKind;
@@ -1493,17 +1672,27 @@ export interface SearchHit {
   page: Page1;
   score: Score2;
   snippet: Snippet1;
-  source: Source1;
+  source: Source2;
 }
 /**
  * This interface was referenced by `FrancesContracts`'s JSON-Schema
  * via the `definition` "SpeechToken".
  */
 export interface SpeechToken {
+  account_id?: AccountId;
+  account_label?: AccountLabel;
   expires_at: ExpiresAt2;
   locale?: Locale1;
-  region: Region1;
+  region: Region4;
   token: Token2;
+}
+/**
+ * This interface was referenced by `FrancesContracts`'s JSON-Schema
+ * via the `definition` "SpeechUsageIn".
+ */
+export interface SpeechUsageIn {
+  account_id: AccountId1;
+  seconds: Seconds;
 }
 /**
  * ``day`` = YYYY-MM-DD en Bogotá.
@@ -1523,7 +1712,7 @@ export interface StudyPlanDay {
  * via the `definition` "StudyRunRequest".
  */
 export interface StudyRunRequest {
-  kind: Kind12;
+  kind: Kind14;
   scope_id?: ScopeId1;
   scope_kind?: ScopeKind1;
 }
@@ -1552,7 +1741,7 @@ export interface StudyTopic {
   course_id: CourseId3;
   description_es: DescriptionEs;
   edited_by_human: EditedByHuman1;
-  id: Id20;
+  id: Id21;
   item_ids: ItemIds;
   position: Position1;
   source_changed: SourceChanged1;

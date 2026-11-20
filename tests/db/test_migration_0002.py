@@ -25,7 +25,11 @@ def test_0002_tables_and_version(tmp_path: Path) -> None:
 
 
 def test_email_unique_case_insensitive(store: Store) -> None:
-    ins = "INSERT INTO users VALUES (?, ?, 'N', 'h', 'user', NULL, 't', NULL, NULL)"
+    ins = (
+        "INSERT INTO users (id, email, display_name, password_hash, role, invited_by,"
+        " created_at, last_login_at, disabled_at)"
+        " VALUES (?, ?, 'N', 'h', 'user', NULL, 't', NULL, NULL)"
+    )
     store.conn.execute(ins, ("u_1", "Ana@Ex.org"))
     with pytest.raises(sqlite3.IntegrityError):
         store.conn.execute(ins, ("u_2", "ana@ex.org"))

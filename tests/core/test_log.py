@@ -5,14 +5,17 @@ import pytest
 from frances.log import SENSITIVE_ENV, get_logger, redact
 
 
-def test_sensitive_env_lists_twelve_names() -> None:
+def test_sensitive_env_lists_secret_names() -> None:
     assert SENSITIVE_ENV == (
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",
         "GOOGLE_REFRESH_TOKEN",
+        "GOOGLE_LOGIN_CLIENT_ID",
+        "GOOGLE_LOGIN_CLIENT_SECRET",
         "AZURE_SPEECH_KEY",
         "AZURE_TRANSLATOR_KEY",
         "FRANCES_PASSPHRASE",
+        "FRANCES_SECRETS_KEY",
         "LLM_BASE_URL",
         "LLM_API_KEY",
         "R2_ACCESS_KEY_ID",

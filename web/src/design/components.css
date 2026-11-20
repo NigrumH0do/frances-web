@@ -675,6 +675,64 @@ a.list-item:hover {
 .flip-face .spacer {
   flex: 1;
 }
+.flip-recap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+}
+.flip-recap-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+.flip-recap-fr {
+  font-family: var(--font-read);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+.flip-recap-ipa {
+  font-family: var(--font-read);
+  font-style: italic;
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+}
+.flip-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+.flip-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.flip-face .flip-example-es {
+  font-style: normal;
+  font-size: var(--fs-md);
+}
+.flip-note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  border-left: 3px solid var(--c-accent);
+  background: var(--c-accent-soft);
+  color: var(--c-on-accent-soft);
+}
+.flip-note .flip-label {
+  color: var(--c-on-accent-soft);
+}
 
 .rating {
   display: grid;

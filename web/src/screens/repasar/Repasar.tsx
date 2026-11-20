@@ -14,6 +14,7 @@ import { previewIntervals } from '../../review/intervals';
 import { currentCard } from '../../review/session';
 import { useReviewSession } from '../../review/useReviewSession';
 import type { Rating } from '../../srs/types';
+import { SafeCardBurstScene } from '../../three/LazyScenes';
 import { FlipCard } from './FlipCard';
 import { RatingBar } from './RatingBar';
 import { ReviewTabs } from './ReviewTabs';
@@ -57,6 +58,7 @@ export function Repasar() {
 
   const [notice, setNotice] = useState<Notice | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [burstCount, setBurstCount] = useState(0);
   const [editedCard, setEditedCard] = useState<CardView | null>(null);
   const [initialIds, setInitialIds] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -65,6 +67,7 @@ export function Repasar() {
     () => new Set(),
   );
   const planMarked = useRef(false);
+  const finishedBurstRef = useRef(false);
 
   const queue = session.state.queue;
   const total = queue.length;
@@ -224,11 +227,70 @@ export function Repasar() {
       return next;
     });
     setNotice(null);
+    if (rating === 3 || rating === 4) {
+      setBurstCount((n) => n + 1);
+    }
     void session.grade(rating);
   }
 
+  useEffect(() => {
+    if (finished && session.state.done > 0) {
+      if (!finishedBurstRef.current) {
+        finishedBurstRef.current = true;
+        setBurstCount((n) => n + 1);
+      }
+    } else if (!finished) {
+      finishedBurstRef.current = false;
+    }
+  }, [finished, session.state.done]);
+
+  useEffect(() => {
+    if (finished || current === null) return undefined;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (
+        event.defaultPrevented ||
+        event.repeat ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey
+      ) {
+        return;
+      }
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable ||
+          target.closest('[contenteditable="true"]') !== null)
+      ) {
+        return;
+      }
+      if (document.querySelector('dialog[open], [role="dialog"]') !== null) {
+        return;
+      }
+      if (event.key === 'a' || event.key === 'A') {
+        const audioBtn = document.querySelector<HTMLButtonElement>(
+          '[data-review] .flip-face:not([aria-hidden="true"]) button',
+        );
+        if (audioBtn !== null) {
+          event.preventDefault();
+          audioBtn.click();
+        }
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [current, finished]);
+
   return (
-    <div className="stack-lg">
+    <div className="stack-lg repasar-stage">
+      <div className="burst-overlay" aria-hidden="true">
+        <SafeCardBurstScene trigger={burstCount} />
+      </div>
       <AppBar
         title={repasarStrings.title}
         subtitle={remainingLabel(remaining)}
@@ -323,6 +385,7 @@ export function Repasar() {
                   {repasarStrings.markHard}
                 </Button>
               </div>
+              <p className="kbd-hint">{repasarStrings.kbdHint}</p>
             </div>
           ) : null
         }

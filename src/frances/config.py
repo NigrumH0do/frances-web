@@ -4,6 +4,7 @@ import os
 import re
 import tomllib
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
@@ -241,3 +242,36 @@ def public_origin(settings: Settings) -> str:
     ):
         raise error
     return value
+
+
+def forwarded_allow_ips(settings: Settings) -> str:
+    """``FRANCES_FORWARDED_ALLOW_IPS`` o ``127.0.0.1`` si no se define."""
+    return settings.optional_secret("FRANCES_FORWARDED_ALLOW_IPS") or "127.0.0.1"
+
+
+@dataclass(frozen=True)
+class GoogleLoginConfig:
+    """Configuración del login web con Google OIDC/PKCE."""
+
+    client_id: str
+    client_secret: str
+    redirect_uri: str
+
+
+def google_login_config(settings: Settings) -> GoogleLoginConfig | None:
+    """Credenciales OIDC web si están presentes ``GOOGLE_LOGIN_CLIENT_ID`` y SECRET."""
+    client_id = (settings.optional_secret("GOOGLE_LOGIN_CLIENT_ID") or "").strip()
+    client_secret = (settings.optional_secret("GOOGLE_LOGIN_CLIENT_SECRET") or "").strip()
+    if not (client_id and client_secret):
+        return None
+    return GoogleLoginConfig(
+        client_id=client_id,
+        client_secret=client_secret,
+        redirect_uri=f"{public_origin(settings)}/api/auth/google/callback",
+    )
+
+
+def admin_bootstrap_emails(settings: Settings) -> frozenset[str]:
+    """Correos autorizados automáticamente como administradores desde ``FRANCES_ADMIN_EMAILS``."""
+    raw = settings.optional_secret("FRANCES_ADMIN_EMAILS") or ""
+    return frozenset(part.strip().lower() for part in raw.split(",") if part.strip())

@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict
 
 from frances.cards.llm import (
     CARDS_PROMPT_VERSION,
+    SYSTEM_PROMPT,
     USER_AGENT,
     CallMeter,
     DailyCallMeter,
@@ -156,7 +157,15 @@ def test_schema_name_keyword_overrides(respx_mock: respx.Router) -> None:
 
 
 def test_cards_prompt_version_constant() -> None:
-    assert CARDS_PROMPT_VERSION == "cards-1"
+    assert CARDS_PROMPT_VERSION == "cards-3"
+    assert LlmGenerator.version == "cards-3"
+
+
+def test_system_prompt_requests_notes_and_rich_phrases() -> None:
+    lower = SYSTEM_PROMPT.lower()
+    assert "notes" in lower
+    assert "phrase" in lower
+    assert "concordancia" in lower or "pronunciación" in lower
 
 
 def test_llm_from_env_accepts_v2_keywords(store: Store, clock: Callable[[], datetime]) -> None:

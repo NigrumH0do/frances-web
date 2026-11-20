@@ -111,21 +111,32 @@ function SourceList({ citations }: { citations: Citation[] }) {
   return (
     <div className="sources">
       <p className="xs muted">{chatStrings.sources}</p>
-      {citations.map((citation, index) => (
-        <Link
-          key={`${citation.item_id}-${citation.block_id}-${index}`}
-          to={citationHref(citation)}
-          className="source"
-        >
-          <span className="cite">{index + 1}</span>
-          <span className="grow">{citation.snippet}</span>
-          {citation.page !== null && citation.page !== undefined ? (
-            <span className="muted">
-              {tr(chatStrings.page, { page: citation.page })}
+      {citations.map((citation, index) => {
+        const title = citation.item_title;
+        const showTitle =
+          title !== undefined &&
+          title !== null &&
+          title !== '' &&
+          !citation.snippet.startsWith(title);
+        return (
+          <Link
+            key={`${citation.item_id}-${citation.block_id}-${index}`}
+            to={citationHref(citation)}
+            className="source"
+          >
+            <span className="cite">{index + 1}</span>
+            <span className="grow">
+              {showTitle ? <strong>{title} — </strong> : null}
+              {citation.snippet}
             </span>
-          ) : null}
-        </Link>
-      ))}
+            {citation.page !== null && citation.page !== undefined ? (
+              <span className="muted">
+                {tr(chatStrings.page, { page: citation.page })}
+              </span>
+            ) : null}
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -165,10 +176,12 @@ function AssistantBubble({
   content,
   citations,
   status,
+  onCreateCard,
 }: {
   content: string;
   citations: Citation[];
   status: ChatMessageOut['status'] | null;
+  onCreateCard?: (content: string) => void;
 }) {
   const paragraphs = content.split(/\n{2,}/).filter((part) => part !== '');
 
@@ -211,8 +224,13 @@ function AssistantBubble({
 
       {citations.length > 0 ? <SourceList citations={citations} /> : null}
       {content !== '' ? (
-        <div className="row">
+        <div className="row wrap">
           <CopyButton text={content} />
+          {onCreateCard !== undefined ? (
+            <Button variant="ghost" onClick={() => onCreateCard(content)}>
+              {chatStrings.createCard}
+            </Button>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -226,9 +244,11 @@ function AssistantBubble({
 export function MessageList({
   messages,
   pending,
+  onCreateCard,
 }: {
   messages: ChatMessageOut[];
   pending?: PendingAsk | null;
+  onCreateCard?: (content: string) => void;
 }): JSX.Element {
   const visiblePending = withoutSavedPending(messages, pending);
 
@@ -245,6 +265,7 @@ export function MessageList({
             content={message.content}
             citations={message.citations}
             status={message.status}
+            onCreateCard={onCreateCard}
           />
         ),
       )}

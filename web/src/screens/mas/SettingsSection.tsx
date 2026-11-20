@@ -15,6 +15,11 @@ import { applyTheme } from '../../design/theme';
 import { messageFor } from '../../l10n/errors';
 import { prefetchForOffline } from '../../offline/prefetch';
 import { getOfflineAudio, setOfflineAudio } from '../../offline/settings';
+import {
+  getMotion3dPref,
+  prefersReducedMotion,
+  setMotion3dPref,
+} from '../../three/motionPref';
 import { masStrings } from './strings';
 
 type DailyChoice = '5' | '10' | '20' | '30' | 'custom';
@@ -236,8 +241,38 @@ function SettingsForm({ initial }: { initial: UserPrefs }) {
             {strings.prefetchError}
           </p>
         ) : null}
+
+        <Motion3dSetting />
       </div>
     </Card>
+  );
+}
+
+function Motion3dSetting() {
+  const strings = masStrings.settings;
+  const reduced = prefersReducedMotion();
+  const [enabled, setEnabled] = useState(() => getMotion3dPref() !== 'off');
+
+  function toggle(next: boolean): void {
+    if (reduced) return;
+    setEnabled(next);
+    setMotion3dPref(next ? 'auto' : 'off');
+  }
+
+  return (
+    <div className="row-between wrap">
+      <div className="grow">
+        <p>{strings.motion3d}</p>
+        <p className="small muted">
+          {reduced ? strings.motion3dReducedHint : strings.motion3dHint}
+        </p>
+      </div>
+      <Switch
+        label={strings.motion3d}
+        checked={enabled && !reduced}
+        onChange={toggle}
+      />
+    </div>
   );
 }
 

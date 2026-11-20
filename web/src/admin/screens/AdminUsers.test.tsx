@@ -206,3 +206,59 @@ test('un usuario normal no puede montar la pantalla de usuarios', async () => {
     screen.queryByRole('heading', { name: 'Usuarios' }),
   ).not.toBeInTheDocument();
 });
+
+test('filtra usuarios pendientes y aprueba una cuenta de Google', async () => {
+  const pendingUser: UserOut = {
+    id: 'u_google_1',
+    email: 'nuevo@example.test',
+    display_name: 'Camille',
+    role: 'user',
+    created_at: '2026-11-10T10:00:00.000Z',
+    last_login_at: null,
+    disabled: true,
+    status: 'pending',
+    auth_provider: 'google',
+  };
+  let approved = false;
+  const { transport } = renderScreen(<AdminUsers />, {
+    user: ME_ADMIN,
+    routes: {
+      'GET /api/admin/users': [USER_ANA, USER_LEO],
+      'GET /api/admin/users?status=pending': () =>
+        jsonResponse(approved ? [] : [pendingUser]),
+      'POST /api/admin/users/u_google_1/approve': () => {
+        approved = true;
+        return jsonResponse({
+          ...pendingUser,
+          disabled: false,
+          status: 'active',
+        });
+      },
+    },
+  });
+
+  await screen.findByText('Ana');
+  await userEvent.click(screen.getByRole('radio', { name: 'Pendientes' }));
+
+  expect(await screen.findByText('Camille')).toBeVisible();
+  expect(screen.getByText('Google')).toBeVisible();
+  expect(screen.getByText('Pendiente')).toBeVisible();
+
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Aprobar Camille' }),
+  );
+  await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
+
+  await waitFor(() =>
+    expect(
+      transport.calls.some(
+        (call) =>
+          call.method === 'POST' &&
+          call.url === '/api/admin/users/u_google_1/approve',
+      ),
+    ).toBe(true),
+  );
+  expect(await screen.findByRole('status')).toHaveTextContent(
+    'Camille quedó aprobado.',
+  );
+});

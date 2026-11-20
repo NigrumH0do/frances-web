@@ -274,3 +274,69 @@ test('without recognizer shows unavailable message and no record button', () => 
   ).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Grabar' })).toBeNull();
 });
+
+test('score summary muestra anillo SVG y WordList reproduce palabra con voz francesa del navegador', async () => {
+  const speak = vi.fn();
+  const cancel = vi.fn();
+  const origSpeech = window.speechSynthesis;
+  const origUtterance = globalThis.SpeechSynthesisUtterance;
+
+  class FakeUtterance {
+    text: string;
+    voice: SpeechSynthesisVoice | null = null;
+    lang = '';
+    rate = 1;
+    onend: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    constructor(text: string) {
+      this.text = text;
+    }
+  }
+
+  Object.defineProperty(globalThis, 'SpeechSynthesisUtterance', {
+    configurable: true,
+    writable: true,
+    value: FakeUtterance,
+  });
+  Object.defineProperty(window, 'speechSynthesis', {
+    configurable: true,
+    writable: true,
+    value: {
+      getVoices: () => [{ lang: 'fr-FR', name: 'Amélie' }],
+      speak: (u: { onend?: (() => void) | null }) => {
+        speak(u);
+        u.onend?.();
+      },
+      cancel,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    },
+  });
+
+  try {
+    const user = userEvent.setup();
+    renderSession(<PracticeSession card={card} recognizer={fakeRec} />);
+    await user.click(screen.getByRole('button', { name: 'Grabar' }));
+
+    const total = await screen.findByRole('region', { name: 'Puntaje global' });
+    expect(total.querySelector('svg.score-ring')).not.toBeNull();
+
+    const speakBtn = await screen.findByRole('button', {
+      name: 'Escuchar allez',
+    });
+    await user.click(speakBtn);
+    expect(cancel).toHaveBeenCalled();
+    expect(speak).toHaveBeenCalledOnce();
+  } finally {
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      writable: true,
+      value: origSpeech,
+    });
+    Object.defineProperty(globalThis, 'SpeechSynthesisUtterance', {
+      configurable: true,
+      writable: true,
+      value: origUtterance,
+    });
+  }
+});

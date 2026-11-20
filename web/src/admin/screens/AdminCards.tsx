@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { useApi } from '../../api/ApiContext';
 import { useResource } from '../../api/useResource';
-import { Button, Card, Chip, Field, StateView } from '../../components';
+import { AppBar, Button, Card, Chip, Field, StateView } from '../../components';
 import type { CardView } from '../../contracts/generated';
 import { CardActions } from '../../manage/CardActions';
 import { cardsStrings as s } from '../cardsStrings';
@@ -139,7 +139,7 @@ export function AdminCards() {
 
   return (
     <div className="stack-lg">
-      <h1>{s.title}</h1>
+      <AppBar title={s.title} back={{ to: '/mas', label: 'Más' }} />
       <p className="small muted">{s.intro}</p>
 
       <Card>

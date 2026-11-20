@@ -23,6 +23,7 @@ import { createRecorder } from '../../pron/recorder';
 import type { Recorder, RecorderState } from '../../pron/recorder';
 import { isCanonicalPhoneme } from '../../pron/phonemeLabels';
 import { loadStats, saveStats, updateStats } from '../../pron/stats';
+import { SafeVoiceOrbScene } from '../../three/LazyScenes';
 import { ScoreSummary } from './ScoreSummary';
 import { WordList } from './WordList';
 
@@ -36,8 +37,8 @@ export const PRACTICE_MESSAGES = {
   unavailable:
     'La evaluación de pronunciación no está disponible en este bundle',
   requesting_mic: 'Pidiendo permiso del micrófono…',
-  recording: 'Analizando audio…',
-  scoring: 'Analizando audio…',
+  recording: 'Grabando… Analizando audio…',
+  scoring: 'Evaluando tu pronunciación…',
   analyzing: 'Analizando audio…',
   done: 'Listo',
   saveFailed: 'No se pudo guardar el intento en este dispositivo',
@@ -218,7 +219,7 @@ export function PracticeSession({
   } else if (recState.status === 'requesting_mic') {
     statusText = PRACTICE_MESSAGES.requesting_mic;
   } else if (recState.status === 'recording') {
-    statusText = PRACTICE_MESSAGES.analyzing;
+    statusText = PRACTICE_MESSAGES.recording;
   }
 
   const analyzing =
@@ -227,7 +228,13 @@ export function PracticeSession({
     recState.status === 'requesting_mic';
 
   return (
-    <div className="practice-session">
+    <div className="practice-session paper">
+      <div className="orb-wrap" aria-hidden="true">
+        <SafeVoiceOrbScene
+          active={recState.status === 'recording'}
+          score={result?.scores.pron}
+        />
+      </div>
       <p lang="fr" className="practice-front">
         {card.front_fr}
       </p>
@@ -249,7 +256,7 @@ export function PracticeSession({
               aria-live="polite"
             >
               <span className="practice-analyzing-dot" aria-hidden="true" />
-              <span>{PRACTICE_MESSAGES.analyzing}</span>
+              <span>{statusText}</span>
             </p>
           ) : (
             <p aria-live="polite" className="practice-status">

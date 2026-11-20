@@ -1,7 +1,7 @@
 # Pendientes de Frances Classroom (v2)
 
 Lo que falta para producción, lo que solo decide el dueño y los límites conocidos.
-Actualizado el 2026-11-16. Marca cada casilla al resolverla y anota la decisión.
+Actualizado el 2026-11-19. Marca cada casilla al resolverla y anota la decisión.
 
 La lista de la v1 (R2, Worker de Cloudflare, GitHub Pages con bundle cifrado) quedó
 sin efecto con la spec v2; su historia está en el git. El demo v2 tampoco se
@@ -18,7 +18,10 @@ e [`../infra/README.md`](../infra/README.md). Cada uno deja un ADR firmado.
   firewall, y un dominio que apunte a su IP → ADR-010.
 - [ ] **GOL-02** Secretos en `/srv/frances/.env` y `/srv/frances/caddy.env`:
   refresh token de Google (pantalla de consentimiento en «In production»; en
-  «Testing» caduca a los 7 días), Azure Speech, Azure Translator, LLM y backup
+  «Testing» caduca a los 7 días), Azure Speech, Azure Translator, LLM y backup,
+  además de las variables v3 de login Google y cifrado del pool Azure
+  (`GOOGLE_LOGIN_CLIENT_ID`, `GOOGLE_LOGIN_CLIENT_SECRET`,
+  `FRANCES_ADMIN_EMAILS`, `FRANCES_SECRETS_KEY`)
   → ADR-011.
 - [ ] **GOL-03** Imágenes ARM construidas, HTTPS, primer admin y `frances auth check`
   → ADR-012.
@@ -28,12 +31,8 @@ e [`../infra/README.md`](../infra/README.md). Cada uno deja un ADR firmado.
 
 ## 2. Decisiones del dueño
 
-- [ ] **ADR-018 (Cahier y Texto libre):** aprobar el diseño. Las fuentes Spectral y
-  Lexend tienen licencia OFL-1.1, que no está en la lista de licencias del plan
-  maestro. Son archivos de fuente, no código; si no se aprueban, se quitan los dos
-  `@import` de `web/src/design/index.css`.
-- [ ] **ADR-019 (RapidOCR y Office):** aprobar el cambio de OCR y la lectura de
-  PowerPoint y Word.
+- [x] **ADR-018 (Cahier y Texto libre):** aprobado (ampliado con Cahier Atelier 3D en ADR-023; Spectral + Lexend autoalojadas bajo `font-src 'self'`).
+- [x] **ADR-019 (RapidOCR y Office):** aprobado para OCR local y extracción de PowerPoint y Word.
 - [ ] **Voces jóvenes (SPK-02, ADR-002):** escuchar las 4 voces sintéticas y fijar su
   tono. Hoy usan valores provisionales de `src/frances/audio/voices_default.yaml`.
 - [ ] **Archivos de más de 50 MB:** subir `classroom.max_download_mb` o dejarlos
@@ -43,10 +42,10 @@ e [`../infra/README.md`](../infra/README.md). Cada uno deja un ADR firmado.
 
 | Tema | Qué falta | Por qué importa |
 |---|---|---|
-| Chat en español | Ampliar la pregunta con el glosario de tarjetas, raíces de palabras e historial; si no hay resultados, que el LLM proponga palabras en francés | Hoy «qué profesiones hay» responde «no cubre» porque el material está en francés |
-| Fichas | 2 de 42 publicaciones no pasan el control de frases clave y se quedan con la ficha básica | El LLM reescribe las frases y no coinciden con el texto |
+| Chat en español | Glosario de tarjetas ES→FR, lematización y chips iniciales integrados en ADR-024 (`CHG-22`) | Resuelto en v3 (`ADR-024`) |
+| Fichas y tarjetas | Prompt `cards-3` (notas pedagógicas y contexto en frases), grounding lematizado con `spaCy`, respaldo de reglas si los sobrevivientes quedan vacíos y reverso enriquecido en `FlipCard` (`CHG-22` / `ADR-024`) | Resuelto en v3 (`ADR-024`) |
 | Plan del día | Agregar práctica de pronunciación | Hoy el plan no la pide ni la cuenta |
-| Proxy | `frances serve` fija `forwarded_allow_ips="*"`; pasar el CIDR de la red `edge` desde compose | Ver `infra/README.md` |
+| Proxy | `FRANCES_FORWARDED_ALLOW_IPS` configurado con la subred `172.28.0.0/24` de `edge` en `compose.yaml` | Resuelto en v3 |
 
 ## 4. Sin probar
 
