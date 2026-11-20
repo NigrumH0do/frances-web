@@ -12,17 +12,17 @@
 /* ---------- Entrada editorial por ruta y elevación ---------- */
 
 .route-enter {
-  animation: atelierFadeRise var(--dur-med) var(--ease-atelier) both;
+  animation: atelierFadeRise var(--dur-med) var(--ease-atelier);
 }
 
 @keyframes atelierFadeRise {
   from {
-    opacity: 0;
-    transform: translateY(8px);
+    opacity: 0.01;
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 

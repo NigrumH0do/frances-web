@@ -75,7 +75,7 @@ export function FlipCard({
 
     function onKeyDown(event: KeyboardEvent) {
       if (
-        event.key !== ' ' ||
+        (event.key !== ' ' && event.code !== 'Space') ||
         event.defaultPrevented ||
         event.repeat ||
         event.altKey ||

@@ -21,7 +21,8 @@ export default defineConfig({
   workers: 2,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  use: { baseURL: BASE_URL },
+  reporter: process.env.CI ? [['dot'], ['html', { open: 'never' }]] : 'list',
+  use: { baseURL: BASE_URL, trace: 'on-first-retry' },
   projects: [
     { name: 'mobile-chromium', use: { ...devices['Pixel 7'] } },
     { name: 'mobile-webkit', use: { ...devices['iPhone 14'] } },

@@ -13,8 +13,9 @@ test('voltear con Espacio muestra los intervalos y califica con el teclado', asy
   await expect(
     page.getByRole('button', { name: 'Mostrar respuesta' }),
   ).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
 
-  await page.keyboard.press(' ');
+  await page.keyboard.press('Space');
   const ratings = page.getByRole('group', { name: RATING });
   await expect(ratings).toBeVisible();
   await expect(ratings.getByRole('button')).toHaveCount(4);

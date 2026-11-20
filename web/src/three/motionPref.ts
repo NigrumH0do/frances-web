@@ -59,6 +59,9 @@ export function hasWebGLSupport(): boolean {
       canvas.getContext('webgl2', { powerPreference: 'low-power' }) ??
       canvas.getContext('webgl', { powerPreference: 'low-power' });
     webglSupportedCache = gl !== null;
+    if (gl !== null) {
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+    }
   } catch {
     webglSupportedCache = false;
   }

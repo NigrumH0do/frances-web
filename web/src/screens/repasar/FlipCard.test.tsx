@@ -346,3 +346,31 @@ test('al voltear sin ejemplo ni nota igual muestra el recordatorio en francés e
   expect(scoped.queryByText('Ejemplo')).not.toBeInTheDocument();
   expect(scoped.queryByText('Nota')).not.toBeInTheDocument();
 });
+
+test('voltea cuando keydown trae code Space aunque key sea Spacebar', () => {
+  const onFlip = vi.fn();
+  render(
+    <MemoryRouter>
+      <FlipCard card={CARD} flipped={false} onFlip={onFlip} />
+    </MemoryRouter>,
+  );
+
+  window.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      key: ' ',
+      code: 'Space',
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
+  window.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      key: 'Spacebar',
+      code: 'Space',
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
+
+  expect(onFlip).toHaveBeenCalledTimes(2);
+});
