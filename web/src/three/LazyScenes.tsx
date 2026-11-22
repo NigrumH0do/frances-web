@@ -5,6 +5,7 @@ import {
   lazy,
   Suspense,
   useSyncExternalStore,
+  type ComponentType,
   type ReactNode,
   type RefObject,
 } from 'react';
@@ -12,17 +13,32 @@ import type { LevelMeter } from '../pron/levelMeter';
 import type { BurstRequest } from './burstPhysics';
 import { CompassFallback, NotebookFallback, OrbFallback } from './fallbacks';
 import { useShouldRender3d } from './motionPref';
-import { getSceneAvailability, subscribeSceneAvailability } from './sceneGate';
+import {
+  getSceneAvailability,
+  setSceneAvailability,
+  subscribeSceneAvailability,
+} from './sceneGate';
 import { probeTier } from './tier';
 import './fallbacks.css';
 
 export type { BurstRequest };
 export { CompassFallback, NotebookFallback, OrbFallback };
 
-const LazyAuthNotebook = lazy(() => import('./AuthNotebookScene'));
-const LazyStreakCompass = lazy(() => import('./StreakCompassScene'));
-const LazyVoiceOrb = lazy(() => import('./VoiceOrbScene'));
-const LazyCardBurst = lazy(() => import('./CardBurstScene'));
+function lazyScene<P extends object>(
+  loader: () => Promise<{ default: ComponentType<P> }>,
+) {
+  return lazy(() =>
+    loader().catch(() => {
+      setSceneAvailability('css');
+      return { default: (() => null) as ComponentType<P> };
+    }),
+  );
+}
+
+const LazyAuthNotebook = lazyScene(() => import('./AuthNotebookScene'));
+const LazyStreakCompass = lazyScene(() => import('./StreakCompassScene'));
+const LazyVoiceOrb = lazyScene(() => import('./VoiceOrbScene'));
+const LazyCardBurst = lazyScene(() => import('./CardBurstScene'));
 
 export class SceneBoundary extends Component<
   { fallback: ReactNode; children: ReactNode },
