@@ -95,6 +95,34 @@ test('voiceLabel no repite el acento ni la edad que ya trae la etiqueta', async 
   ).toBe('Niña (Francia)');
 });
 
+test('«Lento» baja a 0,75× el audio ya cargado sin pedir otro blob', async () => {
+  const load = vi.fn(async () => new Blob(['wav']));
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+  const { container } = render(
+    <ClipPlayer
+      clips={[{ voice_id: 'fr-FR-DeniseNeural', load }]}
+      pendingVoiceIds={[]}
+      voices={VOICES}
+      preferred={[]}
+      slowLabel="Lento"
+    />,
+  );
+
+  expect(
+    screen.queryByRole('button', { name: 'Más lento' }),
+  ).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Reproducir' }));
+  expect(await screen.findByRole('button', { name: 'Detener' })).toBeTruthy();
+  expect(load).toHaveBeenCalledTimes(1);
+
+  const audio = container.querySelector('audio') as HTMLAudioElement;
+  expect(audio.playbackRate).toBe(1);
+  await userEvent.click(screen.getByRole('button', { name: 'Lento' }));
+  expect(audio.playbackRate).toBe(0.75);
+  expect(load).toHaveBeenCalledTimes(1);
+  expect(container.querySelectorAll('audio')).toHaveLength(1);
+});
+
 test('«Más lento» se puede activar y desactivar', async () => {
   render(
     <ClipPlayer

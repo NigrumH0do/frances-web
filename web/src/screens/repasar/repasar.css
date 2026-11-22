@@ -8,7 +8,7 @@
 .flip-inner {
   position: relative;
   display: grid;
-  min-height: 320px;
+  min-height: min(68dvh, 560px);
   transition: transform var(--dur-flip) var(--ease);
   transform-style: preserve-3d;
 }
@@ -144,6 +144,12 @@
   font-weight: var(--fw-regular);
   color: var(--c-text-muted);
 }
+.rating-name {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+}
 .rating .again {
   border-bottom: 4px solid var(--c-rate-again);
 }
@@ -160,6 +166,10 @@
 /* Sesión de repaso: la calificación aparece al ver la respuesta */
 [data-review]:not(.answered) .rating {
   display: none;
+}
+.show-answer {
+  position: sticky;
+  bottom: 0;
 }
 [data-review].answered .show-answer {
   display: none;
@@ -203,8 +213,11 @@
 
 .flip-tilt {
   transform: perspective(1000px) rotateX(var(--rx, 0deg))
-    rotateY(var(--ry, 0deg));
+    rotateY(var(--ry, 0deg)) translate3d(var(--swipe-x, 0px), 0, 0);
   transition: transform var(--dur-fast) var(--ease);
+}
+.flip-tilt.is-tilting {
+  will-change: transform;
 }
 
 .kbd-hint {
