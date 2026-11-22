@@ -1,3 +1,5 @@
+import type { Mastery } from './mastery';
+
 // Textos de la lista de temas y del detalle de un tema.
 export const temasStrings = {
   title: 'Temas',
@@ -9,6 +11,9 @@ export const temasStrings = {
   all: 'Todos',
   pending: 'Con pendientes',
   active: 'Activo',
+  masteryTodo: 'por hacer',
+  masteryDoing: 'en curso',
+  masteryDone: 'al día',
   publications: '{n} publicaciones',
   publicationsOne: '1 publicación',
   cards: '{n} tarjetas',
@@ -22,6 +27,15 @@ export const temasStrings = {
   regroupNote:
     'Los temas se reagrupan con IA tras cada sincronización. El admin puede renombrarlos, unirlos o dividirlos.',
 } as const;
+
+export function masteryLabel(state: Mastery): string {
+  const labels: Record<Mastery, string> = {
+    todo: temasStrings.masteryTodo,
+    doing: temasStrings.masteryDoing,
+    done: temasStrings.masteryDone,
+  };
+  return labels[state];
+}
 
 export const temaStrings = {
   back: 'Volver a Temas',
