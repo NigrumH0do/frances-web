@@ -664,6 +664,81 @@ test('los [n] solo se enlazan si hay una citation con ese número (P09-7)', () =
   expect(screen.getByText(/\[2\]/)).toBeVisible();
 });
 
+test('los grupos [1, 2] pintan un chip clicable por cita (REM-03)', async () => {
+  const second: Citation = {
+    ...CITATION,
+    block_id: 18,
+    page: null,
+    source: 'item',
+    snippet: 'Le subjonctif se forme sur le radical',
+  };
+  const message: ChatMessageOut = {
+    ...ASSISTANT_MESSAGE,
+    content: 'Con être… [1, 2]',
+    citations: [CITATION, second],
+  };
+
+  renderInRouter(<MessageList messages={[message]} />);
+
+  const first = screen.getByRole('link', { name: 'Fuente 1' });
+  const secondLink = screen.getByRole('link', { name: 'Fuente 2' });
+  expect(first).toHaveAttribute(
+    'href',
+    '/publicaciones/cw_7?pagina=3&adjunto=att_1',
+  );
+  expect(secondLink).toHaveAttribute(
+    'href',
+    '/publicaciones/cw_7?adjunto=item',
+  );
+
+  act(() => {
+    secondLink.focus();
+  });
+  const dialog = await screen.findByRole('dialog');
+  expect(dialog).toHaveTextContent('Le subjonctif se forme sur le radical');
+});
+
+test('el [4] compactado del stream ya es Fuente 1 sin esperar la recarga (REM-03)', () => {
+  const message: ChatMessageOut = {
+    ...ASSISTANT_MESSAGE,
+    content: 'La règle [4] existe.',
+    citations: [CITATION],
+  };
+
+  const { container } = renderInRouter(<MessageList messages={[message]} />);
+
+  expect(container.querySelector('.bubble.bot p')).toHaveTextContent(
+    'La règle 1 existe.',
+  );
+  const inline = screen.getByRole('link', { name: 'Fuente 1' });
+  expect(inline).toHaveAttribute(
+    'href',
+    '/publicaciones/cw_7?pagina=3&adjunto=att_1',
+  );
+});
+
+test('un mensaje normalizado con [1] abre el popover de su cita (REM-03)', async () => {
+  const cited: Citation = {
+    ...CITATION,
+    snippet: 'Le passé composé avec être',
+  };
+  const message: ChatMessageOut = {
+    ...ASSISTANT_MESSAGE,
+    content: 'Con être… [1]',
+    citations: [cited],
+  };
+
+  renderInRouter(<MessageList messages={[message]} />);
+
+  const inline = screen.getByRole('link', { name: 'Fuente 1' });
+  act(() => {
+    inline.focus();
+  });
+  const dialog = await screen.findByRole('dialog');
+  expect(dialog).toHaveTextContent('Le passé composé avec être');
+  expect(dialog).toHaveTextContent('p. 3');
+});
+
 test('borra una conversación solo después de confirmar', async () => {
   const transport = fakeTransport({
     'GET /api/auth/me': {

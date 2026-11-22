@@ -115,6 +115,46 @@ def parse_citations(text: str, retrieved: Retrieved) -> list[Citation]:
     return citations
 
 
+def normalize_citations(text: str, retrieved: Retrieved) -> tuple[str, list[Citation]]:
+    """Renumera las marcas ``[n]`` a 1…len(citations) en orden de aparición.
+
+    El modelo a veces cita solo ``[4]`` cuando recuperó seis fragmentos; la
+    lista compacta de citas tiene entonces un elemento y la marca no apunta a
+    ``citations[0]``. Se reescribe el texto para que cada marca válida quede
+    alineada 1 a 1 con ``citations``; un corchete solo con números fuera de
+    rango se deja intacto y uno mixto conserva los válidos renumerados.
+    """
+    total = len(retrieved.hits)
+    mapping: dict[int, int] = {}
+    citations: list[Citation] = []
+
+    def renumbered(n: int) -> int:
+        if n not in mapping:
+            hit = retrieved.hits[n - 1]
+            citations.append(_citation(hit, retrieved.titles.get(hit.block_id)))
+            mapping[n] = len(citations)
+        return mapping[n]
+
+    pieces: list[str] = []
+    last = 0
+    for match in _CITATION_RE.finditer(text):
+        numbers: list[int] = []
+        for raw in match.group(1).split(","):
+            n = int(raw)
+            if not 1 <= n <= total:
+                continue
+            m = renumbered(n)
+            if m not in numbers:
+                numbers.append(m)
+        if not numbers:
+            continue
+        pieces.append(text[last : match.start()])
+        pieces.append("[" + ", ".join(str(m) for m in numbers) + "]")
+        last = match.end()
+    pieces.append(text[last:])
+    return "".join(pieces), citations
+
+
 def is_no_material(text: str) -> bool:
     """El modelo respondió el texto fijo de «el material no lo cubre»."""
     return norm_key(text).startswith(_NO_MATERIAL_KEY)
@@ -156,11 +196,11 @@ def _partial_events(
     stamp: str,
 ) -> list[ChatEvent]:
     """Guarda lo recibido como ``partial`` y emite sus citas válidas y el error."""
-    citations = parse_citations(text, retrieved)
+    content, citations = normalize_citations(text, retrieved)
     _save_assistant(
         store,
         thread_id,
-        content=text,
+        content=content,
         citations=citations,
         status="partial",
         model=model,
@@ -310,12 +350,12 @@ def answer_events(
             yield ChatEvent(kind="done", message_id=assistant_id, code="no_material")
             return
 
-        citations = parse_citations(text, retrieved)
+        content, citations = normalize_citations(text, retrieved)
         if citations:
             assistant_id = _save_assistant(
                 store,
                 thread_id,
-                content=text,
+                content=content,
                 citations=citations,
                 status="ok",
                 model=llm.model,

@@ -25,6 +25,7 @@ from frances.study.chat import (
     Retrieved,
     answer_events,
     is_no_material,
+    normalize_citations,
     parse_citations,
     retrieve,
 )
@@ -258,6 +259,22 @@ def _retrieved(env: ChatEnv, question: str) -> Retrieved:
     return retrieve(env.conn, question)
 
 
+def _synthetic_retrieved(count: int = 6) -> Retrieved:
+    """Hits sintéticos numerables 1…count, sin tocar la base de datos."""
+    hits = [
+        SearchHit(
+            block_id=100 + n,
+            item_id=f"cw_{n}",
+            source="item",
+            page=None,
+            snippet=f"Fragmento {n}",
+            score=0.0,
+        )
+        for n in range(1, count + 1)
+    ]
+    return Retrieved(hits=hits, fragments=[], titles={})
+
+
 def test_no_fragments_answers_without_llm(chat_env: ChatEnv) -> None:
     llm = FakeStreamLlm(model="m", stream_replies=[])
     events = list(
@@ -305,6 +322,45 @@ def test_citations_map_to_real_blocks(chat_env: ChatEnv) -> None:
     stored = last_assistant(chat_env)
     assert stored.status == "ok" and len(stored.citations) == 2
     assert stored.model == "m" and stored.prompt_version == "chat-1"
+
+
+def test_answer_events_renumbers_compact_citations(chat_env: ChatEnv) -> None:
+    """El LLM cita solo ``[4]``: el texto guardado dice ``[1]`` y hay 1 cita."""
+    question = "pomme pommier chat mange fruit crue longue"
+    retrieved = _retrieved(chat_env, question)
+    assert len(retrieved.hits) >= 4
+    fourth = retrieved.hits[3]
+
+    events = run(
+        chat_env,
+        stream_replies=[["La règle s'applique ", "[4] au subjonctif."]],
+        question=question,
+    )
+
+    assert kinds(events)[-2:] == ["citation", "done"]
+    stored = last_assistant(chat_env)
+    assert stored.status == "ok"
+    assert stored.content == "La règle s'applique [1] au subjonctif."
+    assert len(stored.citations) == 1
+    assert stored.citations[0].block_id == fourth.block_id
+    assert stored.citations[0].item_id == fourth.item_id
+
+
+def test_partial_answer_renumbers_compact_citations(chat_env: ChatEnv) -> None:
+    question = "pomme pommier chat mange fruit crue longue"
+    retrieved = _retrieved(chat_env, question)
+    assert len(retrieved.hits) >= 4
+
+    run(
+        chat_env,
+        stream_replies=[InterruptedAfter(["Cita ", "[4]"])],
+        question=question,
+    )
+
+    stored = last_assistant(chat_env)
+    assert stored.status == "partial"
+    assert stored.content == "Cita [1]"
+    assert [citation.block_id for citation in stored.citations] == [retrieved.hits[3].block_id]
 
 
 def test_answer_without_markers_is_partial_with_fallback_citations(chat_env: ChatEnv) -> None:
@@ -429,6 +485,32 @@ def test_parse_citations_accepts_groups_dedupes_and_ignores_out_of_range(
     ]
     assert parse_citations("Sin marcas.", retrieved) == []
     assert parse_citations("Solo [99].", retrieved) == []
+
+
+def test_normalize_citations_renumbers_non_sequential_and_groups() -> None:
+    retrieved = _synthetic_retrieved(6)
+
+    content, citations = normalize_citations("Regla [4]. Ejemplo [6, 4]. Fuera [99].", retrieved)
+
+    assert content == "Regla [1]. Ejemplo [2, 1]. Fuera [99]."
+    assert [citation.block_id for citation in citations] == [104, 106]
+
+
+def test_normalize_citations_keeps_sequential_text_and_invalid_markers() -> None:
+    retrieved = _synthetic_retrieved(6)
+
+    content, citations = normalize_citations("A [1] y [2].", retrieved)
+    assert content == "A [1] y [2]."
+    assert [citation.block_id for citation in citations] == [101, 102]
+
+    mixed, mixed_citations = normalize_citations("B [4, 99] y [4, 4].", retrieved)
+    assert mixed == "B [1] y [1]."
+    assert [citation.block_id for citation in mixed_citations] == [104]
+
+    plain, plain_citations = normalize_citations("C [9] y [0].", retrieved)
+    assert plain == "C [9] y [0]."
+    assert plain_citations == []
+    assert normalize_citations("Sin marcas.", retrieved) == ("Sin marcas.", [])
 
 
 def test_is_no_material_accepts_trailing_text() -> None:
