@@ -43,7 +43,7 @@ jobs:
       - name: Guardián del build real
         # P09-6: el build de producción no puede contener el modo demo.
         working-directory: web
-        run: npm run build && node scripts/check-no-demo.mjs dist
+        run: npm run build && node scripts/check-no-demo.mjs dist && node scripts/check-three-budget.mjs dist
       - name: Upload report
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

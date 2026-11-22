@@ -27,3 +27,11 @@ def test_app_image_installs_libgomp_for_onnxruntime() -> None:
 def test_dockerignore_excludes_data_and_secrets() -> None:
     ig = Path(".dockerignore").read_text().split()
     assert {".env*", "data/", ".git", "**/node_modules"} <= set(ig)
+
+
+def test_web_build_runs_bundle_guardians() -> None:
+    """QA-01: el stage web-build invoca check-no-demo y check-three-budget."""
+    df = Path("infra/Dockerfile").read_text()
+    web_build = df.split("AS web-build", 1)[1].split("\nFROM ", 1)[0]
+    assert "node web/scripts/check-no-demo.mjs web/dist" in web_build
+    assert "node web/scripts/check-three-budget.mjs web/dist" in web_build

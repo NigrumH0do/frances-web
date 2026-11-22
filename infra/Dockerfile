@@ -10,7 +10,9 @@ COPY contracts/ ./contracts/
 # `tsc --noEmit` también revisa los tests de web/src, que importan fixtures de
 # tests/fixtures/ (fuera del contexto de build). La imagen no lleva tests.
 RUN find web/src -type f \( -name '*.test.ts' -o -name '*.test.tsx' \) -delete \
-    && VITE_BASE=/ npm --prefix web run build
+    && VITE_BASE=/ npm --prefix web run build \
+    && node web/scripts/check-no-demo.mjs web/dist \
+    && node web/scripts/check-three-budget.mjs web/dist
 
 # --- web: Caddy + estáticos ------------------------------------------------------
 FROM caddy:2.11.7@sha256:36c24ad91a7ff7bc4c87fe22bfa8df3c4b18da0773d73fc12ee2c52b98c0bb7e AS web
