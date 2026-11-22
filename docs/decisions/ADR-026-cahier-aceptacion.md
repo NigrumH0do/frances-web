@@ -1,6 +1,6 @@
 # ADR-026: Acta de aceptación de Cahier Atelier 3D — Edición Definitiva
 
-**Estado:** Pendiente de firma del dueño
+**Estado:** Decisiones D0 aprobadas por el dueño — pendiente de verificación en hardware real y CI Smoke arm64
 **Tarea:** QA-04 · actualización REM-06
 **No reemplaza:** ADR-025 (la decisión de diseño sigue siendo la de GOV-01)
 **Fecha de la medición:** 2026-11-22, 17:33–17:43 (UTC−5)
@@ -129,15 +129,15 @@ Nota de método: el arnés `rv2_b5.mjs` conserva `pass: false` en dos aserciones
 
 ## Decisiones D0
 
-La misma lista que autorizó el diseño. Cada fila espera veredicto, fecha y firma del dueño. Este agente no las llena. El PR hacia `main` no se abre mientras alguna siga vacía o diga «Pide cambio».
+La misma lista que autorizó el diseño. El dueño aprobó las cinco decisiones el **2026-11-22** y firmó cada fila; ninguna dice «Pide cambio». Queda pendiente únicamente marcar en el PR el checklist de hardware real y el CI `Smoke arm64` antes de fusionar a `main`: este agente no puede medir ni declarar verde ninguno de los dos.
 
 | # | Decisión | Efecto si se aprueba | Aprueba / Pide cambio | Fecha | Firma del dueño |
 |---|---|---|---|---|---|
-| 1 | Paleta única y `--c-gold-3d` | Papel `#f8f6ed`, pizarra `#10131a`, tinta `#2147a3` / `#98b9fa`. El metal se llama `--c-gold-3d` (`#d3ac41` / `#d9b65e`), nunca `--c-brass`, y no entra en `color:`. | | | |
-| 2 | Anillo de puntaje | Arco proporcional con el color de banda, cifra en `--c-text`, icono y palabra. No un `strokeDasharray` distinto sobre el mismo círculo que se anima. | | | |
-| 3 | Refinamientos de SceneHost | `unmasked` es `WebGL2RenderingContext` \| `WebGLRenderingContext` \| `null`. El puntero de `window` ignora lo que no sea `mouse`. `resize()` solo cuando el techo DPR cambia. Al pasar de `mix > 0.999` se copia el color de destino. | | | |
-| 4 | Frontera del 3D | Solo cuaderno, brújula, orbe y ráfaga. Publicación, Chat, Admin, Quiz, Temas, Ajustes y el volteo de `FlipCard` se quedan en DOM. Cero `react-three-fiber`, `drei` y motor de física. | | | |
-| 5 | Secuencia | Tokens y movimiento antes que escenas. Cada tarea cierra en verde antes de mezclarse a la rama de integración. | | | |
+| 1 | Paleta única y `--c-gold-3d` | Papel `#f8f6ed`, pizarra `#10131a`, tinta `#2147a3` / `#98b9fa`. El metal se llama `--c-gold-3d` (`#d3ac41` / `#d9b65e`), nunca `--c-brass`, y no entra en `color:`. | Aprueba | 2026-11-22 | NigrumH0do (aprobado en sesión) |
+| 2 | Anillo de puntaje | Arco proporcional con el color de banda, cifra en `--c-text`, icono y palabra. No un `strokeDasharray` distinto sobre el mismo círculo que se anima. | Aprueba | 2026-11-22 | NigrumH0do (aprobado en sesión) |
+| 3 | Refinamientos de SceneHost | `unmasked` es `WebGL2RenderingContext` \| `WebGLRenderingContext` \| `null`. El puntero de `window` ignora lo que no sea `mouse`. `resize()` solo cuando el techo DPR cambia. Al pasar de `mix > 0.999` se copia el color de destino. | Aprueba | 2026-11-22 | NigrumH0do (aprobado en sesión) |
+| 4 | Frontera del 3D | Solo cuaderno, brújula, orbe y ráfaga. Publicación, Chat, Admin, Quiz, Temas, Ajustes y el volteo de `FlipCard` se quedan en DOM. Cero `react-three-fiber`, `drei` y motor de física. | Aprueba | 2026-11-22 | NigrumH0do (aprobado en sesión) |
+| 5 | Secuencia | Tokens y movimiento antes que escenas. Cada tarea cierra en verde antes de mezclarse a la rama de integración. | Aprueba | 2026-11-22 | NigrumH0do (aprobado en sesión) |
 
 ## Checklist manual en hardware real
 
