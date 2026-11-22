@@ -47,6 +47,29 @@ function oauthNotice(search: string): {
   return null;
 }
 
+function WaitClock() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <circle
+        cx="12"
+        cy="12"
+        r="8.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <path
+        d="M12 7.5V12.2l3.2 1.9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function GoogleMark() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -137,24 +160,19 @@ export default function Login() {
           <p className="auth-cover-sub">{authStrings.login.subtitle}</p>
         </div>
         <div className="auth-cover-visual">
-          <SafeAuthNotebookScene
-            fallback={
-              <div className="auth-fallback-badge" aria-hidden="true">
-                Fr
-              </div>
-            }
-          />
+          <SafeAuthNotebookScene />
         </div>
       </div>
 
-      {callbackNotice !== null ? (
-        <p
-          className={
-            callbackNotice.kind === 'error' ? 'callout error' : 'callout info'
-          }
-          role={callbackNotice.kind === 'error' ? 'alert' : 'status'}
-        >
+      {callbackNotice?.kind === 'error' ? (
+        <p className="callout error" role="alert">
           {callbackNotice.text}
+        </p>
+      ) : null}
+      {callbackNotice?.kind === 'info' ? (
+        <p className="auth-wait" role="status">
+          <WaitClock />
+          <span>{callbackNotice.text}</span>
         </p>
       ) : null}
 
