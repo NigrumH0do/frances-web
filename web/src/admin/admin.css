@@ -1,4 +1,4 @@
-/* Administración: cuota de Azure. */
+/* Administración: cuota de Azure, densidad y subnav. */
 
 /* ---------- Admin Azure y medidores ---------- */
 
@@ -24,4 +24,74 @@
 
 .usage-meter-fill.warn {
   background: var(--c-warning);
+}
+
+.nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-dense .list-item {
+  min-height: 48px;
+}
+
+.admin-dense .section-title {
+  position: sticky;
+  top: 0;
+  background: var(--c-bg);
+  z-index: 1;
+}
+
+.admin-console {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.admin-console-main {
+  min-width: 0;
+}
+
+.admin-subnav {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.admin-subnav a {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-md);
+  color: var(--c-text);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.admin-subnav a[aria-current='page'] {
+  background: var(--c-accent-soft);
+  font-weight: var(--fw-bold);
+}
+
+@media (min-width: 960px) {
+  .admin-console {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    align-items: start;
+    column-gap: var(--sp-5);
+  }
+
+  .admin-subnav {
+    position: sticky;
+    top: 0;
+    width: 240px;
+    flex-direction: column;
+    align-items: stretch;
+    overflow-x: visible;
+  }
 }

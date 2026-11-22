@@ -33,6 +33,8 @@ export const masStrings = {
     motion3dHint: 'Escenas WebGL y transiciones suaves en este dispositivo.',
     motion3dReducedHint:
       'Tu sistema tiene «reducir movimiento» activo; las animaciones permanecen desactivadas.',
+    sample: 'Muestra',
+    sampleStill: 'sin animación',
     offlineAudioError: 'No se pudo guardar el ajuste de audios.',
     offlineSaved: 'Sin conexión: el tema queda solo en este dispositivo.',
     saved: 'Ajustes guardados.',

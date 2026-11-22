@@ -76,7 +76,7 @@ function UsageBar({
     <div className="stack">
       <div className="row-between">
         <span className="small">{label}</span>
-        <span className="small muted">{detail}</span>
+        <span className="small muted nums">{detail}</span>
       </div>
       <div
         className="usage-meter"
@@ -129,7 +129,7 @@ function SummarySection({
               used={summary.stt_seconds_used}
               cap={summary.stt_seconds_cap}
             />
-            <span className="xs muted">
+            <span className="xs muted nums">
               {s.activePool(summary.speech_active, summary.speech_accounts)}
             </span>
           </div>
@@ -146,7 +146,7 @@ function SummarySection({
               used={summary.tts_chars_used}
               cap={summary.tts_chars_cap}
             />
-            <span className="xs muted">
+            <span className="xs muted nums">
               {s.activePool(summary.speech_active, summary.speech_accounts)}
             </span>
           </div>
@@ -163,7 +163,7 @@ function SummarySection({
               used={summary.translator_chars_used}
               cap={summary.translator_chars_cap}
             />
-            <span className="xs muted">
+            <span className="xs muted nums">
               {s.activePool(
                 summary.translator_active,
                 summary.translator_accounts,
@@ -366,7 +366,7 @@ export function AdminAzure() {
       <AppBar
         title={s.title}
         subtitle={s.subtitle}
-        back={{ to: '/mas', label: 'Más' }}
+        back={{ to: '/mas/admin', label: 'Administración' }}
         actions={
           <Button variant="primary" onClick={openCreate}>
             {s.addAccount}

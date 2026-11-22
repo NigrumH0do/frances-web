@@ -139,7 +139,10 @@ export function AdminCards() {
 
   return (
     <div className="stack-lg">
-      <AppBar title={s.title} back={{ to: '/mas', label: 'Más' }} />
+      <AppBar
+        title={s.title}
+        back={{ to: '/mas/admin', label: 'Administración' }}
+      />
       <p className="small muted">{s.intro}</p>
 
       <Card>
