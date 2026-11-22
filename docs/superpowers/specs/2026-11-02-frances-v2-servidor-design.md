@@ -10,15 +10,33 @@ sigue vigente salvo que aquí se diga otra cosa.
 > - **LLM:** ya no es Kiosapi. ADR-015 pasó a Groq y ADR-016 a OneRouter
 >   (`qwen/qwen3.8-27b:free`). Cualquier API compatible con OpenAI sirve vía
 >   `LLM_BASE_URL`, `LLM_API_KEY` y `LLM_MODEL`.
-> - **Diseño:** ADR-018 reemplaza la paleta y las fuentes de §8 por el sistema
->   «Cahier» (papel Seyès, tinta azul `#2b37b8`, Spectral y Lexend) y agrega la
->   sección «Texto libre» en Repasar: texto propio → audio con Edge TTS
->   (`POST /api/practice/tts`) → grabarse y puntuar con Azure. Estado: propuesto.
-> - **Lectura del material:** ADR-019 cambia el OCR a RapidOCR (PP-OCRv6, sin
->   red) con Tesseract `fra+spa` de respaldo, y agrega texto de PowerPoint y Word.
->   `frances coverage` dice qué archivos tienen texto. Estado: propuesto.
+> - **Diseño:** ADR-018 (**Aceptado**, 2026-11-19) reemplaza la paleta y las
+>   fuentes de §8 por el sistema «Cahier» (papel frío `#f7f7fb`, pizarra
+>   `#121917`, tinta azul `#2b37b8`, Spectral y Lexend; ver
+>   `web/src/design/tokens.css`) y agrega la sección «Texto libre» en Repasar:
+>   texto propio → audio con Edge TTS (`POST /api/practice/tts`) → grabarse y
+>   puntuar con Azure.
+> - **Movimiento:** ADR-023 (**Aceptado**) amplía «Cahier» con «Cahier Atelier
+>   3D»: escenas Three.js con carga diferida, movimiento CSS y preferencia
+>   `frances.motion3d`, con equivalente editorial si no hay WebGL.
+> - **Lectura del material:** ADR-019 (**Aceptado**, 2026-11-19) cambia el OCR a
+>   RapidOCR (PP-OCRv6, sin red) con Tesseract `fra+spa` de respaldo, y agrega
+>   texto de PowerPoint y Word. `frances coverage` dice qué archivos tienen
+>   texto. El `Dockerfile` instala `libgomp1` para `onnxruntime` en ARM64.
 > - **Publicación:** ADR-020 retira GitHub Pages. El único despliegue es el
 >   servidor. El modo demo queda para el e2e y no se publica.
+> - **Cuentas:** ADR-021 (**Aceptado**) agrega login web con Google OIDC (PKCE)
+>   y aprobación por administrador; los correos de `FRANCES_ADMIN_EMAILS` entran
+>   como admin y el resto queda `pending` hasta aprobación.
+> - **Azure:** ADR-022 (**Aceptado**) añade el pool multicuenta cifrado con
+>   `FRANCES_SECRETS_KEY`, failover por enfriamiento y medición de STT. La CSP de
+>   Caddy usa `wss://*.stt.speech.microsoft.com` y ya no depende de la región.
+> - **Tarjetas IA:** ADR-024 (**Aceptado**) devuelve `cards` al LLM con el prompt
+>   `cards-3` (notas pedagógicas), lematización con spaCy y temas reeditables;
+>   `quiz` sigue con reglas. Reemplaza en parte ADR-017.
+> - **Retiro de la v1:** CHG-16 retiró la web v1 y **CHG-21 ya retiró el runtime
+>   FRB1, R2 y el Worker de Cloudflare**; los fixtures sintéticos del demo
+>   (`tests/fixtures/demo_state.sql` y `demo_audio/`) se conservan para el e2e.
 
 ## 1. Intención
 

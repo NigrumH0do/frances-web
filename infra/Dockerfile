@@ -22,11 +22,13 @@ FROM python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf22
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.17@sha256:10787c682e4184e4f290de1171fd4703dc63de99221f10fe1c99002ce7fa9acc /uv /usr/local/bin/uv
 
+# libgomp1 es la runtime OpenMP que exige onnxruntime (RapidOCR) en Debian slim ARM64.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         espeak-ng \
         ffmpeg \
+        libgomp1 \
         sqlite3 \
         tesseract-ocr \
         tesseract-ocr-fra \

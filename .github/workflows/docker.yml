@@ -73,3 +73,5 @@ jobs:
           docker buildx build --platform linux/arm64 --target app --load \
             -t frances-app:ci -f infra/Dockerfile .
           docker run --rm --platform linux/arm64 frances-app:ci --help
+          docker run --rm --platform linux/arm64 --entrypoint python frances-app:ci \
+            -c "import onnxruntime, rapidocr"

@@ -1,8 +1,14 @@
 # ADR-017: AI-17 evalúa el LLM solo en sheet, topics, plan_why y chat
 
 **Estado:** Aceptado (decisión del dueño, 2026-11-08)
+**Reemplazado en parte por:** ADR-024 (2026-11-19): `--task cards` volvió al LLM con el prompt `cards-3`; solo `quiz` se evalúa con reglas y sale 0 sin cliente.
 **Tarea:** AI-17 (evaluación de calidad del LLM)
 **Complementa:** ADR-016 (OneRouter / `qwen/qwen3.8-27b:free`)
+
+> **Actualización (ADR-024):** la decisión de `quiz` sigue vigente (reglas,
+> `rules_questions`/`dictation_questions`, sale 0 sin construir el cliente).
+> `cards` ya no se evalúa con reglas: ADR-024 devolvió esa tarea al LLM con el
+> prompt `cards-3` y su evaluación real. El resto de este ADR no cambia.
 
 ## Decisión
 

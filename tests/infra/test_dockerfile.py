@@ -17,6 +17,13 @@ def test_web_build_runs_on_build_platform() -> None:
     assert "FROM --platform=$BUILDPLATFORM node:22" in Path("infra/Dockerfile").read_text()
 
 
+def test_app_image_installs_libgomp_for_onnxruntime() -> None:
+    """onnxruntime/RapidOCR necesitan OpenMP (libgomp1) en Debian slim ARM64."""
+    df = Path("infra/Dockerfile").read_text()
+    apt = df.split("apt-get install -y --no-install-recommends", 1)[1].split("&& rm -rf", 1)[0]
+    assert "libgomp1" in apt
+
+
 def test_dockerignore_excludes_data_and_secrets() -> None:
     ig = Path(".dockerignore").read_text().split()
     assert {".env*", "data/", ".git", "**/node_modules"} <= set(ig)

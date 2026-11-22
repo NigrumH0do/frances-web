@@ -64,42 +64,42 @@ tasks:
   - {id: AUD-05, plan: P04, human: false, deps: [FND-04], title: "Post-proceso ffmpeg: MP3 24k/48k mono, −16 LUFS, duración", owns: [src/frances/audio/post.py]}
   - {id: AUD-06, plan: P04, human: false, deps: [AUD-02, AUD-03, AUD-04, AUD-05], title: "Etapa audio: cola, concurrencia, fallback Edge→Azure", owns: [src/frances/audio/run.py]}
   # ---------- Bundle ----------
-  - {id: BND-01, plan: P05, human: false, deps: [FND-01], title: "FRB1 en Python + vectores de prueba", owns: [src/frances/bundle/frb1.py, tests/fixtures/frb1_vectors.json]}
-  - {id: BND-02, plan: P05, human: false, deps: [FND-02, FND-03, BND-03, EXT-03], title: "Constructor del ContentIndex desde el Store", owns: [src/frances/bundle/index.py]}
-  - {id: BND-03, plan: P05, human: false, deps: [BND-01, FND-04], title: "Empaquetador d/*.bin con dedupe y presupuesto de tamaño", owns: [src/frances/bundle/pack.py]}
-  - {id: BND-04, plan: P05, human: false, deps: [BND-02, BND-03, FND-05, CRD-07, AUD-01], title: "Etapa bundle + política de passphrase + demo-bundle", owns: [src/frances/bundle/run.py, src/frances/bundle/demo.py, tests/fixtures/demo_state.sql, tests/fixtures/demo_audio/]}
+  - {id: BND-01, plan: P05, human: false, deps: [FND-01], title: "RETIRADA (v2): FRB1 en Python + vectores de prueba", owns: [src/frances/bundle/frb1.py, tests/fixtures/frb1_vectors.json]}
+  - {id: BND-02, plan: P05, human: false, deps: [FND-02, FND-03, BND-03, EXT-03], title: "RETIRADA (v2): Constructor del ContentIndex desde el Store", owns: [src/frances/bundle/index.py]}
+  - {id: BND-03, plan: P05, human: false, deps: [BND-01, FND-04], title: "RETIRADA (v2): Empaquetador d/*.bin con dedupe y presupuesto de tamaño", owns: [src/frances/bundle/pack.py]}
+  - {id: BND-04, plan: P05, human: false, deps: [BND-02, BND-03, FND-05, CRD-07, AUD-01], title: "RETIRADA (v2): Etapa bundle + política de passphrase + demo-bundle", owns: [src/frances/bundle/run.py, src/frances/bundle/demo.py, tests/fixtures/demo_state.sql, tests/fixtures/demo_audio/]}
   # ---------- Web ----------
-  - {id: WEB-01, plan: P05, human: false, deps: [FND-01], title: "Shell: rutas, layout, tokens, es.ts, a11y, idb.ts", owns: [web/src/App.tsx, web/src/main.tsx, web/src/ui/layout/, web/src/ui/theme.css, web/src/i18n/, web/src/db/idb.ts]}
-  - {id: WEB-02, plan: P05, human: false, deps: [WEB-01, BND-01], title: "FRB1 en TypeScript + keystore no extraíble", owns: [web/src/crypto/]}
-  - {id: WEB-03, plan: P05, human: false, deps: [WEB-02, FND-02], title: "Loader, blobs descifrados y ContentContext", owns: [web/src/data/]}
-  - {id: WEB-04, plan: P05, human: false, deps: [WEB-03], title: "Pantalla Desbloquear", owns: [web/src/routes/Unlock.tsx]}
-  - {id: WEB-05, plan: P05, human: false, deps: [WEB-08, WEB-06, PRN-04], title: "Pantalla Hoy", owns: [web/src/routes/Today.tsx]}
-  - {id: WEB-06, plan: P05, human: false, deps: [WEB-03], title: "Classroom + detalle de publicación + visores PDF/imagen", owns: [web/src/routes/Classroom.tsx, web/src/routes/ItemDetail.tsx, web/src/ui/viewers/]}
-  - {id: WEB-07, plan: P05, human: false, deps: [WEB-06], title: "Ficha de estudio", owns: [web/src/routes/Sheet.tsx]}
-  - {id: WEB-08, plan: P05, human: false, deps: [WEB-10], title: "SRS (ts-fsrs + IndexedDB) y pantalla Repaso", owns: [web/src/srs/, web/src/routes/Review.tsx]}
-  - {id: WEB-09, plan: P05, human: false, deps: [WEB-10], title: "Buscador de tarjetas", owns: [web/src/routes/Cards.tsx]}
+  - {id: WEB-01, plan: P05, human: false, deps: [FND-01], title: "RETIRADA (v2): Shell: rutas, layout, tokens, es.ts, a11y, idb.ts", owns: [web/src/App.tsx, web/src/main.tsx, web/src/ui/layout/, web/src/ui/theme.css, web/src/i18n/, web/src/db/idb.ts]}
+  - {id: WEB-02, plan: P05, human: false, deps: [WEB-01, BND-01], title: "RETIRADA (v2): FRB1 en TypeScript + keystore no extraíble", owns: [web/src/crypto/]}
+  - {id: WEB-03, plan: P05, human: false, deps: [WEB-02, FND-02], title: "RETIRADA (v2): Loader, blobs descifrados y ContentContext", owns: [web/src/data/]}
+  - {id: WEB-04, plan: P05, human: false, deps: [WEB-03], title: "RETIRADA (v2): Pantalla Desbloquear", owns: [web/src/routes/Unlock.tsx]}
+  - {id: WEB-05, plan: P05, human: false, deps: [WEB-08, WEB-06, PRN-04], title: "RETIRADA (v2): Pantalla Hoy", owns: [web/src/routes/Today.tsx]}
+  - {id: WEB-06, plan: P05, human: false, deps: [WEB-03], title: "RETIRADA (v2): Classroom + detalle de publicación + visores PDF/imagen", owns: [web/src/routes/Classroom.tsx, web/src/routes/ItemDetail.tsx, web/src/ui/viewers/]}
+  - {id: WEB-07, plan: P05, human: false, deps: [WEB-06], title: "RETIRADA (v2): Ficha de estudio", owns: [web/src/routes/Sheet.tsx]}
+  - {id: WEB-08, plan: P05, human: false, deps: [WEB-10], title: "RETIRADA (v2): SRS (ts-fsrs + IndexedDB) y pantalla Repaso", owns: [web/src/srs/, web/src/routes/Review.tsx]}
+  - {id: WEB-09, plan: P05, human: false, deps: [WEB-10], title: "RETIRADA (v2): Buscador de tarjetas", owns: [web/src/routes/Cards.tsx]}
   - {id: WEB-10, plan: P05, human: false, deps: [WEB-03], title: "Componente AudioPlayer (voces, pendiente)", owns: [web/src/ui/AudioPlayer.tsx]}
-  - {id: WEB-11, plan: P05, human: false, deps: [WEB-08, PRN-04, PRN-06], title: "Ajustes + exportar/importar progreso + bloquear", owns: [web/src/routes/Settings.tsx, web/src/progress/]}
+  - {id: WEB-11, plan: P05, human: false, deps: [WEB-08, PRN-04, PRN-06], title: "RETIRADA (v2): Ajustes + exportar/importar progreso + bloquear", owns: [web/src/routes/Settings.tsx, web/src/progress/]}
   - {id: WEB-12, plan: P05, human: false, deps: [WEB-03], title: "PWA offline (service worker)", owns: [web/src/sw/, web/vite.config.ts]}
-  - {id: WEB-13, plan: P05, human: false, deps: [BND-04, WEB-04, WEB-05, WEB-07, WEB-09, WEB-11, PRN-05, PRN-07], title: "E2E Playwright sobre el demo-bundle", owns: [web/e2e/, web/playwright.config.ts]}
+  - {id: WEB-13, plan: P05, human: false, deps: [BND-04, WEB-04, WEB-05, WEB-07, WEB-09, WEB-11, PRN-05, PRN-07], title: "RETIRADA (v2): E2E Playwright sobre el demo-bundle", owns: [web/e2e/, web/playwright.config.ts]}
   # ---------- Pronunciación ----------
   - {id: PRN-01, plan: P06, human: false, deps: [FND-02, SPK-04], title: "Parser del JSON de Azure → PronResult", owns: [web/src/pron/parse.ts, web/src/pron/phonemeLabels.ts]}
   - {id: PRN-02, plan: P06, human: false, deps: [PRN-01, WEB-03], title: "Recognizer Azure + máquina de estados del grabador", owns: [web/src/pron/recognizer.ts, web/src/pron/recorder.ts]}
-  - {id: PRN-03, plan: P06, human: false, deps: [PRN-02, PRN-04, PRN-06, WEB-10], title: "Pantalla Práctica: escuchar, grabar, puntajes por palabra/fonema", owns: [web/src/routes/Practice.tsx, web/src/ui/pron/]}
+  - {id: PRN-03, plan: P06, human: false, deps: [PRN-02, PRN-04, PRN-06, WEB-10], title: "RETIRADA (v2): Pantalla Práctica: escuchar, grabar, puntajes por palabra/fonema", owns: [web/src/routes/Practice.tsx, web/src/ui/pron/]}
   - {id: PRN-04, plan: P06, human: false, deps: [PRN-01, WEB-01], title: "Intentos + estadística EMA por fonema + debilidades", owns: [web/src/pron/attempts.ts, web/src/pron/stats.ts]}
-  - {id: PRN-05, plan: P06, human: false, deps: [PRN-03, PRN-04], title: "Sesión de taladro por fonema débil", owns: [web/src/pron/drill.ts, web/src/routes/Drill.tsx]}
+  - {id: PRN-05, plan: P06, human: false, deps: [PRN-03, PRN-04], title: "RETIRADA (v2): Sesión de taladro por fonema débil", owns: [web/src/pron/drill.ts, web/src/routes/Drill.tsx]}
   - {id: PRN-06, plan: P06, human: false, deps: [PRN-04], title: "Medidor de cuota F0 (5 h/mes, aviso a 4 h)", owns: [web/src/pron/quota.ts]}
-  - {id: PRN-07, plan: P06, human: false, deps: [PRN-04, PRN-06], title: "Pantalla Progreso (mapa de fonemas, historial)", owns: [web/src/routes/Progress.tsx]}
+  - {id: PRN-07, plan: P06, human: false, deps: [PRN-04, PRN-06], title: "RETIRADA (v2): Pantalla Progreso (mapa de fonemas, historial)", owns: [web/src/routes/Progress.tsx]}
   # ---------- Operación ----------
   - {id: OPS-01, plan: P07, human: false, deps: [AGT-01, BND-04, WEB-13], title: "CI completo del repo público (contratos, grafo, e2e)", owns: [.github/workflows/contracts.yml, .github/workflows/e2e.yml]}
   - {id: OPS-02, plan: P07, human: false, deps: [SYN-07, FET-03, EXT-04, CRD-05, CRD-06, CRD-07, AUD-06, BND-04], title: "frances run-daily (orquestación + detección de cambios)", owns: [src/frances/ops/daily.py]}
-  - {id: OPS-03, plan: P07, human: false, deps: [FND-03, FND-04], title: "Almacén R2: pull, push con lease e If-Match, publicación del bundle", owns: [src/frances/ops/r2.py]}
+  - {id: OPS-03, plan: P07, human: false, deps: [FND-03, FND-04], title: "RETIRADA (v2): Almacén R2: pull, push con lease e If-Match, publicación del bundle", owns: [src/frances/ops/r2.py]}
   - {id: OPS-04, plan: P07, human: false, deps: [FND-04], title: "frances report-failure (issues idempotentes)", owns: [src/frances/ops/report.py]}
-  - {id: OPS-05, plan: P07, human: false, deps: [OPS-02, OPS-03, OPS-04, OPS-07, AUD-01], title: "Workflows de producción (daily, reconcile) y configuración de despliegue", owns: [.github/workflows/daily.yml, .github/workflows/reconcile.yml, deploy/]}
+  - {id: OPS-05, plan: P07, human: false, deps: [OPS-02, OPS-03, OPS-04, OPS-07, AUD-01], title: "RETIRADA (v2): Workflows de producción (daily, reconcile) y configuración de despliegue", owns: [.github/workflows/daily.yml, .github/workflows/reconcile.yml, deploy/]}
   # OPS-06 queda CANCELADA (ADR-020, 2026-11-16): no hay GitHub Pages; el único despliegue es el servidor.
   - {id: OPS-06, plan: P07, human: false, deps: [OPS-01], title: "CANCELADA (v2): Pages: app real y demo sintético", owns: []}
   - {id: OPS-07, plan: P07, human: false, deps: [FND-03, AUD-01], title: "frances doctor (tamaños, cuotas, token, voces)", owns: [src/frances/ops/doctor.py]}
-  - {id: OPS-09, plan: P07, human: false, deps: [FND-01], title: "Worker de Cloudflare que sirve el bundle cifrado", owns: [worker/, .github/workflows/worker.yml, .github/workflows/worker-deploy.yml]}
+  - {id: OPS-09, plan: P07, human: false, deps: [FND-01], title: "RETIRADA (v2): Worker de Cloudflare que sirve el bundle cifrado", owns: [worker/, .github/workflows/worker.yml, .github/workflows/worker-deploy.yml]}
   # ---------- Puesta en marcha (humano + agente) ----------
   - {id: LIVE-01, plan: P07, human: true, deps: [SPK-05, SYN-01], title: "Proyecto GCP, cliente OAuth en producción, refresh token", owns: []}
   # LIVE-02 y LIVE-03 quedan CANCELADAS por el spec v2 (2026-11-02). El formato no tiene campo de estado:
@@ -213,3 +213,18 @@ tasks:
   - {id: GOL-04, plan: P12, human: true, deps: [GOL-03], title: "Backfill inicial, doctor, backup y restauración de prueba", owns: [docs/decisions/ADR-013-golive-backfill-inicial.md]}
   - {id: GOL-05, plan: P12, human: true, deps: [GOL-04], title: "Checklist de aceptación del go-live (LIVE-03 v1 adaptado)", owns: [docs/decisions/ADR-014-golive-aceptacion.md]}
   - {id: CHG-21, plan: P12, human: false, deps: [CHG-16, UI-20, CHG-20], title: "Retiro de FRB1, R2 y Worker v1 conservando los fixtures del demo", owns: []}
+
+  # ================= v3 — ADR-018…ADR-024 (2026-11-19) =================
+  # Tareas citadas en las cabeceras «Tarea:» de los ADRs v3. El trabajo ya está
+  # fusionado: se registran aquí con owns vacío (R-31) para que el grafo y
+  # sync_issues no pierdan el rastro. Van en los planes v2 (P08–P10) porque las
+  # olas v1 ya están cerradas y no se reescriben.
+  - {id: EXT-05, plan: P08, human: false, deps: [EXT-04], title: "OCR v3: RapidOCR principal con Tesseract fra+spa de respaldo (ADR-019)", owns: []}
+  - {id: EXT-06, plan: P08, human: false, deps: [EXT-04], title: "Office v3: texto de PowerPoint (.pptx/.ppsx/.pptm) y Word (.docx) (ADR-019)", owns: []}
+  - {id: EXT-07, plan: P08, human: false, deps: [EXT-05, EXT-06, OPS-07], title: "frances coverage: cobertura de texto por adjunto y motivos (ADR-019)", owns: []}
+  - {id: CHG-22, plan: P10, human: false, deps: [CHG-08, CHG-10, AI-02, AI-07], title: "Tarjetas IA v3: prompt cards-3, lematización con spaCy y temas reeditables (ADR-024)", owns: []}
+  - {id: AI-19, plan: P10, human: false, deps: [CHG-22, AI-03, AI-17], title: "Evaluación real de cards con el LLM (heavy) (ADR-024)", owns: []}
+  - {id: CHG-23, plan: P08, human: false, deps: [SRV-04, SYN-01, CHG-07], title: "Login web con Google OIDC (PKCE) y aprobación por admin, migración 0005 (ADR-021)", owns: []}
+  - {id: CHG-24, plan: P08, human: false, deps: [SRV-10, AUD-04, CRD-03, CHG-07], title: "Pool multicuenta de Azure Speech y Translator cifrado, migración 0006 (ADR-022)", owns: []}
+  - {id: CHG-25, plan: P09, human: false, deps: [UI-02, UI-09], title: "Cahier Atelier 3D: escenas WebGL, movimiento CSS y preferencia (ADR-023)", owns: []}
+  - {id: PRACTICE-01, plan: P09, human: false, deps: [UI-16, SRV-10, CHG-24], title: "Texto libre: TTS, grabación y puntuación de pronunciación (ADR-018)", owns: []}
