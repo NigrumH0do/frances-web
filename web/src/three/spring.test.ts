@@ -31,6 +31,23 @@ describe('stepSpring', () => {
     expect(Math.abs(position - 1)).toBeLessThan(0.02);
   });
 
+  test('stepSpring(0, 0, 1, 1/60, 9, 0.86) da posición 0.0225 y velocidad 1.35', () => {
+    const [position, velocity] = stepSpring(0, 0, 1, 1 / 60, 9, 0.86);
+    expect(position).toBeCloseTo(0.0225, 6);
+    expect(velocity).toBeCloseTo(1.35, 6);
+  });
+
+  test('180 pasos con ζ = 1 convergen y siguen finitos', () => {
+    let position = 0;
+    let velocity = 0;
+    for (let i = 0; i < 180; i += 1) {
+      [position, velocity] = stepSpring(position, velocity, 1, 1 / 60, 9, 1);
+      expect(Number.isFinite(position)).toBe(true);
+      expect(Number.isFinite(velocity)).toBe(true);
+    }
+    expect(Math.abs(position - 1)).toBeLessThan(0.02);
+  });
+
   test('dt <= 0 devuelve la posición y la velocidad de entrada', () => {
     expect(stepSpring(0.4, -0.2, 1, 0, 9, 0.86)).toEqual([0.4, -0.2]);
     expect(stepSpring(0.4, -0.2, 1, -0.5, 9, 0.86)).toEqual([0.4, -0.2]);

@@ -51,6 +51,17 @@ function normalized(body: string): string {
   return body.replace(/\s+/g, ' ').trim();
 }
 
+function classSelectors(cssChunk: string): string[] {
+  const found = new Set<string>();
+  for (const match of cssChunk.matchAll(/([^{}]+)\{/g)) {
+    for (const raw of (match[1] as string).split(',')) {
+      const selector = raw.replace(/html\.motion-off/g, '').trim();
+      if (selector.startsWith('.')) found.add(selector);
+    }
+  }
+  return [...found].sort();
+}
+
 function transitionDeclarations(text: string): string[] {
   const clean = text.replace(/\/\*[\s\S]*?\*\//g, '');
   return [...clean.matchAll(/transition\s*:\s*([^;]*);/g)].map((m) =>
@@ -198,6 +209,15 @@ describe('components.css', () => {
         expect(normalized(ruleFor(css, mirrored)), mirrored).toBe(rule.body);
       }
     }
+  });
+
+  test('los selectores de clase de motion-off coinciden con reduced-motion', () => {
+    const reduced = mediaBlock(css, 'prefers-reduced-motion: reduce');
+    const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    const offAt = clean.indexOf('html.motion-off');
+    const off = offAt < 0 ? '' : clean.slice(offAt);
+    expect(classSelectors(reduced).length).toBeGreaterThan(0);
+    expect(classSelectors(reduced)).toEqual(classSelectors(off));
   });
 
   test('las barras usan el hueco de la rejilla de 8', () => {
