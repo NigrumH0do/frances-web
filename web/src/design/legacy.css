@@ -17,6 +17,8 @@
   font-size: var(--fs-3xl);
   line-height: var(--lh-tight);
   font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+  font-weight: 700;
 }
 .pron-score-band {
   font-size: var(--fs-sm);
