@@ -1,7 +1,7 @@
 // Texto libre (PRACTICE-01): escribir, letras francesas, aviso del audio en el
 // demo y grabación evaluada con el recognizer falso del build VITE_E2E.
 
-import { expect, test } from '@playwright/test';
+import { expect, test } from './console.fixture';
 import { installFakeRecognizer, loginDemo } from './helpers';
 
 test('escribir, insertar letras y evaluar la pronunciación', async ({

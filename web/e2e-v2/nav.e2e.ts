@@ -1,7 +1,7 @@
 // Navegación del shell v2 (UI-09): barra inferior, enlaces profundos, atrás y
 // foco en el encabezado de cada pantalla.
 
-import { expect, test } from '@playwright/test';
+import { expect, test } from './console.fixture';
 import {
   DEMO_QUIZ_ID,
   DEMO_TOPIC_ID,

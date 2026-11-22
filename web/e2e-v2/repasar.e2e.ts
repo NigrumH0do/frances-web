@@ -1,7 +1,7 @@
 // Repaso FSRS (UI-15): volteo con Espacio, intervalos, calificación 1–4,
 // suspender con deshacer y fin de sesión.
 
-import { expect, test } from '@playwright/test';
+import { expect, test } from './console.fixture';
 import { loginDemo } from './helpers';
 
 const RATING = /^¿Qué tal la recordaste\?$/;

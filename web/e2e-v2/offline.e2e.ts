@@ -2,7 +2,7 @@
 // instantánea del demo, las reseñas entran en la cola y se envían al volver la
 // red. Es el e2e del Review Focus P09-4.
 
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './console.fixture';
 import { loginDemo } from './helpers';
 
 async function waitForServiceWorker(page: Page): Promise<void> {

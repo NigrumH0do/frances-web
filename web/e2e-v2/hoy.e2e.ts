@@ -1,6 +1,6 @@
 // Pantalla Hoy (UI-12): plan del día, enlaces y marca de «Hecho» persistente.
 
-import { expect, test } from '@playwright/test';
+import { expect, test } from './console.fixture';
 import { loginDemo } from './helpers';
 
 test('el plan enlaza cada entrada con su pantalla', async ({ page }) => {

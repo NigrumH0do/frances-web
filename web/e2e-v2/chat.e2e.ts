@@ -1,7 +1,7 @@
 // Chat (UI-18): «pensando» con cronómetro, cancelar, citas que abren la
 // publicación y respuesta sin fuentes.
 
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './console.fixture';
 import {
   DEMO_CHAT_QUESTION,
   DEMO_NO_MATERIAL_QUESTION,
