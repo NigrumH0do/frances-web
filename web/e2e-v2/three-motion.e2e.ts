@@ -105,6 +105,7 @@ test('el tema de sistema marca la paleta y theme-light la cambia en caliente', a
   });
 
   await loginDemo(page, '/');
+  await expect(page.locator('.hoy-compass-slot canvas')).toBeVisible();
   await expect
     .poll(() => page.evaluate(() => document.documentElement.dataset.palette))
     .toBe('dark');
