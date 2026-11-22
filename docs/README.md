@@ -53,6 +53,7 @@ guarda como registro de decisiones.
 | [023](decisions/ADR-023-cahier-atelier-3d-y-animaciones.md) | Sistema visual «Cahier Atelier 3D» y animaciones WebGL | Aceptado; oro y reloj de movimiento reemplazados por 025 |
 | [024](decisions/ADR-024-tarjetas-ia-lematizacion-y-temas.md) | Tarjetas IA v2/v3 (`cards-3` con notas pedagógicas), lematización y temas | Aceptado |
 | [025](decisions/ADR-025-cahier-atelier-3d-edicion-definitiva.md) | Cahier Atelier 3D — Edición Definitiva: paleta, tipografía, quiebre 960 px y un reloj de movimiento | Aceptado |
+| [026](decisions/ADR-026-cahier-aceptacion.md) | Acta de aceptación de Cahier Atelier 3D — Edición Definitiva (matriz QA-04) | Pendiente de firma del dueño |
 
 ## Otros
 
