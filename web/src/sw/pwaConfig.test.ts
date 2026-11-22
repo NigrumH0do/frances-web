@@ -281,3 +281,41 @@ describe('chunk three fuera del precache (GL-07)', () => {
     }
   });
 });
+
+describe('compuerta del chunk three (QA-01)', () => {
+  const MODULE_ONLY = [
+    'API_DATA_PATTERN',
+    'API_MEDIA_PATTERN',
+    'API_NEVER_PATTERN',
+    'DEMO_PATTERN',
+    'ONE_DAY',
+    'isCacheableApiGet',
+    'pwaOptions',
+  ];
+
+  test('globIgnores excluye three y sigue excluyendo el demo', () => {
+    expect(pwaOptions.workbox!.globIgnores).toContain('**/three-*.js');
+    expect(pwaOptions.workbox!.globIgnores).toContain('**/demo-api/**');
+  });
+
+  test('CacheFirst de three no cierra sobre constantes del módulo', () => {
+    const runtime = pwaOptions.workbox!.runtimeCaching as unknown as Matcher[];
+    const entry = runtime.find(
+      (item) =>
+        item.handler === 'CacheFirst' &&
+        String(item.urlPattern).includes('three-'),
+    );
+    expect(entry).toBeDefined();
+    const source = String(entry?.urlPattern);
+    expect(source).toContain('three-');
+    expect(source).not.toContain('API_MEDIA_PATTERN');
+    for (const identifier of MODULE_ONLY) {
+      expect(source, identifier).not.toMatch(new RegExp(`\\b${identifier}\\b`));
+    }
+
+    const three = rule('/assets/three-abc123.js');
+    expect(three?.handler).toBe('CacheFirst');
+    expect(rule('/assets/index-abc123.js')).not.toBe(three);
+    expect(rule('/assets/three-abc123.js', 'POST')).toBeUndefined();
+  });
+});
