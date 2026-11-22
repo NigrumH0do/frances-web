@@ -2,6 +2,7 @@
 
 import json
 import sys
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -107,8 +108,21 @@ def raw(cid: str, update_time: str, title: str = "T", materials: Any = ()) -> di
     }
 
 
+#: Recursos abiertos por los helpers del módulo: el fixture `_close_resources` los cierra.
+_OPEN_STORES: list[Store] = []
+
+
+@pytest.fixture(autouse=True)
+def _close_resources() -> Iterator[None]:
+    """Cierra los `Store` que abren los helpers del módulo (una conexión `sqlite` cada uno)."""
+    yield
+    while _OPEN_STORES:
+        _OPEN_STORES.pop().close()
+
+
 def seeded_store(tmp_path: Path, watermark: str | None) -> Store:
     store = Store.open(tmp_path / "state.db")
+    _OPEN_STORES.append(store)
     with store.tx() as conn:
         conn.execute(
             "INSERT OR REPLACE INTO courses"

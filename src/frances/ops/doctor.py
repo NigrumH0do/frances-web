@@ -167,12 +167,12 @@ def _size_lines(rep: SizeReport) -> list[str]:
 
 
 def _storage_warnings(rep: SizeReport) -> list[str]:
-    """Aviso si datos + `site/` superan el objetivo de R2 (8 GB contra los 10 gratis)."""
+    """Aviso si datos + `site/` superan el objetivo del volumen local de la instancia."""
     if rep.total > REPO_WARN_BYTES:
         return [
             "datos + site/ = "
             f"{_fmt_gb(rep.total)} superan el aviso de {_fmt_gb(REPO_WARN_BYTES)}"
-            " (los 10 GB gratis de R2)"
+            " del volumen local de datos de la instancia"
         ]
     return []
 

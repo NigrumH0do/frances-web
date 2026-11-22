@@ -153,3 +153,44 @@ def test_search_expands_spanish_glossary_and_taught_cards(indexed: Indexed) -> N
     )
     colegio_hits = search_blocks(indexed.conn, "colegio")
     assert colegio_hits and any("école" in hit.snippet.lower() for hit in colegio_hits)
+
+
+def _insert_card(conn: sqlite3.Connection, card_id: str, front_fr: str, back_es: str) -> None:
+    conn.execute(
+        "INSERT INTO cards (id, kind, front_fr, back_es, generator, generator_version,"
+        " stale, created_at, updated_at)"
+        " VALUES (?, 'vocab', ?, ?, 'demo', '1', 0, ?, ?)",
+        (card_id, front_fr, back_es, _NOW, _NOW),
+    )
+
+
+def test_card_expansion_prefilters_rows_in_sql(indexed: Indexed) -> None:
+    """La expansión por tarjetas filtra en SQL por `back_es`, sin normalizar toda la tabla."""
+    conn = indexed.conn
+    _insert_card(conn, "c_pre_1", "la école", "el colegio")
+    _insert_card(conn, "c_pre_2", "le chat", "el gato")
+    _insert_card(conn, "c_pre_3", "demain", "MAÑANA")
+    _insert_card(conn, "c_pre_4", "le livre", "el libro")
+
+    assert search._candidate_card_fronts(conn, ["colegio", "manana"]) == [
+        ("la école", "el colegio"),
+        ("demain", "MAÑANA"),
+    ]
+    assert search._candidate_card_fronts(conn, ["zzz"]) == []
+    assert search._candidate_card_fronts(conn, []) == []
+
+
+def test_card_expansion_ignores_removed_cards(indexed: Indexed) -> None:
+    conn = indexed.conn
+    _insert_card(conn, "c_pre_5", "la fenêtre", "la ventana")
+    conn.execute("UPDATE cards SET removed_at = ? WHERE id = 'c_pre_5'", (_NOW,))
+    assert search._candidate_card_fronts(conn, ["ventana"]) == []
+
+
+def test_expansion_does_not_scan_cards_without_matching_back_es(indexed: Indexed) -> None:
+    conn = indexed.conn
+    _insert_card(conn, "c_rel_1", "le fromage", "el queso")
+    _insert_card(conn, "c_unrel_1", "le chien", "el perro")
+    tokens = search._expanded_tokens(conn, ["queso"])
+    assert "fromage" in tokens
+    assert "chien" not in tokens

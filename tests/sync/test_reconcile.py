@@ -2,10 +2,12 @@
 
 import json
 import sys
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import pytest
 import respx
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "fixtures"))
@@ -79,8 +81,21 @@ def client() -> ClassroomClient:
     return ClassroomClient(GoogleApi(FakeCreds(), CLASSROOM_BASE_URL))
 
 
+#: Recursos abiertos por los helpers del módulo: el fixture `_close_resources` los cierra.
+_OPEN_STORES: list[Store] = []
+
+
+@pytest.fixture(autouse=True)
+def _close_resources() -> Iterator[None]:
+    """Cierra los `Store` que abren los helpers del módulo (una conexión `sqlite` cada uno)."""
+    yield
+    while _OPEN_STORES:
+        _OPEN_STORES.pop().close()
+
+
 def synced_store(tmp_path: Path, scenario: str) -> Store:
     store = Store.open(tmp_path / "state.db")
+    _OPEN_STORES.append(store)
     with store.tx() as conn:
         conn.execute(
             "INSERT OR REPLACE INTO courses"

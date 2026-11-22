@@ -2,6 +2,7 @@
 
 import json
 import sqlite3
+from collections.abc import Iterator
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -71,9 +72,28 @@ def fakes(monkeypatch: pytest.MonkeyPatch) -> _Fakes:
     return doubles
 
 
+#: Contextos abiertos por los helpers del módulo: el fixture `_close_contexts` los cierra.
+_OPEN_CONTEXTS: list[StageContext] = []
+
+
+def close_open_contexts() -> None:
+    """Cierra los `StageContext` abiertos por `make_ctx` (lo usan los fixtures autouse)."""
+    while _OPEN_CONTEXTS:
+        _OPEN_CONTEXTS.pop().store.close()
+
+
+@pytest.fixture(autouse=True)
+def _close_contexts() -> Iterator[None]:
+    """Cierra los `StageContext` del test: cada uno abre una conexión `sqlite`."""
+    yield
+    close_open_contexts()
+
+
 def make_ctx(tmp_path: Path) -> StageContext:
     ctx = make_context(tmp_path, FAKE_ENV)
-    return replace(ctx, now=lambda: FIXED)
+    replaced = replace(ctx, now=lambda: FIXED)
+    _OPEN_CONTEXTS.append(replaced)
+    return replaced
 
 
 def ctx_with_blobs(tmp_path: Path, mime_by_key: dict[str, str]) -> StageContext:

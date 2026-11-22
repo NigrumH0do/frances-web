@@ -216,6 +216,18 @@ def test_repo_over_limit_warns_but_exits_0(
     assert cli_runner.invoke(app, ["doctor", "--data", str(data_dir)]).exit_code == 0
 
 
+def test_storage_warning_speaks_of_local_volume_not_r2(
+    ctx: StageContext, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """El aviso es del volumen local de datos de la instancia, no de la cuota de R2."""
+    monkeypatch.setattr(doctor, "REPO_WARN_BYTES", 1)
+    warnings = run_doctor(ctx, online=False).warnings
+    assert any("volumen local" in w for w in warnings)
+    assert all("R2" not in w and "10 GB" not in w for w in warnings)
+    assert doctor._storage_warnings.__doc__ is not None
+    assert "R2" not in doctor._storage_warnings.__doc__
+
+
 def test_online_runs_auth_check_subprocess(
     data_dir: Path, fake_bin: FakeBin, cli_runner: CliRunner
 ) -> None:

@@ -31,7 +31,7 @@ from frances.audio.repo import (
 from frances.audio.voices import load_voices
 from frances.cli import DataOpt, exit_with
 from frances.errors import ConfigError
-from frances.log import redact
+from frances.log import get_logger, redact
 from frances.models.audio import EngineFamily, Voice
 from frances.stage import StageContext, StageReport, make_context
 from frances.timeutil import format_ts
@@ -41,6 +41,8 @@ BREAKER_THRESHOLD = 3
 CONCURRENCY = 2
 MAX_SYNTH_ATTEMPTS = 3
 _BACKOFF_SECONDS: tuple[float, ...] = (1.0, 2.0)
+
+_log = get_logger(__name__)
 
 
 class TtsEngine(Protocol):
@@ -59,7 +61,12 @@ class EngineSet:
 
 
 def make_engines(ctx: StageContext) -> EngineSet:
-    """Edge siempre; Azure si hay cuentas en el pool DB o ``AZURE_SPEECH_KEY`` en el entorno."""
+    """Edge siempre; Azure si hay cuentas en el pool DB o ``AZURE_SPEECH_KEY`` en el entorno.
+
+    El respaldo del entorno exige clave **y** región: con la clave pero sin
+    ``AZURE_SPEECH_REGION`` no se inventa una región por defecto, se avisa en el
+    log y el run sigue solo con Edge.
+    """
     azure: TtsEngine | None = None
     has_db_speech = (
         ctx.store.conn.execute(
@@ -67,13 +74,16 @@ def make_engines(ctx: StageContext) -> EngineSet:
         ).fetchone()
         is not None
     )
-    key = ctx.env.get("AZURE_SPEECH_KEY")
-    if has_db_speech or key:
-        effective_env = dict(ctx.env)
-        if key and not effective_env.get("AZURE_SPEECH_REGION"):
-            effective_env["AZURE_SPEECH_REGION"] = "eastus"
+    key = (ctx.env.get("AZURE_SPEECH_KEY") or "").strip()
+    region = (ctx.env.get("AZURE_SPEECH_REGION") or "").strip()
+    if key and not region:
+        _log.warning(
+            "audio: AZURE_SPEECH_KEY sin AZURE_SPEECH_REGION; se ignora el respaldo de "
+            "Azure del entorno y se sintetiza solo con Edge"
+        )
+    if has_db_speech or (key and region):
         azure = PooledAzureTtsEngine(
-            effective_env,
+            dict(ctx.env),
             ctx.store,
             ctx.settings.audio.azure_tts_monthly_char_cap,
             now=ctx.now,
@@ -242,7 +252,10 @@ def run_audio_keys(
     voices = load_voices(ctx.paths)
     engines = make_engines(ctx)
     if engine == "azure" and engines.azure is None:
-        raise ConfigError("--engine azure pero AZURE_SPEECH_KEY no está configurada")
+        raise ConfigError(
+            "--engine azure pero no hay respaldo de Azure configurado "
+            "(AZURE_SPEECH_KEY y AZURE_SPEECH_REGION, o una cuenta en el pool)"
+        )
     keys = sorted(set(cache_keys))
     rows = [row for row in select_by_keys(ctx.store.conn, keys) if row.status == "pending"]
     state = asyncio.run(
@@ -282,7 +295,10 @@ def run_audio(
     voices = load_voices(ctx.paths)
     engines = make_engines(ctx)
     if engine == "azure" and engines.azure is None:
-        raise ConfigError("--engine azure pero AZURE_SPEECH_KEY no está configurada")
+        raise ConfigError(
+            "--engine azure pero no hay respaldo de Azure configurado "
+            "(AZURE_SPEECH_KEY y AZURE_SPEECH_REGION, o una cuenta en el pool)"
+        )
     planned = plan_audio(ctx.store, voices, ctx.settings, now_str)
     rows = select_work(
         ctx.store.conn,
@@ -324,4 +340,8 @@ def register(app: typer.Typer) -> None:
         ] = None,
     ) -> None:
         """Etapa audio: cola, concurrencia y fallback Edge→Azure."""
-        exit_with(lambda: run_audio(make_context(data), max_clips, engine))
+        ctx = make_context(data)
+        try:
+            exit_with(lambda: run_audio(ctx, max_clips, engine))
+        finally:
+            ctx.store.close()

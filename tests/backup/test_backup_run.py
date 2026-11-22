@@ -39,7 +39,11 @@ def test_backup_uses_online_backup_and_integrity_check(ctx: StageContext, tmp_pa
         writer.close()
 
     assert size > 0
-    check = sqlite3.connect(str(copy)).execute("PRAGMA integrity_check").fetchone()
+    verified = sqlite3.connect(str(copy))
+    try:
+        check = verified.execute("PRAGMA integrity_check").fetchone()
+    finally:
+        verified.close()
     assert check is not None and check[0] == "ok"
     assert db_row_count(copy, "usage") == 1  # la fila sin confirmar no entra en la copia
 

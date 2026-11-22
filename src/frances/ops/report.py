@@ -180,14 +180,17 @@ def register(app: typer.Typer) -> None:
     ) -> None:
         def run() -> None:
             ctx = make_context(data)
-            path = summary if summary is not None else ctx.paths.cache / "daily_summary.json"
-            result = report_failure(
-                _load_summary(path),
-                run_url,
-                exit_code_opt,
-                ctx.env.get("GITHUB_REPOSITORY"),
-                run_gh,
-            )
-            typer.echo(result)
+            try:
+                path = summary if summary is not None else ctx.paths.cache / "daily_summary.json"
+                result = report_failure(
+                    _load_summary(path),
+                    run_url,
+                    exit_code_opt,
+                    ctx.env.get("GITHUB_REPOSITORY"),
+                    run_gh,
+                )
+                typer.echo(result)
+            finally:
+                ctx.store.close()
 
         exit_with(run)

@@ -112,18 +112,30 @@ def dump_sql(store: Store) -> str:
 
 
 def restore_sql(sql_text: str, db_path: Path) -> Store:
-    """Restaura `sql_text` en `db_path` de forma atómica y devuelve el Store."""
+    """Restaura `sql_text` en `db_path` de forma atómica y devuelve el Store.
+
+    El trabajo va a un `.tmp` hermano que solo reemplaza `db_path` si todo sale
+    bien. Antes de empezar se borra cualquier `.tmp` de un intento anterior y, si
+    `executescript`, `PRAGMA foreign_key_check` o el rebuild de FTS5 fallan, se
+    cierra la conexión temporal y se borra el `.tmp` antes de relanzar: un
+    restore fallido no deja restos ni una base a medias.
+    """
     tmp_path = db_path.with_suffix(".tmp")
-    conn = sqlite3.connect(str(tmp_path), isolation_level=None)
+    tmp_path.unlink(missing_ok=True)
     try:
-        conn.executescript(sql_text)
-        violations = conn.execute("PRAGMA foreign_key_check").fetchall()
-        if violations:
-            raise ValueError(f"dump con FK rotas: {violations!r}")
-        for fts in _fts5_tables(conn):
-            conn.execute(f'INSERT INTO "{fts}"("{fts}") VALUES (\'rebuild\')')
-    finally:
-        conn.close()
+        conn = sqlite3.connect(str(tmp_path), isolation_level=None)
+        try:
+            conn.executescript(sql_text)
+            violations = conn.execute("PRAGMA foreign_key_check").fetchall()
+            if violations:
+                raise ValueError(f"dump con FK rotas: {violations!r}")
+            for fts in _fts5_tables(conn):
+                conn.execute(f'INSERT INTO "{fts}"("{fts}") VALUES (\'rebuild\')')
+        finally:
+            conn.close()
+    except BaseException:
+        tmp_path.unlink(missing_ok=True)
+        raise
     # restore_sql borra -wal y -shm porque reemplaza el archivo: un WAL viejo no debe aplicarse
     # sobre la base nueva. El llamador no debe tener conexiones abiertas a esa base.
     for suffix in ("-wal", "-shm"):  # un WAL viejo no debe aplicarse sobre la base nueva

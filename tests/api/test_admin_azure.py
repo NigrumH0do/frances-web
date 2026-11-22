@@ -5,10 +5,12 @@ from pathlib import Path
 
 import httpx
 import respx
+from cryptography.fernet import Fernet
 
 from tests.testkit.api import ORIGIN, create_user, login, make_api, second_user_client
 
-ENV = {"FRANCES_SECRETS_KEY": "clave-maestra-api-admin-azure"}
+#: Clave Fernet sintética: `FRANCES_SECRETS_KEY` exige base64 urlsafe de 32 bytes.
+ENV = {"FRANCES_SECRETS_KEY": Fernet.generate_key().decode()}
 
 
 def _setup(tmp_path: Path) -> tuple[object, sqlite3.Connection]:
