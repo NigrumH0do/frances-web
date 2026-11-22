@@ -112,6 +112,7 @@ test('audio muestra la cola de trabajos y el vacío', async () => {
   });
 
   expect(await screen.findByText('Regenerar audio')).toBeVisible();
+  expect(screen.getByText('Trabajo 12 · intento 5 de 5')).toHaveClass('nums');
   expect(screen.getByText('Fallido')).toBeVisible();
   expect(screen.queryByText(/Leçon/)).not.toBeInTheDocument();
   cleanup();

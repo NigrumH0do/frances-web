@@ -11,6 +11,15 @@ function remainingWords(options: string[], selected: string[]): string[] {
   return pool;
 }
 
+function pieceKey(words: string[], index: number): string {
+  const word = words[index] ?? '';
+  let seen = 0;
+  for (let at = 0; at < index; at += 1) {
+    if (words[at] === word) seen += 1;
+  }
+  return `${word}-${seen}`;
+}
+
 export function Order({ q, value, onChange }: QuestionProps<string[]>) {
   const remaining = remainingWords(q.options, value);
 
@@ -34,67 +43,76 @@ export function Order({ q, value, onChange }: QuestionProps<string[]>) {
           </span>
         ) : null}
       </legend>
-      <p className="small muted">{quizStrings.orderHelp}</p>
+      <div className="quiz-answer" key={q.id}>
+        <p className="small muted">{quizStrings.orderHelp}</p>
 
-      <p className="small muted">{quizStrings.orderPhrase}</p>
-      <div
-        className="answer-line"
-        role="group"
-        aria-label={quizStrings.orderPhrase}
-      >
-        {value.length === 0 ? (
-          <span className="small muted" aria-hidden="true">
-            —
-          </span>
-        ) : null}
-        {value.map((word, index) => (
-          <span key={`${word}-${index}`} className="row">
+        <p className="small muted">{quizStrings.orderPhrase}</p>
+        <div
+          className="answer-line"
+          role="group"
+          aria-label={quizStrings.orderPhrase}
+        >
+          {value.length === 0 ? (
+            <span className="small muted" aria-hidden="true">
+              —
+            </span>
+          ) : null}
+          {value.map((word, index) => (
+            <span key={pieceKey(value, index)} className="row">
+              <button
+                type="button"
+                className="tile"
+                onClick={() => onChange(value.filter((_, at) => at !== index))}
+                onKeyDown={(event) => {
+                  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
+                    return;
+                  }
+                  event.preventDefault();
+                  move(index, event.key === 'ArrowLeft' ? -1 : 1);
+                }}
+              >
+                {word}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm-text"
+                aria-label={tr(quizStrings.moveUp, { word })}
+                disabled={index === 0}
+                onClick={() => move(index, -1)}
+              >
+                {quizStrings.up}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm-text"
+                aria-label={tr(quizStrings.moveDown, { word })}
+                disabled={index === value.length - 1}
+                onClick={() => move(index, 1)}
+              >
+                {quizStrings.down}
+              </button>
+            </span>
+          ))}
+        </div>
+
+        <p className="small muted">{quizStrings.orderWords}</p>
+        <div className="tiles" role="group" aria-label={quizStrings.orderWords}>
+          {remaining.length === 0 ? (
+            <span className="small muted" aria-hidden="true">
+              —
+            </span>
+          ) : null}
+          {remaining.map((word, index) => (
             <button
+              key={`${word}-${index}`}
               type="button"
               className="tile"
-              onClick={() => onChange(value.filter((_, at) => at !== index))}
+              onClick={() => onChange([...value, word])}
             >
               {word}
             </button>
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm-text"
-              aria-label={tr(quizStrings.moveUp, { word })}
-              disabled={index === 0}
-              onClick={() => move(index, -1)}
-            >
-              {quizStrings.up}
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm-text"
-              aria-label={tr(quizStrings.moveDown, { word })}
-              disabled={index === value.length - 1}
-              onClick={() => move(index, 1)}
-            >
-              {quizStrings.down}
-            </button>
-          </span>
-        ))}
-      </div>
-
-      <p className="small muted">{quizStrings.orderWords}</p>
-      <div className="tiles" role="group" aria-label={quizStrings.orderWords}>
-        {remaining.length === 0 ? (
-          <span className="small muted" aria-hidden="true">
-            —
-          </span>
-        ) : null}
-        {remaining.map((word, index) => (
-          <button
-            key={`${word}-${index}`}
-            type="button"
-            className="tile"
-            onClick={() => onChange([...value, word])}
-          >
-            {word}
-          </button>
-        ))}
+          ))}
+        </div>
       </div>
     </fieldset>
   );

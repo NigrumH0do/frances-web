@@ -1,7 +1,7 @@
 // Pronunciación (UI-16): recognizer falso del build VITE_E2E, puntajes por
 // palabra y fonema. No se pide token de Azure real.
 
-import { expect, test } from '@playwright/test';
+import { expect, test } from './console.fixture';
 import { installFakeRecognizer, loginDemo } from './helpers';
 
 test('grabar con el recognizer falso muestra puntajes y fonemas', async ({

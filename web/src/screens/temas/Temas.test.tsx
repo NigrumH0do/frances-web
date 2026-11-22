@@ -3,6 +3,9 @@ import { IDBFactory } from 'fake-indexeddb';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { jsonResponse } from '../../api/testing';
 import type {
@@ -13,6 +16,11 @@ import type {
 import { closeV2DbForTests } from '../../offline/db';
 import { renderScreen } from '../../shell/testing';
 import Temas from './Temas';
+
+const temasCss = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), 'temas.css'),
+  'utf8',
+);
 
 const COURSE: CourseOut = {
   id: 'c_1',
@@ -262,4 +270,59 @@ test('con varios cursos recuerda la elección en localStorage', async () => {
     await screen.findByRole('radio', { name: 'Français B1' }),
   ).toHaveAttribute('aria-checked', 'true');
   expect(await screen.findByText('Les articles définis')).toBeVisible();
+});
+
+test('el filtro Todos está pulsado, la fila activa se marca y cada tema dice su dominio', async () => {
+  renderTemas({
+    path: '/temas?tema=tp_1',
+    overrides: {
+      'GET /api/me/topic-progress?course_id=c_1': [
+        PROGRESS[0],
+        PROGRESS[1],
+        {
+          ...PROGRESS[2],
+          cards_learned: 20,
+          cards_total: 20,
+          last_quiz_score: null,
+        },
+      ],
+    },
+  });
+
+  const todos = await screen.findByRole('button', { name: 'Todos' });
+  expect(todos).toHaveAttribute('aria-pressed', 'true');
+
+  const active = screen.getByRole('link', { name: /Le passé composé/ });
+  expect(active).toHaveAttribute('aria-current', 'true');
+  expect(active).toHaveClass('is-active');
+  expect(active).toHaveTextContent('en curso');
+
+  const pending = screen.getByRole('link', { name: /Le subjonctif présent/ });
+  expect(pending).not.toHaveAttribute('aria-current');
+  expect(pending).not.toHaveClass('is-active');
+  expect(pending).toHaveTextContent('por hacer');
+
+  const done = screen.getByRole('link', { name: /Décrire sa ville/ });
+  expect(done).toHaveTextContent('al día');
+
+  const icons = [active, pending, done].map((link) => {
+    const icon = link.querySelector('.mastery svg');
+    expect(icon).toHaveAttribute('aria-hidden', 'true');
+    return icon?.innerHTML ?? '';
+  });
+  expect(new Set(icons).size).toBe(3);
+
+  await userEvent.click(screen.getByRole('button', { name: 'B1' }));
+  expect(todos).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('la fila activa usa la tarjeta elevada y no baja de 44 px', () => {
+  expect(temasCss).toMatch(
+    /\.is-active[^{]*\{[^}]*background:\s*var\(--c-card-raised\)/,
+  );
+  expect(temasCss).toMatch(/min-height:\s*var\(--tap\)/);
+  expect(temasCss).toMatch(/--c-text-muted/);
+  expect(temasCss).toMatch(/--c-warning/);
+  expect(temasCss).toMatch(/--c-success/);
+  expect(temasCss).toMatch(/tabular-nums/);
 });

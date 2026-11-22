@@ -47,5 +47,5 @@ jobs:
         working-directory: web
       - run: npm run test
         working-directory: web
-      - run: npm run build && node scripts/check-no-demo.mjs dist
+      - run: npm run build && node scripts/check-no-demo.mjs dist && node scripts/check-three-budget.mjs dist
         working-directory: web

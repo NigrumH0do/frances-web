@@ -124,6 +124,7 @@ export function screenPaths(threadId: string): string[] {
     `/publicaciones/${DEMO_ITEM_ID}`,
     '/repasar',
     '/repasar/pronunciacion',
+    '/repasar/texto',
     `/quiz/${DEMO_QUIZ_ID}`,
     `/chat/${threadId}`,
     '/mas',

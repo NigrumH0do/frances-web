@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useApi } from '../api/ApiContext';
 import {
   HttpError,
@@ -7,12 +7,14 @@ import {
   toUiError,
   type UiError,
 } from '../api/client';
-import { Button, Field } from '../components';
+import { Button, Field, Skeleton } from '../components';
 import { messageFor } from '../l10n/errors';
 import { common } from '../l10n/es';
+import { SafeAuthNotebookScene } from '../three/LazyScenes';
 import { useAuth } from './AuthContext';
 import { passwordProblems, type PasswordProblem } from './password';
 import { authStrings } from './strings';
+import './auth.css';
 
 type CheckState =
   | { status: 'checking' }
@@ -127,16 +129,37 @@ export default function Invitacion() {
 
   return (
     <div className="auth-wrap stack-lg">
-      <h1>{authStrings.invite.title}</h1>
+      <div className="auth-cover">
+        <div className="auth-cover-copy">
+          <span className="auth-cover-eyebrow">
+            {authStrings.login.eyebrow}
+          </span>
+          <h1>{authStrings.invite.title}</h1>
+          <p className="auth-cover-sub">{authStrings.login.subtitle}</p>
+        </div>
+        <div className="auth-cover-visual">
+          <SafeAuthNotebookScene />
+        </div>
+      </div>
 
       {check.status === 'checking' ? (
-        <p role="status">{authStrings.invite.checking}</p>
+        <div className="stack">
+          <Skeleton variant="title" />
+          <Skeleton />
+          <Skeleton variant="block" />
+          <p role="status">{authStrings.invite.checking}</p>
+        </div>
       ) : null}
 
       {check.status === 'invalid' ? (
-        <p className="callout error" role="alert">
-          {authStrings.invite.invalid}
-        </p>
+        <div className="stack">
+          <p className="callout error" role="alert">
+            {authStrings.invite.invalid}
+          </p>
+          <Link className="btn btn-secondary btn-block" to="/entrar">
+            {authStrings.login.title}
+          </Link>
+        </div>
       ) : null}
 
       {check.status === 'error' ? (

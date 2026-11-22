@@ -1,12 +1,26 @@
-import { useEffect, useRef, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { Link } from 'react-router';
 import { Button, Chip } from '../../components';
 import { cx } from '../../components/cx';
 import type { CardView } from '../../contracts/generated';
 import { CardAudio } from '../../media/CardAudio';
 import { tr } from '../../l10n/es';
+import type { Rating } from '../../srs/types';
 import { getMotion3dPref, prefersReducedMotion } from '../../three/motionPref';
 import { repasarStrings } from './strings';
+
+// Controles internos de la tarjeta (audio, selector de voz, enlaces fuente) y
+// elementos con papel de control: un `pointerdown` sobre ellos (incluido el
+// `<path>` SVG del icono, que no es un `HTMLElement`) no debe iniciar el gesto
+// de swipe ni capturar el puntero.
+function isInteractiveControl(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  return (
+    target.closest(
+      'button, a, select, input, textarea, label, [role="button"], [role="link"], [role="combobox"], audio, video',
+    ) !== null
+  );
+}
 
 function isTextEntry(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -34,10 +48,12 @@ export function FlipCard({
   card,
   flipped,
   onFlip,
+  onSwipeRate,
 }: {
   card: CardView;
   flipped: boolean;
   onFlip: () => void;
+  onSwipeRate?: (rating: Rating) => void;
 }) {
   const personal = card.mine;
   const front = personal?.front_fr ?? card.front_fr;
@@ -53,8 +69,20 @@ export function FlipCard({
       : undefined;
   const flagged = card.state?.flagged_hard ?? false;
   const tiltRef = useRef<HTMLDivElement>(null);
+  const swipeRef = useRef<{
+    pointerId: number;
+    x: number;
+    y: number;
+    captured: boolean;
+  } | null>(null);
+  const [tilting, setTilting] = useState(false);
+
+  function gestureEnabled(): boolean {
+    return !prefersReducedMotion() && getMotion3dPref() !== 'off';
+  }
 
   function handleTiltMove(event: PointerEvent<HTMLDivElement>): void {
+    if (event.pointerType !== 'mouse') return;
     if (
       prefersReducedMotion() ||
       getMotion3dPref() === 'off' ||
@@ -70,10 +98,88 @@ export function FlipCard({
     tiltRef.current.style.setProperty('--ry', `${(dx * 5).toFixed(2)}deg`);
   }
 
+  function handleTiltEnter(event: PointerEvent<HTMLDivElement>): void {
+    if (event.pointerType !== 'mouse') return;
+    if (!gestureEnabled() || tiltRef.current === null) return;
+    setTilting(true);
+  }
+
   function handleTiltLeave(): void {
+    setTilting(false);
     if (tiltRef.current === null) return;
     tiltRef.current.style.setProperty('--rx', '0deg');
     tiltRef.current.style.setProperty('--ry', '0deg');
+  }
+
+  function handleSwipeDown(event: PointerEvent<HTMLDivElement>): void {
+    // Nunca se captura el puntero aquí: en `pointerdown` la captura redirige
+    // `pointerup` y `click` al contenedor y los controles internos dejarían de
+    // responder (LIVE-A3 BUG-1). La captura se hace en `dragSwipe` cuando el
+    // arrastre horizontal es real.
+    if (!gestureEnabled() || isInteractiveControl(event.target)) return;
+    swipeRef.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      captured: false,
+    };
+  }
+
+  function dragSwipe(event: PointerEvent<HTMLDivElement>): void {
+    const swipe = swipeRef.current;
+    if (swipe === null || swipe.pointerId !== event.pointerId) return;
+    const dx = event.clientX - swipe.x;
+    const dy = event.clientY - swipe.y;
+    if (!swipe.captured && Math.abs(dx) > 8 && Math.abs(dx) >= Math.abs(dy)) {
+      const node = event.currentTarget;
+      if (typeof node.setPointerCapture === 'function') {
+        try {
+          node.setPointerCapture(event.pointerId);
+          swipe.captured = true;
+        } catch {
+          // jsdom no implementa la captura del puntero.
+        }
+      }
+    }
+    if (!flipped || tiltRef.current === null) return;
+    tiltRef.current.style.setProperty('--swipe-x', `${dx}px`);
+  }
+
+  function handleSwipeEnd(event: PointerEvent<HTMLDivElement>): void {
+    const swipe = swipeRef.current;
+    if (swipe === null || swipe.pointerId !== event.pointerId) return;
+    swipeRef.current = null;
+    if (swipe.captured) {
+      const node = event.currentTarget;
+      if (typeof node.releasePointerCapture === 'function') {
+        try {
+          node.releasePointerCapture(event.pointerId);
+        } catch {
+          // El navegador ya había liberado el puntero.
+        }
+      }
+    }
+    if (!gestureEnabled()) {
+      tiltRef.current?.style.setProperty('--swipe-x', '0px');
+      return;
+    }
+    const dx = event.clientX - swipe.x;
+    const dy = event.clientY - swipe.y;
+    const horizontal = Math.abs(dx) >= Math.abs(dy);
+    if (!flipped) {
+      if (horizontal && Math.abs(dx) >= 48) onFlip();
+      return;
+    }
+    const width = tiltRef.current?.getBoundingClientRect().width ?? 0;
+    const passed = horizontal && width > 0 && Math.abs(dx) >= width * 0.4;
+    tiltRef.current?.style.setProperty('--swipe-x', '0px');
+    if (!passed) return;
+    onSwipeRate?.(dx < 0 ? 1 : 4);
+  }
+
+  function handlePointerMove(event: PointerEvent<HTMLDivElement>): void {
+    dragSwipe(event);
+    handleTiltMove(event);
   }
 
   useEffect(() => {
@@ -111,8 +217,12 @@ export function FlipCard({
     <>
       <div
         ref={tiltRef}
-        className="flip-tilt"
-        onPointerMove={handleTiltMove}
+        className={cx('flip-tilt', tilting && 'is-tilting')}
+        onPointerEnter={handleTiltEnter}
+        onPointerDown={handleSwipeDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handleSwipeEnd}
+        onPointerCancel={handleSwipeEnd}
         onPointerLeave={handleTiltLeave}
       >
         <div className={cx('flip', flipped && 'is-flipped')}>
@@ -145,7 +255,11 @@ export function FlipCard({
                 </p>
               ) : null}
               {hasAudio(card, 'front') ? (
-                <CardAudio card={card} field="front" />
+                <CardAudio
+                  card={card}
+                  field="front"
+                  slowLabel={repasarStrings.slow}
+                />
               ) : null}
               <div className="spacer" />
             </div>
@@ -177,7 +291,11 @@ export function FlipCard({
                     ) : null}
                   </div>
                   {hasAudio(card, 'front') ? (
-                    <CardAudio card={card} field="front" />
+                    <CardAudio
+                      card={card}
+                      field="front"
+                      slowLabel={repasarStrings.slow}
+                    />
                   ) : null}
                 </div>
               ) : null}
@@ -198,7 +316,11 @@ export function FlipCard({
                     <p className="example flip-example-es">{exampleEs}</p>
                   ) : null}
                   {hasAudio(card, 'example') ? (
-                    <CardAudio card={card} field="example" />
+                    <CardAudio
+                      card={card}
+                      field="example"
+                      slowLabel={repasarStrings.slow}
+                    />
                   ) : null}
                 </div>
               ) : null}

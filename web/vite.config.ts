@@ -8,6 +8,15 @@ declare const process: { env: Record<string, string | undefined> };
 export default defineConfig({
   base: process.env['VITE_BASE'] ?? '/',
   plugins: [react(), VitePWA(pwaOptions)],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('/node_modules/three/')) return 'three';
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     strictPort: true,

@@ -601,7 +601,10 @@ export function AdminTopics() {
   return (
     <div className="stack-lg">
       <div className="stack">
-        <AppBar title={s.title} back={{ to: '/mas', label: 'Más' }} />
+        <AppBar
+          title={s.title}
+          back={{ to: '/mas/admin', label: 'Administración' }}
+        />
         <p className="small muted">{s.intro}</p>
       </div>
 

@@ -20,6 +20,7 @@ import { UpcomingCard } from './UpcomingCard';
 import { WeekStrip } from './WeekStrip';
 import { SafeStreakCompassScene } from '../../three/LazyScenes';
 import { hoyStrings } from './strings';
+import './hoy.css';
 
 interface HoyData {
   plan: StudyPlanDay;
@@ -162,19 +163,27 @@ export function Hoy() {
           <p className="sub">{formatShort(now.toISOString())}</p>
         </div>
         {resource.status === 'ready' ? (
-          <div
-            className="row"
-            style={{ alignItems: 'center', gap: 'var(--s-2)' }}
-          >
+          <div className="hoy-streak">
             <div className="hoy-compass-slot" aria-hidden="true">
               <SafeStreakCompassScene
                 streak={resource.data.stats.streak_days}
               />
             </div>
             <Chip tone="streak">
-              {tr(hoyStrings.streak, {
-                n: resource.data.stats.streak_days,
-              })}
+              <svg
+                className="icon icon-sm"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+              </svg>
+              {tr(
+                resource.data.stats.streak_days === 1
+                  ? hoyStrings.streakOne
+                  : hoyStrings.streak,
+                { n: resource.data.stats.streak_days },
+              )}
             </Chip>
           </div>
         ) : null}

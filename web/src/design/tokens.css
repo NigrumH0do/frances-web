@@ -1,98 +1,103 @@
-/* Frances Classroom v2 — tokens del sistema de diseño «Cahier» (ADR-018).
+/* Frances Classroom — tokens «Papel Seyès / Pizarra nocturna».
  *
- * La app es el cuaderno de francés del alumno. El modo claro es el papel de un
- * cuaderno Seyès: blanco frío, pauta lavanda, margen rojo. El acento es la tinta
- * azul de pluma escolar; el rojo es el boli de corrección (solo para lo que hay
- * que repetir); el amarillo es el subrayador (lo que pide atención). El modo
- * oscuro es la pizarra: verde casi negro y tiza.
+ * El modo claro es el papel de un cuaderno Seyès: marfil frío, pauta violeta
+ * y margen rojo. El acento es la tinta azul; el rojo es el boli de corrección
+ * (solo para lo que hay que repetir); el amarillo es el subrayador. El modo
+ * oscuro es la pizarra nocturna.
  *
- * La pauta Seyès (--rule-*) solo aparece donde se lee o se escribe francés:
- * la cara de la tarjeta y el cuaderno de práctica. El resto es papel liso.
+ * La pauta Seyès (--rule-*) solo aparece donde se lee o se escribe francés.
+ * El resto es papel liso.
  *
  * Modo: sigue `prefers-color-scheme`; la clase `theme-light` o `theme-dark`
- * en <html> lo fuerza (ajuste «Tema» en Más).
+ * en <html> lo fuerza. `:root.theme-light` hereda esta paleta porque el media
+ * oscuro selecciona `:root:not(.theme-light)`.
  *
- * Contraste WCAG 2.x (peor caso entre bg/surface/card; script en ADR-018):
- *   claro  texto 14.2:1 · secundario 7.3:1 · tenue 5.3:1 · tinta 7.7:1
- *          éxito 5.0:1 · aviso 5.9:1 · peligro 5.0:1 · racha 7.2:1
- *          sobre tinta 9.0:1 · sobre subrayador 13.0:1
- *   oscuro texto 11.9:1 · secundario 7.1:1 · tenue 5.4:1 · tinta 6.9:1
- *          éxito 8.1:1 · aviso 8.3:1 · peligro 6.2:1 · racha 8.5:1
- *          sobre tinta 8.3:1 · sobre subrayador 11.3:1
+ * Contraste WCAG AA (peor caso; lo afirma tokens.test.ts):
+ *   claro  texto 13.0:1 · secundario 8.8:1 · tenue 7.1:1 · tinta 8.2:1
+ *          éxito 6.6:1 · aviso 6.8:1 · peligro 6.3:1 · racha 6.7:1
+ *          sobre tinta 8.1:1 · sobre subrayador 11.7:1 · grabar 7.4:1
+ *   oscuro texto 12.5:1 · secundario 8.4:1 · tenue 6.8:1 · tinta 7.9:1
+ *          éxito 8.1:1 · aviso 7.1:1 · peligro 5.8:1 · racha 8.9:1
+ *          sobre tinta 8.6:1 · sobre subrayador 10.4:1 · grabar 6.5:1
  * Todos >= 4.5:1 (AA texto normal). Bordes de control >= 3:1.
+ *
+ * El reloj (--dur-*, --ease, --ease-atelier) vive solo aquí.
  */
 
 :root {
   color-scheme: light;
 
-  /* Papel */
-  --c-bg: #f7f7fb;
-  --c-surface: #eeedf5;
-  --c-card: #ffffff;
-  --c-card-raised: #ffffff;
-  --c-border: #dddbe8;
-  --c-border-strong: #7d7a8c; /* bordes de inputs: 3.6:1 */
-  --c-overlay: rgb(31 29 43 / 45%);
+  /* Papel Seyès */
+  --c-bg: #f8f6ed;
+  --c-surface: #efece0;
+  --c-card: #fefcf8;
+  --c-card-raised: #f9f4e7;
+  --c-border: #dad7cf;
+  --c-border-strong: #666875;
+  --c-overlay: rgb(28 31 41 / 46%);
 
   /* Grafito */
-  --c-text: #1f1d2b;
-  --c-text-muted: #4e4b5e;
-  --c-text-faint: #625f73;
+  --c-text: #232430;
+  --c-text-muted: #464856;
+  --c-text-faint: #545662;
+  --c-text-placeholder: #585a65;
 
   /* Tinta (marca) */
-  --c-accent: #2b37b8;
-  --c-accent-strong: #1f2a8f;
-  --c-accent-soft: #e9ebfb;
-  --c-on-accent: #ffffff;
-  --c-on-accent-soft: #1f2a8f;
-
-  /* Oro de las escenas 3D y del sello de racha (ADR-023) */
-  --c-gold: #c99a1e;
+  --c-accent: #2147a3;
+  --c-accent-strong: #15378b;
+  --c-accent-soft: #e6eeff;
+  --c-on-accent: #fbfaf7;
+  --c-on-accent-soft: #1b387b;
 
   /* Estados: verde de corrección, ámbar, boli rojo */
-  --c-success: #17734a;
-  --c-success-soft: #e6f4ec;
-  --c-warning: #8a4b00;
-  --c-warning-soft: #fff4dc;
-  --c-warning-border: #f0c77a;
-  --c-danger: #c22636;
-  --c-danger-soft: #fcebec;
-  --c-info: #1f2a8f;
+  --c-success: #006150;
+  --c-success-soft: #def7ef;
+  --c-warning: #7c4607;
+  --c-warning-soft: #fcf1d4;
+  --c-warning-border: #7c4607;
+  --c-danger: #a4283a;
+  --c-danger-soft: #ffedea;
+  --c-info: var(--c-accent);
+  --c-info-soft: var(--c-accent-soft);
 
   /* Botón de grabar: relleno rojo con icono blanco en ambos modos */
-  --c-record: #c22636;
+  --c-record: #a02a26;
   --c-on-record: #ffffff;
 
   /* Subrayador: fondo de lo que pide atención, siempre con texto grafito */
-  --c-highlight: #ffe45c;
-  --c-on-highlight: #1f1d2b;
+  --c-highlight: #f7e16b;
+  --c-on-highlight: #232430;
 
-  /* Pauta Seyès: decorativa, nunca lleva texto encima sin papel */
-  --rule-line: rgb(120 104 196 / 11%);
-  --rule-line-strong: rgb(120 104 196 / 28%);
-  --rule-grid: rgb(120 104 196 / 7%);
-  --rule-margin: rgb(210 40 58 / 55%);
-  --rule-step: 8px; /* interlínea fina; la gruesa cada 4 */
-
-  /* Puntaje de pronunciación (bandas de ui/pron/score.ts) */
-  --c-score-excelente: #17734a;
-  --c-score-bien: #2b37b8;
-  --c-score-mejorable: #8a4b00;
-  --c-score-repetir: #c22636;
+  /* Oro de las escenas 3D y del sello de racha */
+  --c-gold: #714d00;
+  --c-gold-soft: #fbf0cf;
+  --c-gold-3d: #d3ac41;
+  --c-streak: #714d00;
+  --c-streak-soft: #fbf0cf;
+  --c-ok: var(--c-success);
 
   /* Calificación FSRS */
-  --c-rate-again: #c22636;
-  --c-rate-hard: #8a4b00;
-  --c-rate-good: #17734a;
-  --c-rate-easy: #2b37b8;
+  --c-rate-again: #a4283a;
+  --c-rate-hard: #7c4607;
+  --c-rate-good: #006150;
+  --c-rate-easy: #2147a3;
 
-  /* Racha */
-  --c-streak: #7a3d00;
-  --c-streak-soft: #fff1c7;
+  /* Puntaje de pronunciación (bandas de ui/pron/score.ts) */
+  --c-score-excelente: var(--c-success);
+  --c-score-bien: var(--c-accent);
+  --c-score-mejorable: var(--c-warning);
+  --c-score-repetir: var(--c-danger);
 
-  --focus-ring: 3px solid #2b37b8;
-  --skeleton-a: #e7e6ef;
-  --skeleton-b: #f2f1f7;
+  --focus-ring: 3px solid #2147a3;
+  --skeleton-a: #e7e3d6;
+  --skeleton-b: #f4f0e4;
+
+  /* Pauta Seyès: decorativa, nunca lleva texto encima sin papel */
+  --rule-line: rgb(120 104 196 / 20%);
+  --rule-line-strong: rgb(120 104 196 / 38%);
+  --rule-grid: rgb(120 104 196 / 10%);
+  --rule-margin: rgb(164 40 58 / 58%);
+  --rule-step: 8px; /* interlínea fina; la gruesa cada 4 */
 
   /* Tipografía autoalojada (sin fuentes remotas): Spectral, de Production Type
    * (París), para el francés y los títulos; Lexend, diseñada para leer con más
@@ -104,21 +109,27 @@
   --font-display: var(--font-read);
   --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
-  /* Escala 1.25 (tercera mayor) sobre 16 px */
-  --fs-xs: 0.8125rem; /* 13 — sólo metadatos */
-  --fs-sm: 0.875rem; /* 14 */
-  --fs-md: 1rem; /* 16 — base */
-  --fs-lg: 1.25rem; /* 20 */
-  --fs-xl: 1.5625rem; /* 25 — títulos de pantalla */
-  --fs-2xl: 1.953rem; /* 31 — frente de tarjeta */
-  --fs-3xl: 2.441rem; /* 39 — cifras y saludo */
+  /* Escala fluida sobre 16 px */
+  --fs-xs: 0.8125rem;
+  --fs-sm: clamp(0.875rem, 0.848rem + 0.119vw, 0.9375rem);
+  --fs-md: clamp(1rem, 0.946rem + 0.238vw, 1.125rem);
+  --fs-lg: clamp(1.25rem, 1.143rem + 0.476vw, 1.5rem);
+  --fs-xl: clamp(1.5625rem, 1.375rem + 0.833vw, 2rem);
+  --fs-2xl: clamp(1.9375rem, 1.697rem + 1.071vw, 2.5rem);
+  --fs-3xl: clamp(2.4375rem, 1.982rem + 2.024vw, 3.5rem);
   --lh-tight: 1.15;
   --lh-base: 1.55;
-  --lh-read: 1.6;
+  --lh-read: 1.45;
+  --track-display: -0.015em;
+  --track-eyebrow: 0.08em;
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-semibold: 600;
-  --fw-bold: 600;
+  --fw-bold: 650;
+  --measure-ui: 66ch;
+  --measure-fr: 42ch;
+  --measure-read: 64ch;
+  --measure-chat: 68ch;
 
   /* Espaciado: base 4 px */
   --sp-1: 0.25rem;
@@ -129,6 +140,8 @@
   --sp-6: 1.5rem;
   --sp-8: 2rem;
   --sp-10: 2.5rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
 
   /* Radios por jerarquía: papel casi recto, controles redondeados */
   --r-sm: 0.375rem;
@@ -143,68 +156,71 @@
   --shadow-2: 0 1px 0 rgb(31 29 43 / 6%), 0 10px 28px -12px rgb(31 29 43 / 22%);
   --shadow-3: 0 18px 40px -16px rgb(31 29 43 / 35%);
 
-  /* Tamaños táctiles */
+  /* Tamaños táctiles y rail */
   --tap: 44px;
   --tap-lg: 52px;
   --tabbar-h: 64px;
   --rail-w: 232px;
+  --bp-rail: 960px;
 
-  /* Movimiento */
-  --dur-fast: 120ms;
+  /* Reloj único */
+  --dur-fast: 140ms;
   --dur-base: 220ms;
+  --dur-med: 320ms;
   --dur-flip: 420ms;
-  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-slow: 520ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-atelier: var(--ease);
 }
 
-/* Pizarra: se aplica por sistema o forzada con .theme-dark */
+/* Pizarra nocturna: se aplica por sistema o forzada con .theme-dark.
+ * Los dos bloques declaran los mismos tokens, en el mismo orden. */
 @media (prefers-color-scheme: dark) {
   :root:not(.theme-light) {
     color-scheme: dark;
-    --c-bg: #121917;
-    --c-surface: #18211f;
-    --c-card: #1e2926;
-    --c-card-raised: #24302d;
-    --c-border: #2e3b37;
-    --c-border-strong: #7f8a84;
-    --c-overlay: rgb(0 0 0 / 60%);
-    --c-text: #ecf0ea;
-    --c-text-muted: #b4bdb6;
-    --c-text-faint: #9ba59e;
-    --c-accent: #aab3ff;
-    --c-accent-strong: #cbd0ff;
-    --c-accent-soft: #232c52;
-    --c-on-accent: #121a4a;
-    --c-on-accent-soft: #cbd0ff;
-    --c-gold: #e6be53;
-    --c-success: #7fd9a6;
-    --c-success-soft: #173126;
-    --c-warning: #f2c27a;
-    --c-warning-soft: #33270f;
-    --c-warning-border: #6b5222;
-    --c-danger: #ff8f8a;
-    --c-danger-soft: #3a1f1e;
-    --c-info: #cbd0ff;
-    --c-highlight: #f2d54b;
-    --c-on-highlight: #1f1d2b;
-    --c-record: #dc3b49;
+    --c-bg: #10131a;
+    --c-surface: #171b23;
+    --c-card: #1e242c;
+    --c-card-raised: #282f3a;
+    --c-border: #343a42;
+    --c-border-strong: #9e9b90;
+    --c-overlay: rgb(7 9 14 / 64%);
+    --c-text: #e8e6df;
+    --c-text-muted: #c0beb4;
+    --c-text-faint: #adaba1;
+    --c-text-placeholder: #a2a098;
+    --c-accent: #98b9fa;
+    --c-accent-strong: #b0c9fb;
+    --c-accent-soft: #212d46;
+    --c-on-accent: #111c34;
+    --c-on-accent-soft: #bfd1f6;
+    --c-success: #86d2c1;
+    --c-success-soft: #163029;
+    --c-warning: #efaf6f;
+    --c-warning-soft: #3b2c19;
+    --c-warning-border: #efaf6f;
+    --c-danger: #f18790;
+    --c-danger-soft: #3e2522;
+    --c-record: #a63933;
     --c-on-record: #ffffff;
-    --rule-line: rgb(236 240 234 / 5%);
-    --rule-line-strong: rgb(236 240 234 / 12%);
-    --rule-grid: rgb(236 240 234 / 3%);
-    --rule-margin: rgb(255 143 138 / 45%);
-    --c-score-excelente: #7fd9a6;
-    --c-score-bien: #aab3ff;
-    --c-score-mejorable: #f2c27a;
-    --c-score-repetir: #ff8f8a;
-    --c-rate-again: #ff8f8a;
-    --c-rate-hard: #f2c27a;
-    --c-rate-good: #7fd9a6;
-    --c-rate-easy: #aab3ff;
-    --c-streak: #ffc06b;
-    --c-streak-soft: #3a2a10;
-    --focus-ring: 3px solid #cbd0ff;
-    --skeleton-a: #22302c;
-    --skeleton-b: #2a3935;
+    --c-highlight: #e2d175;
+    --c-on-highlight: #292010;
+    --c-gold: #d7d688;
+    --c-gold-soft: #392d18;
+    --c-gold-3d: #d9b65e;
+    --c-streak: #d7d688;
+    --c-streak-soft: #392d18;
+    --c-rate-again: #f18790;
+    --c-rate-hard: #efaf6f;
+    --c-rate-good: #86d2c1;
+    --c-rate-easy: #98b9fa;
+    --focus-ring: 3px solid #b0c9fb;
+    --skeleton-a: #1c2129;
+    --skeleton-b: #262c36;
+    --rule-line: rgb(232 230 223 / 8%);
+    --rule-line-strong: rgb(232 230 223 / 16%);
+    --rule-grid: rgb(232 230 223 / 5%);
+    --rule-margin: rgb(241 135 144 / 55%);
     --shadow-1: 0 1px 0 rgb(0 0 0 / 35%);
     --shadow-2: 0 1px 0 rgb(0 0 0 / 40%), 0 12px 30px -12px rgb(0 0 0 / 60%);
     --shadow-3: 0 18px 40px -16px rgb(0 0 0 / 70%);
@@ -213,51 +229,49 @@
 
 :root.theme-dark {
   color-scheme: dark;
-  --c-bg: #121917;
-  --c-surface: #18211f;
-  --c-card: #1e2926;
-  --c-card-raised: #24302d;
-  --c-border: #2e3b37;
-  --c-border-strong: #7f8a84;
-  --c-overlay: rgb(0 0 0 / 60%);
-  --c-text: #ecf0ea;
-  --c-text-muted: #b4bdb6;
-  --c-text-faint: #9ba59e;
-  --c-accent: #aab3ff;
-  --c-accent-strong: #cbd0ff;
-  --c-accent-soft: #232c52;
-  --c-on-accent: #121a4a;
-  --c-on-accent-soft: #cbd0ff;
-  --c-gold: #e6be53;
-  --c-success: #7fd9a6;
-  --c-success-soft: #173126;
-  --c-warning: #f2c27a;
-  --c-warning-soft: #33270f;
-  --c-warning-border: #6b5222;
-  --c-danger: #ff8f8a;
-  --c-danger-soft: #3a1f1e;
-  --c-info: #cbd0ff;
-  --c-highlight: #f2d54b;
-  --c-on-highlight: #1f1d2b;
-  --c-record: #dc3b49;
+  --c-bg: #10131a;
+  --c-surface: #171b23;
+  --c-card: #1e242c;
+  --c-card-raised: #282f3a;
+  --c-border: #343a42;
+  --c-border-strong: #9e9b90;
+  --c-overlay: rgb(7 9 14 / 64%);
+  --c-text: #e8e6df;
+  --c-text-muted: #c0beb4;
+  --c-text-faint: #adaba1;
+  --c-text-placeholder: #a2a098;
+  --c-accent: #98b9fa;
+  --c-accent-strong: #b0c9fb;
+  --c-accent-soft: #212d46;
+  --c-on-accent: #111c34;
+  --c-on-accent-soft: #bfd1f6;
+  --c-success: #86d2c1;
+  --c-success-soft: #163029;
+  --c-warning: #efaf6f;
+  --c-warning-soft: #3b2c19;
+  --c-warning-border: #efaf6f;
+  --c-danger: #f18790;
+  --c-danger-soft: #3e2522;
+  --c-record: #a63933;
   --c-on-record: #ffffff;
-  --rule-line: rgb(236 240 234 / 5%);
-  --rule-line-strong: rgb(236 240 234 / 12%);
-  --rule-grid: rgb(236 240 234 / 3%);
-  --rule-margin: rgb(255 143 138 / 45%);
-  --c-score-excelente: #7fd9a6;
-  --c-score-bien: #aab3ff;
-  --c-score-mejorable: #f2c27a;
-  --c-score-repetir: #ff8f8a;
-  --c-rate-again: #ff8f8a;
-  --c-rate-hard: #f2c27a;
-  --c-rate-good: #7fd9a6;
-  --c-rate-easy: #aab3ff;
-  --c-streak: #ffc06b;
-  --c-streak-soft: #3a2a10;
-  --focus-ring: 3px solid #cbd0ff;
-  --skeleton-a: #22302c;
-  --skeleton-b: #2a3935;
+  --c-highlight: #e2d175;
+  --c-on-highlight: #292010;
+  --c-gold: #d7d688;
+  --c-gold-soft: #392d18;
+  --c-gold-3d: #d9b65e;
+  --c-streak: #d7d688;
+  --c-streak-soft: #392d18;
+  --c-rate-again: #f18790;
+  --c-rate-hard: #efaf6f;
+  --c-rate-good: #86d2c1;
+  --c-rate-easy: #98b9fa;
+  --focus-ring: 3px solid #b0c9fb;
+  --skeleton-a: #1c2129;
+  --skeleton-b: #262c36;
+  --rule-line: rgb(232 230 223 / 8%);
+  --rule-line-strong: rgb(232 230 223 / 16%);
+  --rule-grid: rgb(232 230 223 / 5%);
+  --rule-margin: rgb(241 135 144 / 55%);
   --shadow-1: 0 1px 0 rgb(0 0 0 / 35%);
   --shadow-2: 0 1px 0 rgb(0 0 0 / 40%), 0 12px 30px -12px rgb(0 0 0 / 60%);
   --shadow-3: 0 18px 40px -16px rgb(0 0 0 / 70%);
@@ -267,6 +281,16 @@
   :root {
     --dur-fast: 0ms;
     --dur-base: 0ms;
+    --dur-med: 0ms;
     --dur-flip: 0ms;
+    --dur-slow: 0ms;
   }
+}
+
+html.motion-off {
+  --dur-fast: 0ms;
+  --dur-base: 0ms;
+  --dur-med: 0ms;
+  --dur-flip: 0ms;
+  --dur-slow: 0ms;
 }

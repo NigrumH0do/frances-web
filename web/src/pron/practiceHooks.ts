@@ -1,11 +1,19 @@
 // Hooks compartidos por las pantallas de práctica oral (UI-16 y texto libre):
 // cuota de Azure Speech del dispositivo y recognizer con token del servidor.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react';
 import { useApi } from '../api/ApiContext';
 import { HttpError, OfflineError } from '../api/client';
 import { speechTokenSource } from '../media/speech';
 import { pronunciacionStrings as s } from '../screens/pronunciacion/strings';
+import type { LevelMeter } from './levelMeter';
 import { getUsage, monthOf, quotaState } from './quota';
 import {
   getTokenRecognizer,
@@ -119,4 +127,13 @@ export function usePracticeRecognizer(): {
 
   const clearSpeechError = useCallback(() => setSpeechError(null), []);
   return { recognizer, speechError, clearSpeechError };
+}
+
+// Ref estable del medidor de la toma. La UI lo pasa a `createRecorder` y lo
+// lee en su propio bucle; aquí no hay estado ni requestAnimationFrame.
+export function usePracticeLevelMeter(): {
+  meterRef: RefObject<LevelMeter | null>;
+} {
+  const meterRef = useRef<LevelMeter | null>(null);
+  return { meterRef };
 }

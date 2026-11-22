@@ -11,6 +11,7 @@ import type { Transport } from '../api/transport';
 import { closeV2DbForTests } from '../offline/db';
 import { AuthProvider } from './AuthContext';
 import Invitacion from './Invitacion';
+import { authStrings } from './strings';
 
 const ME_U1: Me = {
   csrf_token: 'csrf-u1',
@@ -118,10 +119,17 @@ test('invitación: borra el token de la URL, valida contraseña y entra', async 
   await userEvent.type(screen.getByLabelText('Confirmar contraseña'), 'otra');
   await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
 
-  expect(
-    screen.getByText('La contraseña necesita al menos 12 caracteres'),
-  ).toBeVisible();
-  expect(screen.getByText('Las contraseñas no coinciden')).toBeVisible();
+  const shortAlert = screen.getByText(
+    'La contraseña necesita al menos 12 caracteres',
+  );
+  expect(shortAlert).toBeVisible();
+  expect(shortAlert).toHaveAttribute('role', 'alert');
+  const password = screen.getByLabelText('Contraseña');
+  expect(password).toHaveAttribute('aria-invalid', 'true');
+  expect(password.getAttribute('aria-describedby')).toContain(shortAlert.id);
+  const mismatch = screen.getByText('Las contraseñas no coinciden');
+  expect(mismatch).toBeVisible();
+  expect(mismatch).toHaveAttribute('role', 'alert');
   expect(
     transport.calls.some((call) => call.url === '/api/auth/invite/accept'),
   ).toBe(false);
@@ -169,6 +177,31 @@ test('invitación inválida no muestra el formulario', async () => {
     'El enlace no vale o caducó.',
   );
   expect(screen.queryByLabelText('Email')).toBeNull();
+  expect(document.querySelector('form')).toBeNull();
+  expect(
+    screen.getByRole('link', { name: authStrings.login.title }),
+  ).toHaveAttribute('href', '/entrar');
+});
+
+test('mientras se comprueba el enlace hay estado y no hay formulario', async () => {
+  history.replaceState(null, '', '/invitacion#tok123');
+  const transport = fakeTransport({
+    'GET /api/auth/me': () => jsonResponse(UNAUTHENTICATED, 401),
+    'POST /api/auth/invite/check': () => new Promise(() => undefined),
+  });
+  renderInvitacion(transport);
+
+  expect(await screen.findByRole('status')).toHaveTextContent(
+    authStrings.invite.checking,
+  );
+  expect(document.querySelector('form')).toBeNull();
+  expect(document.querySelectorAll('.skeleton')).toHaveLength(3);
+  expect(document.querySelector('.auth-cover h1')).toHaveTextContent(
+    authStrings.invite.title,
+  );
+  expect(
+    screen.queryByRole('link', { name: /Continuar con Google/ }),
+  ).toBeNull();
 });
 
 test('email existente e invitación inválida dan el mismo 400 sin revelar cuentas', async () => {
@@ -218,6 +251,10 @@ test('sin token en la URL no se llama a la API', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent(
     'El enlace no vale o caducó.',
   );
+  expect(document.querySelector('form')).toBeNull();
+  expect(
+    screen.getByRole('link', { name: authStrings.login.title }),
+  ).toHaveAttribute('href', '/entrar');
   expect(
     transport.calls.some((call) => call.url === '/api/auth/invite/check'),
   ).toBe(false);

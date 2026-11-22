@@ -1,0 +1,43 @@
+/* Pantalla Temas y detalle. La fila y el indicador viven aquí
+ * para no tocar los componentes compartidos. */
+
+a.list-item.topic-row {
+  min-height: var(--tap);
+}
+
+a.list-item.topic-row.is-active {
+  background: var(--c-card-raised);
+}
+
+.mastery {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0 var(--sp-2);
+  min-height: 28px;
+  border: 1px solid currentColor;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+
+.mastery-todo {
+  color: var(--c-text-muted);
+}
+
+.mastery-doing {
+  color: var(--c-warning);
+}
+
+.mastery-done {
+  color: var(--c-success);
+}
+
+.topic-percent {
+  font-variant-numeric: tabular-nums;
+}
+
+.topic-tabs [role='tab'][aria-selected='true'] {
+  box-shadow: inset 0 -2px 0 var(--c-accent);
+}

@@ -1,7 +1,12 @@
 import { expect, test, vi } from 'vitest';
+import { createLevelMeter, type LevelMeter } from './levelMeter';
 import { createRecorder } from './recorder';
 import { RecognizerError } from './recognizer';
 import type { Recognizer } from './recognizer';
+
+vi.mock('./levelMeter', () => ({
+  createLevelMeter: vi.fn(() => null),
+}));
 
 // JSON «allez» de PRN-01: PronScore 94 y fonemas a/l/e con 98/95/62.
 const allez = {
@@ -295,4 +300,109 @@ test('sin captureTake el estado done no trae toma', async () => {
   const state = r.getState();
   expect(state.status).toBe('done');
   expect('take' in state).toBe(false);
+});
+
+test('con meterRef reanuda antes del micrófono y cierra antes de parar pistas', async () => {
+  const events: string[] = [];
+  const trackStop = vi.fn(() => {
+    events.push('stop');
+  });
+  const media = {
+    getTracks: () => [{ stop: trackStop }],
+  } as unknown as MediaStream;
+  let resolveGum: (value: MediaStream) => void = () => undefined;
+  const gum = vi.fn(
+    () =>
+      new Promise<MediaStream>((resolve) => {
+        events.push('getUserMedia');
+        resolveGum = resolve;
+      }),
+  );
+  const meter: LevelMeter = {
+    resumeFromGesture: () => {
+      events.push('resumeFromGesture');
+    },
+    connect: () => {
+      events.push('connect');
+    },
+    close: () => {
+      events.push('close');
+    },
+    read: () => ({ rms: 0, low: 0, mid: 0, high: 0, source: 'live' }),
+    silentEpisodes: 0,
+  };
+  vi.mocked(createLevelMeter).mockReset();
+  vi.mocked(createLevelMeter).mockImplementation(() => meter);
+  const meterRef: { current: LevelMeter | null } = { current: null };
+  const r = createRecorder(
+    { assess: async () => ({ json: allez, durationMs: 100 }) },
+    gum,
+    () => new Date('2026-10-14T21:04:57.216Z'),
+    { meterRef },
+  );
+
+  const pending = r.start('Allez !', 'c_0123456789abcdef');
+  expect(events).toEqual(['resumeFromGesture', 'getUserMedia']);
+  expect(createLevelMeter).toHaveBeenCalledTimes(1);
+  expect(createLevelMeter).toHaveBeenCalledWith();
+  expect(meterRef.current).toBe(meter);
+  expect(r.getLevelMeter()).toBe(meter);
+
+  resolveGum(media);
+  await pending;
+  expect(events).toEqual([
+    'resumeFromGesture',
+    'getUserMedia',
+    'connect',
+    'close',
+    'stop',
+  ]);
+  expect(meterRef.current).toBeNull();
+  expect(r.getLevelMeter()).toBeNull();
+  expect(r.getState().status).toBe('done');
+});
+
+test('si connect lanza, la toma igual llega a done', async () => {
+  const meter: LevelMeter = {
+    resumeFromGesture: vi.fn(),
+    connect: () => {
+      throw new Error('ios');
+    },
+    close: vi.fn(),
+    read: () => ({ rms: 0, low: 0, mid: 0, high: 0, source: 'silent' }),
+    silentEpisodes: 0,
+  };
+  vi.mocked(createLevelMeter).mockReset();
+  vi.mocked(createLevelMeter).mockImplementation(() => meter);
+  const meterRef: { current: LevelMeter | null } = { current: null };
+  const r = createRecorder(
+    { assess: async () => ({ json: allez, durationMs: 1840 }) },
+    okGum,
+    () => new Date('2026-10-14T21:04:57.216Z'),
+    { meterRef },
+  );
+  await r.start('Allez !', 'c_0123456789abcdef');
+  const state = r.getState();
+  expect(state.status).toBe('done');
+  if (state.status !== 'done') {
+    throw new Error('sin resultado');
+  }
+  expect(state.result.scores.pron).toBe(94);
+  expect(meter.close).toHaveBeenCalled();
+});
+
+test('sin meterRef no se crea el medidor', async () => {
+  vi.mocked(createLevelMeter).mockReset();
+  vi.mocked(createLevelMeter).mockImplementation(() => {
+    throw new Error('no debía crearse');
+  });
+  const r = createRecorder(
+    { assess: async () => ({ json: allez, durationMs: 10 }) },
+    okGum,
+    () => new Date(0),
+  );
+  await r.start('Allez', null);
+  expect(createLevelMeter).not.toHaveBeenCalled();
+  expect(r.getLevelMeter()).toBeNull();
+  expect(r.getState().status).toBe('done');
 });

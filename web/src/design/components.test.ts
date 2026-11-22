@@ -1,17 +1,23 @@
-// Lee components.css como texto: objetivos de 44 px y movimiento reducido.
+// Lee components.css como texto: objetivos de 44 px, riel a 960 px y
+// movimiento reducido (incluye la paridad de html.motion-off).
 import { describe, expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const css = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'components.css'),
+const designDir = dirname(fileURLToPath(import.meta.url));
+const css = readFileSync(join(designDir, 'components.css'), 'utf8');
+const legacyCss = readFileSync(join(designDir, 'legacy.css'), 'utf8');
+const quizCss = readFileSync(
+  join(designDir, '../screens/quiz/quiz.css'),
   'utf8',
 );
-const legacyCss = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'legacy.css'),
+const repasarCss = readFileSync(
+  join(designDir, '../screens/repasar/repasar.css'),
   'utf8',
 );
+const hoyCss = readFileSync(join(designDir, '../screens/hoy/hoy.css'), 'utf8');
+const pronCss = readFileSync(join(designDir, '../ui/pron/pron.css'), 'utf8');
 
 // Cuerpo de todas las reglas cuyo selector (lista separada por comas) incluye `sel`.
 function ruleFor(text: string, sel: string): string {
@@ -41,6 +47,32 @@ function mediaBlock(text: string, query: string): string {
   return '';
 }
 
+function normalized(body: string): string {
+  return body.replace(/\s+/g, ' ').trim();
+}
+
+function classSelectors(cssChunk: string): string[] {
+  const found = new Set<string>();
+  for (const match of cssChunk.matchAll(/([^{}]+)\{/g)) {
+    for (const raw of (match[1] as string).split(',')) {
+      const selector = raw.replace(/html\.motion-off/g, '').trim();
+      if (selector.startsWith('.')) found.add(selector);
+    }
+  }
+  return [...found].sort();
+}
+
+function transitionDeclarations(text: string): string[] {
+  const clean = text.replace(/\/\*[\s\S]*?\*\//g, '');
+  return [...clean.matchAll(/transition\s*:\s*([^;]*);/g)].map((m) =>
+    normalized(m[1] as string),
+  );
+}
+
+function transitionProperties(value: string): string[] {
+  return value.split(',').map((part) => part.trim().split(/\s+/)[0] ?? '');
+}
+
 describe('components.css', () => {
   test('cada control interactivo declara 44 px', () => {
     for (const sel of [
@@ -55,7 +87,8 @@ describe('components.css', () => {
       '.select',
       '.chip-filter::after',
     ]) {
-      expect(ruleFor(css, sel), sel).toMatch(
+      const sheet = sel === '.option' ? quizCss : css;
+      expect(ruleFor(sheet, sel), sel).toMatch(
         /min-(height|block-size):\s*var\(--tap(-lg)?\)/,
       );
     }
@@ -84,10 +117,122 @@ describe('components.css', () => {
     }
   });
 
-  test('la barra inferior pasa a riel lateral desde 900 px', () => {
-    const wide = mediaBlock(css, 'min-width: 900px');
+  test('el riel lateral arranca en 960 px a 232 px de ancho', () => {
+    expect(css).toContain('@media (min-width: 960px)');
+    const wide = mediaBlock(css, 'min-width: 960px');
     expect(wide).toMatch(/\.tabbar\s*\{[^}]*position:\s*sticky/);
-    expect(wide).toMatch(/width:\s*88px/);
+    expect(wide).toMatch(/\.tabbar\s*\{[^}]*width:\s*var\(--rail-w\)/);
+    expect(wide).toMatch(/\.tabbar\s*\{[^}]*height:\s*100dvh/);
+    expect(wide).toMatch(/\.tabbar-brand\s*\{[^}]*display:\s*block/);
+    expect(wide).toMatch(/\.tabbar a\s*\{[^}]*flex-direction:\s*row/);
+    expect(wide).toMatch(
+      /\.tabbar a\[aria-current='page'\]\s*\{[^}]*background:\s*var\(--c-accent-soft\)/,
+    );
+    expect(wide).toMatch(/\.tab-count\s*\{[^}]*position:\s*static/);
+    expect(wide).toMatch(/\.content\s*\{[^}]*max-width:\s*720px/);
+    expect(wide).toMatch(/\.content\s*\{[^}]*padding-bottom:\s*var\(--sp-10\)/);
+    expect(wide).toMatch(
+      /\.content\.content-repasar\s*\{[^}]*max-width:\s*840px/,
+    );
+    expect(wide).toMatch(
+      /\.content\.content-split\s*\{[^}]*max-width:\s*1120px/,
+    );
+    expect(css).not.toContain('width: 88px');
+    expect(css).not.toContain('max-width: 760px');
+    expect(css).not.toContain('max-width: 1080px');
+    expect(css).not.toContain('content-wide');
+    expect(css).not.toContain('min-width: 900px');
+    expect(css).not.toContain('min-width: 1200px');
+  });
+
+  test('bajo 960 px la barra es fija y el contenido reserva su altura', () => {
+    const tabbar = ruleFor(css, '.tabbar');
+    expect(tabbar).toMatch(/position:\s*fixed/);
+    expect(tabbar).toMatch(/bottom:\s*0/);
+    expect(tabbar).toMatch(/left:\s*0/);
+    expect(tabbar).toMatch(/right:\s*0/);
+    expect(tabbar).toMatch(/width:\s*100%/);
+    expect(tabbar).toMatch(/z-index:\s*30/);
+    expect(tabbar).toMatch(
+      /height:\s*calc\(var\(--tabbar-h\)\s*\+\s*env\(safe-area-inset-bottom,\s*0px\)\s*\+\s*8px\)/,
+    );
+    expect(ruleFor(css, '.content')).toMatch(
+      /padding-bottom:\s*calc\(\s*var\(--tabbar-h\)\s*\+\s*env\(safe-area-inset-bottom,\s*0px\)\s*\+\s*8px\s*\)/,
+    );
+  });
+
+  test('el IPA va en monoespaciado recto y el francés del frente en 700', () => {
+    for (const sel of ['.flip-face .ipa', '.flip-recap-ipa']) {
+      const body = ruleFor(repasarCss, sel);
+      expect(body, sel).toMatch(/font-family:\s*var\(--font-mono\)/);
+      expect(body, sel).toMatch(/font-style:\s*normal/);
+      expect(body, sel).not.toMatch(/italic/);
+    }
+    expect(ruleFor(repasarCss, '.flip-face .front-fr')).toMatch(
+      /font-weight:\s*700/,
+    );
+  });
+
+  test('FSRS pasa a rejilla 2×2 bajo 380 px', () => {
+    const narrow = mediaBlock(repasarCss, 'max-width: 379px');
+    expect(narrow).toMatch(
+      /\.rating\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*1fr\)/,
+    );
+  });
+
+  test('las transiciones no animan background, border-color, box-shadow ni width', () => {
+    const properties =
+      transitionDeclarations(css).flatMap(transitionProperties);
+    expect(properties).toContain('transform');
+    for (const property of properties) {
+      expect(property, property).not.toMatch(
+        /^(?:background|background-color|background-position|border-color|box-shadow|width)$/,
+      );
+    }
+    expect(ruleFor(css, '.btn')).toMatch(
+      /transition:\s*transform\s+var\(--dur-fast\)\s+var\(--ease\)/,
+    );
+    expect(ruleFor(css, '.tabbar a .pill')).not.toMatch(/transition\s*:/);
+    expect(ruleFor(css, '.progress > span')).not.toMatch(/transition\s*:/);
+  });
+
+  test('html.motion-off espeja prefers-reduced-motion', () => {
+    const reduced = mediaBlock(css, 'prefers-reduced-motion: reduce');
+    const rules = [...reduced.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+      sel: (m[1] as string).trim(),
+      body: normalized(m[2] as string),
+    }));
+    expect(rules.length).toBeGreaterThan(0);
+    for (const rule of rules) {
+      for (const sel of rule.sel.split(',').map((s) => s.trim())) {
+        const mirrored = `html.motion-off ${sel}`;
+        expect(normalized(ruleFor(css, mirrored)), mirrored).toBe(rule.body);
+      }
+    }
+  });
+
+  test('los selectores de clase de motion-off coinciden con reduced-motion', () => {
+    const reduced = mediaBlock(css, 'prefers-reduced-motion: reduce');
+    const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    const offAt = clean.indexOf('html.motion-off');
+    const off = offAt < 0 ? '' : clean.slice(offAt);
+    expect(classSelectors(reduced).length).toBeGreaterThan(0);
+    expect(classSelectors(reduced)).toEqual(classSelectors(off));
+  });
+
+  test('las barras usan el hueco de la rejilla de 8', () => {
+    for (const sel of ['.bars', '.bars-labels']) {
+      const body = ruleFor(hoyCss, sel);
+      expect(body, sel).toMatch(/gap:\s*var\(--sp-2\)/);
+      expect(body, sel).not.toMatch(/gap:\s*6px/);
+    }
+  });
+
+  test('.sr-only no reserva caja', () => {
+    const sr = ruleFor(css, '.sr-only');
+    expect(sr).toMatch(/padding:\s*0/);
+    expect(sr).toMatch(/margin:\s*-1px/);
+    expect(sr).toMatch(/border:\s*0/);
   });
 });
 
@@ -105,7 +250,7 @@ describe('objetivos táctiles de 44 px en controles reusados (FIX-18)', () => {
   });
 
   test('el botón de grabación de la práctica declara 44 px', () => {
-    const body = ruleFor(legacyCss, '.practice-session > button');
+    const body = ruleFor(pronCss, '.practice-session > button');
     expect(body).toMatch(/min-height:\s*var\(--tap\)/);
     expect(body).toMatch(/min-width:\s*var\(--tap\)/);
   });
@@ -126,11 +271,11 @@ describe('contraste AA de tabs y grabación (CHG-16)', () => {
   });
 
   test('.practice-session > button usa fondo y color del sistema', () => {
-    const button = ruleFor(legacyCss, '.practice-session > button');
+    const button = ruleFor(pronCss, '.practice-session > button');
     expect(button).toMatch(/background:\s*var\(--c-card\)/);
     expect(button).toMatch(/color:\s*var\(--c-text\)/);
     expect(button).toMatch(/border:\s*1px solid var\(--c-border-strong\)/);
-    expect(ruleFor(legacyCss, '.practice-session > button:hover')).toMatch(
+    expect(ruleFor(pronCss, '.practice-session > button:hover')).toMatch(
       /background:\s*var\(--c-surface\)/,
     );
   });
@@ -165,6 +310,24 @@ describe('components.css: estado activo y esqueletos (UI-03)', () => {
       '.skeleton-block',
     ]) {
       expect(ruleFor(css, sel), sel).not.toBe('');
+    }
+  });
+});
+
+describe('cifra de pronunciación y transiciones de legacy', () => {
+  test('el total usa color de texto y peso 700, sin el color de la banda', () => {
+    const total = ruleFor(pronCss, '.pron-score-total');
+    expect(total).toMatch(/color:\s*var\(--c-text\)/);
+    expect(total).toMatch(/font-weight:\s*700/);
+  });
+
+  test('no transiciona box-shadow, width ni background-position', () => {
+    const properties =
+      transitionDeclarations(legacyCss).flatMap(transitionProperties);
+    for (const property of properties) {
+      expect(property, property).not.toMatch(
+        /^(?:box-shadow|width|background-position)$/,
+      );
     }
   });
 });

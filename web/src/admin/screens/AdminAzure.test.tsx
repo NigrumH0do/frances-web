@@ -1,4 +1,7 @@
 import 'fake-indexeddb/auto';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { IDBFactory } from 'fake-indexeddb';
 import '@testing-library/jest-dom/vitest';
 import { screen, waitFor, within } from '@testing-library/react';
@@ -116,6 +119,49 @@ test('muestra resumen mensual, aviso de cifrado y cambia la estrategia del pool'
     ).toEqual({ strategy: 'least_used' }),
   );
   expect(await screen.findByText('Estrategia actualizada.')).toBeVisible();
+});
+
+test('un cupo al 80 % o más marca el relleno warn y el aviso no es rojo', async () => {
+  renderScreen(<AdminAzure />, {
+    user: ME_ADMIN,
+    routes: {
+      'GET /api/admin/azure/summary': {
+        ...BASE_SUMMARY,
+        stt_seconds_used: 25920,
+        tts_chars_used: 50000,
+      },
+      'GET /api/admin/azure/accounts': [],
+    },
+  });
+
+  const summary = await screen.findByRole('region', {
+    name: 'Consumo mensual del pool',
+  });
+  const stt = within(summary).getByRole('progressbar', {
+    name: 'Reconocimiento de voz (STT)',
+  });
+  const tts = within(summary).getByRole('progressbar', {
+    name: 'Síntesis de audio (TTS)',
+  });
+  expect(stt.querySelector('.usage-meter-fill')).toHaveClass('warn');
+  expect(tts.querySelector('.usage-meter-fill')).not.toHaveClass('warn');
+  expect(stt).toHaveAttribute('aria-valuenow', '80');
+
+  const sttLabel = within(summary).getByText('Reconocimiento de voz (STT)');
+  expect(sttLabel.parentElement?.querySelector('.nums')).toHaveTextContent(
+    /\d/,
+  );
+  for (const pool of within(summary).getAllByText('2 de 2 cuentas activas')) {
+    expect(pool).toHaveClass('nums');
+  }
+
+  const css = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '../admin.css'),
+    'utf8',
+  );
+  const warn = /\.usage-meter-fill\.warn\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+  expect(warn).toMatch(/background:\s*var\(--c-warning\)/);
+  expect(warn).not.toMatch(/var\(--c-danger\)/);
 });
 
 test('crea, prueba, deshabilita y elimina cuentas db sin ofrecer edición en env', async () => {

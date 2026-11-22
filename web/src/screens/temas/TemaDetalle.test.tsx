@@ -3,6 +3,9 @@ import { IDBFactory } from 'fake-indexeddb';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { jsonResponse } from '../../api/testing';
 import type {
@@ -20,8 +23,14 @@ import type {
 import { closeV2DbForTests } from '../../offline/db';
 import { renderScreen } from '../../shell/testing';
 import TemaDetalle from './TemaDetalle';
+import { temaStrings as s } from './strings';
 import { TopicItems } from './TopicItems';
 import { TopicSummary } from './TopicSummary';
+
+const temasCss = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), 'temas.css'),
+  'utf8',
+);
 
 const VOICES: VoiceOut[] = [
   {
@@ -412,11 +421,29 @@ test('tema inexistente muestra estado y enlace a Temas', async () => {
       jsonResponse({ code: 'not_found', message_es: '' }, 404),
   });
 
-  expect(await screen.findByText('Este tema ya no existe')).toBeVisible();
-  expect(screen.getByRole('link', { name: 'Volver a Temas' })).toHaveAttribute(
+  expect(await screen.findByText(s.notFoundTitle)).toBeVisible();
+  expect(screen.getByRole('link', { name: s.back })).toHaveAttribute(
     'href',
     '/temas',
   );
+  expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute(
+    'href',
+    '/temas',
+  );
+});
+
+test('la pestaña activa tiene aria-selected y un indicador de 2 px', async () => {
+  renderTema();
+
+  const active = await screen.findByRole('tab', { name: 'Resumen' });
+  expect(active).toHaveAttribute('aria-selected', 'true');
+  expect(active.closest('.topic-tabs')).not.toBeNull();
+  expect(screen.getByRole('tab', { name: 'Clases' })).toHaveAttribute(
+    'aria-selected',
+    'false',
+  );
+  expect(temasCss).toContain(".topic-tabs [role='tab'][aria-selected='true']");
+  expect(temasCss).toContain('box-shadow: inset 0 -2px 0 var(--c-accent)');
 });
 
 test('clases no lanza más de 4 peticiones a la vez', async () => {

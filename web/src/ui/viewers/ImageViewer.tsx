@@ -47,5 +47,5 @@ export function BlobImage({
   if (url === null) {
     return <p role="status">{t('app.loading')}</p>;
   }
-  return <img src={url} alt={alt} />;
+  return <img className="att-image" src={url} alt={alt} />;
 }

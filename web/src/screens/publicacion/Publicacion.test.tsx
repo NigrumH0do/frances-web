@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup, screen } from '@testing-library/react';
+import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, expect, test, vi } from 'vitest';
 import { jsonResponse, offline } from '../../api/testing';
 import type {
@@ -217,6 +220,23 @@ function renderPublicacion(
   });
 }
 
+const publicacionDir = dirname(fileURLToPath(import.meta.url));
+const publicacionCss = readFileSync(
+  join(publicacionDir, 'publicacion.css'),
+  'utf8',
+);
+
+function rulesTouching(source: string, selectorPart: string): string {
+  const noComments = source.replace(/\/\*[\s\S]*?\*\//g, '');
+  const parts: string[] = [];
+  for (const match of noComments.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if ((match[1] as string).includes(selectorPart)) {
+      parts.push(`${match[1] ?? ''}{${match[2] ?? ''}}`);
+    }
+  }
+  return parts.join('\n');
+}
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -399,6 +419,191 @@ test('la página de la cita abre solo el adjunto citado', async () => {
     },
   });
 
-  expect(await screen.findByText('Página 2 de 3')).toBeVisible();
+  const citedPage = await screen.findByText('Página 2 de 3');
+  expect(citedPage).toBeVisible();
   expect(screen.getByText('Página 1 de 3')).toBeVisible();
+  const bar = citedPage.closest('.pdf-toolbar');
+  expect(bar).not.toBeNull();
+  expect(bar?.parentElement?.closest('.is-cited')).not.toBeNull();
+});
+
+test('el encabezado de material precede al de tarjetas en el DOM', async () => {
+  renderPublicacion();
+
+  const material = await screen.findByRole('heading', {
+    level: 2,
+    name: 'Adjuntos',
+  });
+  const cards = screen.getByRole('heading', { level: 2, name: 'Tarjetas' });
+  expect(
+    material.compareDocumentPosition(cards) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
+test('un error de tarjetas deja el visor vivo y el reintento en la ficha', async () => {
+  renderPublicacion('/publicaciones/cw_1', {
+    'GET /api/cards?item_id=cw_1': () =>
+      jsonResponse({ code: 'internal', message_es: '' }, 500),
+  });
+
+  expect(
+    await screen.findByRole('img', { name: /Página 1 de 3/ }),
+  ).toBeVisible();
+  const cards = screen
+    .getByRole('heading', { level: 2, name: 'Tarjetas' })
+    .closest('section');
+  expect(cards).not.toBeNull();
+  const ficha = within(cards as HTMLElement);
+  expect(await ficha.findByRole('alert')).toBeVisible();
+  expect(ficha.getByRole('button', { name: 'Reintentar' })).toBeVisible();
+});
+
+test('publicacion.css acota el canvas del PDF a su columna', () => {
+  // B5 (LIVE-A2 H-A): la figura, el host y el canvas nunca son más anchos que
+  // la columna; a escala <= 1 el CSS recorta y con zoom el paneo queda dentro
+  // de `.pdf-page`, sin solaparse con la ficha sticky.
+  const figure = rulesTouching(publicacionCss, '.pdf-figure');
+  expect(figure).toContain('margin: 0');
+  expect(figure).toContain('max-width: 100%');
+  expect(figure).toContain('min-width: 0');
+
+  const page = rulesTouching(publicacionCss, '.pdf-page');
+  expect(page).toContain('max-width: 100%');
+  expect(page).toContain('overflow-x: auto');
+
+  const canvas = rulesTouching(publicacionCss, '.pdf-canvas');
+  expect(canvas).toContain('display: block');
+  expect(canvas).toContain('height: auto');
+  expect(canvas).toMatch(/\.pdf-canvas\.is-fit\s*\{/);
+  expect(canvas).toContain('max-width: 100%');
+
+  // Un hijo ancho no puede expandir la pista `minmax(0, …fr)` del split.
+  const children = publicacionCss.match(/\.pub-split\s*>\s*\*\s*\{([^}]*)\}/);
+  expect(children).not.toBeNull();
+  expect(children?.[1] ?? '').toContain('min-width: 0');
+});
+
+test('publicacion.css no reordena .pub-split y deja la ficha sticky', () => {
+  expect(publicacionCss).toContain('@media (min-width: 960px)');
+  expect(publicacionCss).not.toMatch(/min-width:\s*900px/);
+  expect(publicacionCss).not.toMatch(/min-width:\s*1100px/);
+
+  const split = rulesTouching(publicacionCss, '.pub-split');
+  expect(split).toContain(
+    'grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr)',
+  );
+  expect(split).not.toMatch(/(^|[^a-zA-Z-])order\s*:/);
+
+  const second = split.match(/\.pub-split\s*>\s*:nth-child\(2\)\s*\{([^}]*)\}/);
+  expect(second).not.toBeNull();
+  const column = second?.[1] ?? '';
+  expect(column).toContain('position: sticky');
+  expect(column).toContain('top: var(--sp-4)');
+  expect(column).toContain('align-self: start');
+
+  const cited = publicacionCss.match(
+    /\.is-cited\s+\.pdf-toolbar\s*\{([^}]*)\}/,
+  );
+  expect(cited).not.toBeNull();
+  const flash = cited?.[1] ?? '';
+  expect(flash).toMatch(/background:\s*var\(--c-accent-soft\)/);
+  expect(flash).not.toMatch(/transition\s*:/);
+  expect(publicacionCss).not.toMatch(/--c-gold-3d/);
+  expect(publicacionCss).not.toMatch(/transition\s*:/);
+});
+
+// Bloque de una `@media` concreta, sin comentarios y con llaves equilibradas.
+function mediaBlock(source: string, query: string): string {
+  const clean = source.replace(/\/\*[\s\S]*?\*\//g, '');
+  const at = clean.indexOf(query);
+  if (at < 0) {
+    return '';
+  }
+  const open = clean.indexOf('{', at);
+  if (open < 0) {
+    return '';
+  }
+  let depth = 0;
+  for (let i = open; i < clean.length; i += 1) {
+    if (clean[i] === '{') {
+      depth += 1;
+    } else if (clean[i] === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return clean.slice(open + 1, i);
+      }
+    }
+  }
+  return '';
+}
+
+const IMG_SHA = 'c'.repeat(64);
+const IMG_URL = `/api/files/${IMG_SHA}`;
+
+const IMG_ATT: AttachmentView = {
+  id: 'att_img',
+  kind: 'drive_file',
+  title: 'Tableau de conjugaison',
+  url: null,
+  mime_type: 'image/png',
+  status: 'downloaded',
+  file: { url: IMG_URL, size: 2048, mime: 'image/png', sha256: IMG_SHA },
+  view_pdf: null,
+};
+
+function imageResponse(): Response {
+  return new Response(new Uint8Array([137, 80, 78, 71]), {
+    headers: { 'Content-Type': 'image/png' },
+  });
+}
+
+test('la imagen adjunta lleva .att-image y acota su ancho en móvil', async () => {
+  // REVERIFY-2: sin `max-width` el <img> de 800 px desbordaba `#main` en móvil
+  // de 390 px (scrollWidth 816 > clientWidth 390).
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:att-image');
+  renderPublicacion('/publicaciones/cw_1', {
+    'GET /api/items/cw_1': {
+      ...ITEM_DETAIL,
+      attachments: [PDF_ATT, IMG_ATT],
+    },
+    [`GET ${IMG_URL}`]: imageResponse,
+  });
+
+  const img = await screen.findByRole('img', {
+    name: 'Tableau de conjugaison',
+  });
+  expect(img.tagName).toBe('IMG');
+  expect(img).toHaveClass('att-image');
+
+  const rule = publicacionCss.match(
+    /\.att-image\s*,\s*\.pub-split\s+img\s*\{([^}]*)\}/,
+  );
+  expect(rule).not.toBeNull();
+  const body = rule?.[1] ?? '';
+  expect(body).toContain('display: block');
+  expect(body).toContain('max-width: 100%');
+  expect(body).toContain('height: auto');
+
+  // La acotación vale en móvil, así que no puede vivir solo en la `@media`
+  // de escritorio.
+  expect(mediaBlock(publicacionCss, '@media (min-width: 960px)')).not.toContain(
+    '.att-image',
+  );
+});
+
+test('la ficha sticky acota su alto y desplaza por dentro en el split', () => {
+  // REVERIFY-2: con la ficha (18.580 px) más alta que los PDFs de la izquierda
+  // (3.455 px) la fila del grid medía lo de la ficha y `position: sticky` no
+  // tenía recorrido; el alto máximo con `100dvh` más el scroll interno la
+  // mantienen fija junto al material.
+  const media = mediaBlock(publicacionCss, '@media (min-width: 960px)');
+  expect(media).not.toBe('');
+  const second = media.match(/\.pub-split\s*>\s*:nth-child\(2\)\s*\{([^}]*)\}/);
+  expect(second).not.toBeNull();
+  const column = second?.[1] ?? '';
+  expect(column).toContain('position: sticky');
+  expect(column).toContain('top: var(--sp-4)');
+  expect(column).toContain('align-self: start');
+  expect(column).toContain('max-height: calc(100dvh - var(--sp-8))');
+  expect(column).toContain('overflow-y: auto');
 });

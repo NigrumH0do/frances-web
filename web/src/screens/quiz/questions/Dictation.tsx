@@ -21,29 +21,31 @@ export function Dictation({ q, value, onChange }: QuestionProps<string>) {
   return (
     <fieldset className="stack">
       <legend className="quiz-q">{q.prompt_es}</legend>
-      {audio === null ? (
-        <p className="small muted">{quizStrings.audioUnavailable}</p>
-      ) : (
-        <ClipPlayer
-          clips={clips}
-          pendingVoiceIds={[]}
-          voices={[]}
-          preferred={null}
-        />
-      )}
-      <Field
-        label={quizStrings.dictationLabel}
-        hint={quizStrings.dictationHint}
-      >
-        <input
-          className="input fr"
-          lang="fr"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          autoComplete="off"
-          spellCheck={false}
-        />
-      </Field>
+      <div className="quiz-answer" key={q.id}>
+        {audio === null ? (
+          <p className="small muted">{quizStrings.audioUnavailable}</p>
+        ) : (
+          <ClipPlayer
+            clips={clips}
+            pendingVoiceIds={[]}
+            voices={[]}
+            preferred={null}
+          />
+        )}
+        <Field
+          label={quizStrings.dictationLabel}
+          hint={quizStrings.dictationHint}
+        >
+          <input
+            className="input fr"
+            lang="fr"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </Field>
+      </div>
     </fieldset>
   );
 }

@@ -18,6 +18,8 @@
 // módulo porque en el service worker no existen y quedarían `undefined`. Por
 // eso los patrones de runtime llevan sus regex y comprobaciones inline; las
 // constantes exportadas solo documentan y prueban esos mismos patrones.
+// El chunk `three` no se precachea; la primera ruta 3D lo pide y `CacheFirst`
+// lo guarda después.
 
 import type { VitePWAOptions } from 'vite-plugin-pwa';
 
@@ -53,8 +55,8 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     start_url: '.',
     scope: '.',
     display: 'standalone',
-    background_color: '#f7f7fb',
-    theme_color: '#2b37b8',
+    background_color: '#f8f6ed',
+    theme_color: '#2147a3',
     icons: [
       {
         src: 'icon.svg',
@@ -66,7 +68,7 @@ export const pwaOptions: Partial<VitePWAOptions> = {
   },
   workbox: {
     globPatterns: ['**/*.{js,css,html,svg,mjs,woff2}'],
-    globIgnores: ['**/demo-api/**'],
+    globIgnores: ['**/demo-api/**', '**/three-*.js'],
     navigateFallback: 'index.html',
     navigateFallbackDenylist: [/\/data\//, /\/demo\//, /^\/api\//],
     clientsClaim: true,
@@ -127,6 +129,20 @@ export const pwaOptions: Partial<VitePWAOptions> = {
           expiration: {
             maxEntries: 200,
             maxAgeSeconds: ONE_DAY * 7,
+          },
+          cacheableResponse: { statuses: [200] },
+        },
+      },
+      {
+        urlPattern: ({ url, request }: ApiUrlContext) =>
+          request.method === 'GET' &&
+          /\/assets\/three-[^/]+\.js$/.test(url.pathname),
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'frances-three',
+          expiration: {
+            maxEntries: 2,
+            maxAgeSeconds: 60 * 60 * 24 * 30,
           },
           cacheableResponse: { statuses: [200] },
         },

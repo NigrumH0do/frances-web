@@ -23,6 +23,7 @@ import {
   PRACTICE_TEXT_MAX,
   useModelAudio,
 } from './useModelAudio';
+import './texto.css';
 
 /**
  * Texto libre (PRACTICE-01): el usuario escribe en francés, la app genera el
