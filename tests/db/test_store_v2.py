@@ -1,6 +1,8 @@
 """Tests del Store v2: WAL, busy_timeout, connect sin migrar, triggers y dump sin FTS."""
 
+import gc
 import sqlite3
+import warnings
 from pathlib import Path
 
 import pytest
@@ -68,6 +70,32 @@ def test_connect_does_not_migrate_and_rejects_old_schema(tmp_path: Path) -> None
     assert s.conn.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
     assert s.conn.execute("PRAGMA busy_timeout").fetchone()[0] == 5000
     s.close()
+
+
+def test_connect_corrupt_file_does_not_leak(tmp_path: Path) -> None:
+    db = tmp_path / "s.db"
+    db.write_bytes(b"basura-srv02" * 410 + b"x" * 80)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", ResourceWarning)
+        with pytest.raises(sqlite3.DatabaseError):
+            Store.connect(db)
+        gc.collect()
+    assert [w for w in caught if issubclass(w.category, ResourceWarning)] == []
+
+
+def test_connect_outdated_schema_still_closes(tmp_path: Path) -> None:
+    db = tmp_path / "s.db"
+    Store.open(db).close()
+    raw = sqlite3.connect(db)
+    raw.execute("UPDATE schema_version SET version = version - 1")
+    raw.commit()
+    raw.close()
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", ResourceWarning)
+        with pytest.raises(ConfigError, match="schema"):
+            Store.connect(db)
+        gc.collect()
+    assert [w for w in caught if issubclass(w.category, ResourceWarning)] == []
 
 
 def test_make_context_honors_frances_state_db(tmp_path: Path) -> None:

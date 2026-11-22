@@ -196,4 +196,8 @@ def register(app: typer.Typer) -> None:
     @app.command()
     def phonemize(data: DataOpt = Path(".")) -> None:
         """Calcula el IPA y las etiquetas de fonema de cada tarjeta."""
-        exit_with(lambda: run_phonemize(make_context(data)))
+        ctx = make_context(data)
+        try:
+            exit_with(lambda: run_phonemize(ctx))
+        finally:
+            ctx.store.close()

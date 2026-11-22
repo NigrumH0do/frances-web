@@ -87,8 +87,12 @@ def _configured_connection(db_path: Path) -> sqlite3.Connection:
     # check_same_thread=False: el middleware HTTP cierra la conexión en otro hilo
     # del que la abrió. Cada petición tiene la suya y no se comparte.
     conn = sqlite3.connect(str(db_path), isolation_level=None, check_same_thread=False)
-    for pragma in _PRAGMAS:
-        conn.execute(pragma)
+    try:
+        for pragma in _PRAGMAS:
+            conn.execute(pragma)
+    except BaseException:
+        conn.close()
+        raise
     return conn
 
 
@@ -124,12 +128,15 @@ class Store:
         if not db_path.is_file():
             raise ConfigError(f"schema desactualizado: corre frances migrate ({db_path} no existe)")
         conn = _configured_connection(db_path)
-        version = _schema_version(conn)
-        if version < LATEST_SCHEMA:
+        try:
+            version = _schema_version(conn)
+            if version < LATEST_SCHEMA:
+                raise ConfigError(
+                    f"schema desactualizado: corre frances migrate (v{version} < v{LATEST_SCHEMA})"
+                )
+        except BaseException:
             conn.close()
-            raise ConfigError(
-                f"schema desactualizado: corre frances migrate (v{version} < v{LATEST_SCHEMA})"
-            )
+            raise
         return cls(conn)
 
     @contextmanager

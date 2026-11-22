@@ -1,20 +1,24 @@
 """Tests de la etapa extract idempotente por (blob, versión) (EXT-04)."""
 
+import gc
 import json
 import sqlite3
+import warnings
 from collections.abc import Iterator
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+import typer
+from typer.testing import CliRunner
 
 from frances.extract import run
 from frances.extract.pdf import PageText
 from frances.extract.run import run_extract
 from frances.fetch.blobs import BlobStore
 from frances.models import Extraction
-from frances.stage import StageContext, make_context
+from frances.stage import StageContext, StageReport, make_context
 
 FIXED = datetime(2026, 10, 14, 10, 17, tzinfo=UTC)
 NOW = "2026-10-14T10:17:00.000000Z"
@@ -324,3 +328,30 @@ def test_ocr_and_office_pages_merge_tiny_paragraphs(tmp_path: Path, fakes: _Fake
         ctx.paths.extraction_path(row["blob_sha256"], run.EXTRACTOR_VERSION).read_text("utf-8")
     )
     assert len(ex.blocks) == 1 and ex.blocks[0].lang == "fr"
+
+
+def test_extract_cli_closes_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    ctx = make_context(tmp_path, FAKE_ENV)
+    calls: list[int] = []
+    real_close = ctx.store.close
+
+    def spy_close() -> None:
+        calls.append(1)
+        real_close()
+
+    monkeypatch.setattr(run, "make_context", lambda _data: ctx)
+    monkeypatch.setattr(run, "run_extract", lambda _ctx: StageReport(stage="extract", status="ok"))
+    monkeypatch.setattr(ctx.store, "close", spy_close)
+    app = typer.Typer()
+    run.register(app)
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", ResourceWarning)
+            res = CliRunner().invoke(app, ["extract", "--data", str(tmp_path)])
+            gc.collect()
+        assert res.exit_code == 0, res.output
+        assert len(calls) == 1
+        assert [w for w in caught if issubclass(w.category, ResourceWarning)] == []
+    finally:
+        if not calls:
+            real_close()

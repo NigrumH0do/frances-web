@@ -347,4 +347,8 @@ def register(app: typer.Typer) -> None:
 
     @app.command("fetch")
     def fetch(data: DataOpt = Path(".")) -> None:
-        exit_with(lambda: run_fetch(make_context(data)))
+        ctx = make_context(data)
+        try:
+            exit_with(lambda: run_fetch(ctx))
+        finally:
+            ctx.store.close()
