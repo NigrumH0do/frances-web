@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createElement, type RefObject } from 'react';
 import '@testing-library/jest-dom/vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { LevelMeter } from '../pron/levelMeter';
 import {
@@ -272,4 +272,53 @@ test('LazyScenes no importa three y carga la hoja de fallbacks', () => {
   expect(source).toContain('subscribeSceneAvailability');
   expect(source).toContain('getSceneAvailability');
   expect(source).toContain('componentDidCatch');
+  expect(source).toContain("import('./AuthNotebookScene')");
+  expect(source).toContain("import('./StreakCompassScene')");
+  expect(source).toContain("import('./VoiceOrbScene')");
+  expect(source).toContain("import('./CardBurstScene')");
+});
+
+test('un import dinámico rechazado degrada a css y muestra el fallback sin console.error', async () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  // vi.mock cachea el módulo resuelto; hay que desmontarlo para que este
+  // import() rechace aunque una prueba anterior ya haya cargado la escena.
+  vi.doUnmock('./StreakCompassScene');
+  vi.doMock('./StreakCompassScene', () =>
+    Promise.reject(new Error('chunk three no disponible offline')),
+  );
+  vi.resetModules();
+  try {
+    gate.should3d = true;
+    const { SafeStreakCompassScene: Scene } = await import('./LazyScenes');
+    const { getSceneAvailability } = await import('./sceneGate');
+    const { __setProbeResultForTests: setProbe } = await import('./tier');
+    setProbe('full');
+
+    render(<Scene streak={7} />);
+
+    await waitFor(() => {
+      expect(getSceneAvailability()).toBe('css');
+    });
+    expect(document.querySelector('.scene-stage')).toBeNull();
+    expect(document.querySelectorAll('[data-part="milestone"]')).toHaveLength(
+      3,
+    );
+    expect(screen.queryByTestId('streak-scene')).not.toBeInTheDocument();
+    expect(consoleError).not.toHaveBeenCalled();
+  } finally {
+    consoleError.mockRestore();
+    vi.doUnmock('./StreakCompassScene');
+    vi.doMock('./StreakCompassScene', () => {
+      loads.compass += 1;
+      return {
+        default: function StreakCompassSceneMock(props: { streak?: number }) {
+          return createElement('div', {
+            'data-testid': 'streak-scene',
+            'data-streak': String(props.streak ?? ''),
+          });
+        },
+      };
+    });
+    vi.resetModules();
+  }
 });
