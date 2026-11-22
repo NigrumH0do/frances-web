@@ -511,3 +511,99 @@ test('publicacion.css no reordena .pub-split y deja la ficha sticky', () => {
   expect(publicacionCss).not.toMatch(/--c-gold-3d/);
   expect(publicacionCss).not.toMatch(/transition\s*:/);
 });
+
+// Bloque de una `@media` concreta, sin comentarios y con llaves equilibradas.
+function mediaBlock(source: string, query: string): string {
+  const clean = source.replace(/\/\*[\s\S]*?\*\//g, '');
+  const at = clean.indexOf(query);
+  if (at < 0) {
+    return '';
+  }
+  const open = clean.indexOf('{', at);
+  if (open < 0) {
+    return '';
+  }
+  let depth = 0;
+  for (let i = open; i < clean.length; i += 1) {
+    if (clean[i] === '{') {
+      depth += 1;
+    } else if (clean[i] === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return clean.slice(open + 1, i);
+      }
+    }
+  }
+  return '';
+}
+
+const IMG_SHA = 'c'.repeat(64);
+const IMG_URL = `/api/files/${IMG_SHA}`;
+
+const IMG_ATT: AttachmentView = {
+  id: 'att_img',
+  kind: 'drive_file',
+  title: 'Tableau de conjugaison',
+  url: null,
+  mime_type: 'image/png',
+  status: 'downloaded',
+  file: { url: IMG_URL, size: 2048, mime: 'image/png', sha256: IMG_SHA },
+  view_pdf: null,
+};
+
+function imageResponse(): Response {
+  return new Response(new Uint8Array([137, 80, 78, 71]), {
+    headers: { 'Content-Type': 'image/png' },
+  });
+}
+
+test('la imagen adjunta lleva .att-image y acota su ancho en móvil', async () => {
+  // REVERIFY-2: sin `max-width` el <img> de 800 px desbordaba `#main` en móvil
+  // de 390 px (scrollWidth 816 > clientWidth 390).
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:att-image');
+  renderPublicacion('/publicaciones/cw_1', {
+    'GET /api/items/cw_1': {
+      ...ITEM_DETAIL,
+      attachments: [PDF_ATT, IMG_ATT],
+    },
+    [`GET ${IMG_URL}`]: imageResponse,
+  });
+
+  const img = await screen.findByRole('img', {
+    name: 'Tableau de conjugaison',
+  });
+  expect(img.tagName).toBe('IMG');
+  expect(img).toHaveClass('att-image');
+
+  const rule = publicacionCss.match(
+    /\.att-image\s*,\s*\.pub-split\s+img\s*\{([^}]*)\}/,
+  );
+  expect(rule).not.toBeNull();
+  const body = rule?.[1] ?? '';
+  expect(body).toContain('display: block');
+  expect(body).toContain('max-width: 100%');
+  expect(body).toContain('height: auto');
+
+  // La acotación vale en móvil, así que no puede vivir solo en la `@media`
+  // de escritorio.
+  expect(mediaBlock(publicacionCss, '@media (min-width: 960px)')).not.toContain(
+    '.att-image',
+  );
+});
+
+test('la ficha sticky acota su alto y desplaza por dentro en el split', () => {
+  // REVERIFY-2: con la ficha (18.580 px) más alta que los PDFs de la izquierda
+  // (3.455 px) la fila del grid medía lo de la ficha y `position: sticky` no
+  // tenía recorrido; el alto máximo con `100dvh` más el scroll interno la
+  // mantienen fija junto al material.
+  const media = mediaBlock(publicacionCss, '@media (min-width: 960px)');
+  expect(media).not.toBe('');
+  const second = media.match(/\.pub-split\s*>\s*:nth-child\(2\)\s*\{([^}]*)\}/);
+  expect(second).not.toBeNull();
+  const column = second?.[1] ?? '';
+  expect(column).toContain('position: sticky');
+  expect(column).toContain('top: var(--sp-4)');
+  expect(column).toContain('align-self: start');
+  expect(column).toContain('max-height: calc(100dvh - var(--sp-8))');
+  expect(column).toContain('overflow-y: auto');
+});
