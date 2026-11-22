@@ -104,8 +104,16 @@ def register(app: typer.Typer) -> None:
 
     @app.command("sync")
     def sync(full: bool = typer.Option(False, "--full"), data: DataOpt = Path(".")) -> None:
-        exit_with(lambda: run_sync(make_context(data), full))
+        ctx = make_context(data)
+        try:
+            exit_with(lambda: run_sync(ctx, full))
+        finally:
+            ctx.store.close()
 
     @app.command("reconcile")
     def reconcile_cmd(data: DataOpt = Path(".")) -> None:
-        exit_with(lambda: run_reconcile(make_context(data)))
+        ctx = make_context(data)
+        try:
+            exit_with(lambda: run_reconcile(ctx))
+        finally:
+            ctx.store.close()

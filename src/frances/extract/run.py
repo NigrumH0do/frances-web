@@ -221,7 +221,11 @@ def register(app: typer.Typer) -> None:
     @app.command()
     def extract(data: DataOpt = Path(".")) -> None:
         """Extrae texto etiquetado por idioma de los blobs descargados."""
-        exit_with(lambda: run_extract(make_context(data)))
+        ctx = make_context(data)
+        try:
+            exit_with(lambda: run_extract(ctx))
+        finally:
+            ctx.store.close()
 
     @app.command("coverage")
     def coverage_cmd(
