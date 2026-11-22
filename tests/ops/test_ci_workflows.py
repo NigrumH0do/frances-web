@@ -47,18 +47,43 @@ def test_contracts_job_commands_in_order():
 def test_e2e_job_installs_both_browsers_and_runs_v2():
     job = load("e2e.yml")["jobs"]["e2e"]
     run = "\n".join(s.get("run", "") for s in job["steps"])
-    assert job["name"] == "e2e" and job["timeout-minutes"] == 30
+    assert job["name"] == "e2e" and job["timeout-minutes"] == 45
     assert "playwright install --with-deps chromium webkit" in run
     # Playwright resuelve su config desde el cwd: el step debe correr dentro
     # de web/ (con `npm --prefix web exec ...` el cwd quedaba en la raíz).
     run_step = next(s for s in job["steps"] if s.get("name") == "Run e2e")
     assert run_step.get("working-directory") == "web"
-    assert run_step.get("run", "").strip() == "npx playwright test -c playwright.v2.config.ts"
+    assert (
+        run_step.get("run", "").strip()
+        == "npx playwright test -c playwright.v2.config.ts --grep-invert @stress"
+    )
     assert "e2e:prepare" not in run  # R-21: lo prepara webServer.command
     assert "demo-bundle" not in run and "espeak-ng" not in run and "ffmpeg" not in run
     guard = next(s for s in job["steps"] if s.get("name") == "Guardián del build real")
     assert guard.get("working-directory") == "web"
-    assert guard.get("run", "").strip() == "npm run build && node scripts/check-no-demo.mjs dist"
+    assert guard.get("run", "").strip() == (
+        "npm run build && node scripts/check-no-demo.mjs dist"
+        " && node scripts/check-three-budget.mjs dist"
+    )
     assert any(
         "upload-artifact" in s.get("uses", "") and s.get("if") == "failure()" for s in job["steps"]
+    )
+
+
+def test_e2e_stress_job_runs_isolated_with_one_worker():
+    job = load("e2e.yml")["jobs"]["e2e-stress"]
+    run = "\n".join(s.get("run", "") for s in job["steps"])
+    assert job["name"] == "e2e-stress" and job["timeout-minutes"] == 25
+    assert "playwright install --with-deps chromium webkit" in run
+    run_step = next(s for s in job["steps"] if s.get("name") == "Run e2e stress")
+    assert run_step.get("working-directory") == "web"
+    assert (
+        run_step.get("run", "").strip()
+        == "npx playwright test -c playwright.v2.config.ts --grep @stress --workers=1"
+    )
+    assert any(
+        "upload-artifact" in s.get("uses", "")
+        and s.get("if") == "failure()"
+        and s.get("with", {}).get("name") == "playwright-report-stress"
+        for s in job["steps"]
     )
