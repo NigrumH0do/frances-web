@@ -1,6 +1,13 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
-import { AppBar, Button, Chip, Icon, StateView } from '../../components';
+import {
+  AppBar,
+  Button,
+  Chip,
+  Icon,
+  Progress,
+  StateView,
+} from '../../components';
 import { useApi } from '../../api/ApiContext';
 import { toUiError, type UiError } from '../../api/client';
 import { useResource } from '../../api/useResource';
@@ -269,14 +276,21 @@ function QuizBody({ quiz }: { quiz: QuizContract }) {
   const question = quiz.questions[index];
   if (question === undefined) return null;
 
+  const progressLabel = tr(quizStrings.progress, {
+    i: index + 1,
+    n: quiz.questions.length,
+  });
+
   return (
     <section className="stack-lg">
-      <p className="small muted">
-        {tr(quizStrings.progress, {
-          i: index + 1,
-          n: quiz.questions.length,
-        })}
-      </p>
+      <div className="quiz-progress">
+        <Progress
+          value={index + 1}
+          max={quiz.questions.length}
+          label={progressLabel}
+        />
+        <p className="quiz-count small muted">{progressLabel}</p>
+      </div>
 
       <QuestionControl
         question={question}

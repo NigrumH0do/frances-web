@@ -94,3 +94,36 @@
   padding: var(--sp-2);
   border-bottom: 2px dashed var(--c-border-strong);
 }
+
+.quiz-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.quiz-progress .progress {
+  flex: 1;
+  min-width: 0;
+}
+.quiz-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.quiz-answer {
+  animation: quiz-in var(--dur-base) var(--ease) both;
+}
+@keyframes quiz-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .quiz-answer {
+    animation: none;
+  }
+}
+html.motion-off .quiz-answer {
+  animation: none;
+}
