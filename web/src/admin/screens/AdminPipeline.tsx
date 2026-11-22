@@ -139,7 +139,9 @@ export function AdminPipeline() {
                       <br />
                       <span className="meta">
                         {formatShort(run.started_at)} ·{' '}
-                        {strings.counts(run.counts)}
+                        <span className="nums">
+                          {strings.counts(run.counts)}
+                        </span>
                       </span>
                     </span>
                     <Chip tone={runTone(run.status)}>
@@ -162,7 +164,7 @@ export function AdminPipeline() {
                 <div className="list-item">
                   <span className="grow">{jobStateLabel(jobState)}</span>
                   <Chip tone={stateTone(jobState)}>
-                    {data.jobs[jobState] ?? 0}
+                    <span className="nums">{data.jobs[jobState] ?? 0}</span>
                   </Chip>
                 </div>
               </li>
@@ -186,7 +188,7 @@ export function AdminPipeline() {
                         {strings.jobMeta(job.kind, job.id)}
                       </span>
                       <br />
-                      <span className="meta">
+                      <span className="meta nums">
                         {strings.attempts(job.attempts, job.max_attempts)}
                       </span>
                     </span>
@@ -209,7 +211,10 @@ export function AdminPipeline() {
 
   return (
     <div className="stack-lg">
-      <AppBar title={strings.title} back={{ to: '/mas', label: 'Más' }} />
+      <AppBar
+        title={strings.title}
+        back={{ to: '/mas/admin', label: 'Administración' }}
+      />
 
       {notice !== null ? (
         <p className="callout info" role="alert">

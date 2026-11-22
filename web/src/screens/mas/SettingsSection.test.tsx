@@ -1,7 +1,10 @@
 import 'fake-indexeddb/auto';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { IDBFactory } from 'fake-indexeddb';
 import '@testing-library/jest-dom/vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import type { UserPrefs } from '../../contracts/generated';
@@ -10,7 +13,10 @@ import { closeV2DbForTests } from '../../offline/db';
 import { getOfflineAudio } from '../../offline/settings';
 import { prefetchForOffline } from '../../offline/prefetch';
 import { renderScreen } from '../../shell/testing';
+import { setMotion3dPref } from '../../three/motionPref';
 import SettingsSection from './SettingsSection';
+
+const masDir = dirname(fileURLToPath(import.meta.url));
 
 vi.mock('../../offline/prefetch', () => ({
   prefetchForOffline: vi.fn(() => Promise.resolve()),
@@ -40,6 +46,7 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
+  setMotion3dPref('auto');
   vi.restoreAllMocks();
   localStorage.clear();
   document.documentElement.className = '';
@@ -116,4 +123,35 @@ test('guardar audios sin conexión persiste el ajuste y precarga', async () => {
   expect(
     await screen.findByText('Audios guardados para usar sin conexión.'),
   ).toBeVisible();
+});
+
+test('la muestra enseña francés e IPA y avisa sin animación', async () => {
+  renderScreen(<SettingsSection />, { routes: routes() });
+
+  const sample = await screen.findByRole('article', { name: 'Muestra' });
+  expect(sample).toHaveClass('paper', 'settings-sample');
+  expect(within(sample).getByText('Cahier')).toHaveAttribute('lang', 'fr');
+  expect(within(sample).getByText('/kaje/')).toHaveClass('settings-sample-ipa');
+  const dot = sample.querySelector('.settings-sample-dot');
+  expect(dot).toHaveAttribute('aria-hidden', 'true');
+  expect(within(sample).queryByText('sin animación')).not.toBeInTheDocument();
+
+  setMotion3dPref('off');
+
+  expect(await within(sample).findByText('sin animación')).toBeVisible();
+  expect(sample.querySelector('.settings-sample-dot')).toBe(dot);
+
+  const css = readFileSync(join(masDir, 'mas.css'), 'utf8');
+  expect(css).toMatch(/\.settings-sample\s*\{[^}]*min-height:\s*120px/);
+  expect(css).toMatch(
+    /\.settings-sample-word\s*\{[^}]*font-family:\s*var\(--font-read\)/,
+  );
+  expect(css).toMatch(
+    /\.settings-sample-ipa\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
+  );
+  const dotRule = /\.settings-sample-dot\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+  expect(dotRule).toMatch(/width:\s*24px/);
+  expect(dotRule).toMatch(/height:\s*24px/);
+  expect(dotRule).toMatch(/background:\s*var\(--c-gold-3d\)/);
+  expect(css).not.toMatch(/color:\s*var\(--c-gold-3d\)/);
 });

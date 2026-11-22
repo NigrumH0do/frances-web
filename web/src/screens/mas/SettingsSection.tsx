@@ -1,4 +1,9 @@
-import { useEffect, useState, type KeyboardEvent } from 'react';
+import {
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type KeyboardEvent,
+} from 'react';
 import { useApi } from '../../api/ApiContext';
 import { OfflineError, toUiError } from '../../api/client';
 import { useResource } from '../../api/useResource';
@@ -16,15 +21,94 @@ import { messageFor } from '../../l10n/errors';
 import { prefetchForOffline } from '../../offline/prefetch';
 import { getOfflineAudio, setOfflineAudio } from '../../offline/settings';
 import {
+  MOTION_3D_KEY,
   getMotion3dPref,
   prefersReducedMotion,
   setMotion3dPref,
 } from '../../three/motionPref';
 import { masStrings } from './strings';
+import './mas.css';
 
 type DailyChoice = '5' | '10' | '20' | '30' | 'custom';
 
 const DAILY_VALUES = [5, 10, 20, 30] as const;
+const SAMPLE_WORD = 'Cahier';
+const SAMPLE_IPA = '/kaje/';
+
+// `setMotion3dPref` no exporta su suscripción. La muestra oye la clave en
+// localStorage, la clase `motion-off` y el media query del sistema.
+const motionListeners = new Set<() => void>();
+let restoreSetItem: (() => void) | null = null;
+
+function notifyMotionListeners(): void {
+  for (const listener of motionListeners) listener();
+}
+
+function ensureStorageHook(): void {
+  if (restoreSetItem !== null) return;
+  const original = Storage.prototype.setItem;
+  Storage.prototype.setItem = function (
+    this: Storage,
+    key: string,
+    value: string,
+  ): void {
+    original.call(this, key, value);
+    if (key === MOTION_3D_KEY) notifyMotionListeners();
+  };
+  restoreSetItem = () => {
+    Storage.prototype.setItem = original;
+    restoreSetItem = null;
+  };
+}
+
+function motionStill(): boolean {
+  return getMotion3dPref() === 'off' || prefersReducedMotion();
+}
+
+function subscribeMotionStill(onStoreChange: () => void): () => void {
+  motionListeners.add(onStoreChange);
+  ensureStorageHook();
+  const observer = new MutationObserver(onStoreChange);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class'],
+  });
+  let media: MediaQueryList | null = null;
+  if (typeof window.matchMedia === 'function') {
+    media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    media.addEventListener('change', onStoreChange);
+  }
+  return () => {
+    motionListeners.delete(onStoreChange);
+    observer.disconnect();
+    media?.removeEventListener('change', onStoreChange);
+    if (motionListeners.size === 0) restoreSetItem?.();
+  };
+}
+
+function useMotionStill(): boolean {
+  return useSyncExternalStore(subscribeMotionStill, motionStill, () => false);
+}
+
+function SettingsSample() {
+  const strings = masStrings.settings;
+  const still = useMotionStill();
+
+  return (
+    <article
+      className="paper settings-sample"
+      aria-labelledby="mas-settings-sample"
+    >
+      <h3 id="mas-settings-sample">{strings.sample}</h3>
+      <p className="settings-sample-word" lang="fr">
+        {SAMPLE_WORD}
+      </p>
+      <p className="settings-sample-ipa">{SAMPLE_IPA}</p>
+      <span className="settings-sample-dot" aria-hidden="true" />
+      {still ? <p>{strings.sampleStill}</p> : null}
+    </article>
+  );
+}
 
 function normalize(prefs: UserPrefs): UserPrefs {
   return {
@@ -242,6 +326,7 @@ function SettingsForm({ initial }: { initial: UserPrefs }) {
           </p>
         ) : null}
 
+        <SettingsSample />
         <Motion3dSetting />
       </div>
     </Card>
