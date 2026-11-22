@@ -1,7 +1,10 @@
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, screen, waitFor } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { jsonResponse } from '../../api/testing';
@@ -13,6 +16,7 @@ import type {
 import { closeV2DbForTests } from '../../offline/db';
 import { renderScreen } from '../../shell/testing';
 import Quiz from './Quiz';
+import { quizStrings } from './strings';
 
 const QUIZ_5: QuizContract = {
   id: 'qz_1',
@@ -161,6 +165,16 @@ const RESULT_ORDER: QuizAttemptResult = {
 const QUIZ_EMPTY: QuizContract = {
   ...QUIZ_5,
   questions: [],
+};
+
+const QUIZ_TRANSLATE: QuizContract = {
+  ...QUIZ_5,
+  questions: [QUIZ_5.questions[2]!],
+};
+
+const QUIZ_DICTATION_SILENT: QuizContract = {
+  ...QUIZ_5,
+  questions: [{ ...QUIZ_5.questions[4]!, audio: null }],
 };
 
 const mp3 = () =>
@@ -414,4 +428,120 @@ test('el resultado dice correcto o incorrecto con texto e icono, no solo color',
   expect(screen.getByText('Incorrecto')).toBeVisible();
   expect(document.querySelector('.feedback.ok .icon')).not.toBeNull();
   expect(document.querySelector('.feedback.ko .icon')).not.toBeNull();
+});
+
+test('la primera pregunta muestra la barra con aria-valuenow 1', async () => {
+  renderQuiz(QUIZ_5, RESULT_5);
+
+  const bar = await screen.findByRole('progressbar', { name: '1 de 5' });
+  expect(bar).toHaveClass('progress');
+  expect(bar).toHaveAttribute('aria-valuenow', '1');
+  expect(bar).toHaveAttribute('aria-valuemax', '5');
+  expect(screen.getByText('1 de 5')).toHaveClass('quiz-count');
+});
+
+test('el enunciado queda fuera de la respuesta animada', async () => {
+  renderQuiz(QUIZ_5, RESULT_5);
+
+  const legend = (
+    await screen.findByText('¿Cuál es la forma correcta?')
+  ).closest('legend');
+  const answer = document.querySelector('.quiz-answer');
+  expect(legend).not.toBeNull();
+  expect(answer).not.toBeNull();
+  expect(answer!.contains(legend)).toBe(false);
+  expect(legend!.parentElement).toBe(answer!.parentElement);
+  expect(answer!.contains(screen.getByRole('radio', { name: 'suis' }))).toBe(
+    true,
+  );
+
+  await next();
+
+  const nextLegend = screen.getByText('Completa la frase.').closest('legend');
+  const nextAnswer = document.querySelector('.quiz-answer');
+  expect(nextAnswer).not.toBeNull();
+  expect(nextAnswer!.contains(nextLegend)).toBe(false);
+  expect(nextLegend!.parentElement).toBe(nextAnswer!.parentElement);
+  expect(
+    nextAnswer!.contains(screen.getByRole('textbox', { name: 'Respuesta' })),
+  ).toBe(true);
+});
+
+test('la traducción se escribe en francés y sin paper', async () => {
+  renderQuiz(QUIZ_TRANSLATE, RESULT_ONE);
+
+  const area = await screen.findByRole('textbox', { name: /Traducción/ });
+  expect(area).toHaveAttribute('lang', 'fr');
+  expect(area).not.toHaveClass('paper');
+  expect(area.closest('.paper')).toBeNull();
+  expect(area.closest('fieldset')?.querySelector('.paper')).toBeNull();
+});
+
+test('Order reordena la pieza ensamblada con flechas', async () => {
+  renderQuiz(QUIZ_ORDER, RESULT_ORDER);
+
+  for (const word of ['suis', 'Je', 'allé']) {
+    await userEvent.click(await screen.findByRole('button', { name: word }));
+  }
+
+  const phrase = screen.getByRole('group', { name: 'Frase' });
+  function tiles(): string[] {
+    return within(phrase)
+      .getAllByRole('button')
+      .filter((button) => button.classList.contains('tile'))
+      .map((button) => button.textContent ?? '');
+  }
+  expect(tiles()).toEqual(['suis', 'Je', 'allé']);
+
+  within(phrase).getByRole('button', { name: /^Je$/ }).focus();
+  await userEvent.keyboard('{ArrowLeft}');
+  expect(tiles()).toEqual(['Je', 'suis', 'allé']);
+
+  within(phrase)
+    .getByRole('button', { name: /^suis$/ })
+    .focus();
+  await userEvent.keyboard('{ArrowRight}');
+  expect(tiles()).toEqual(['Je', 'allé', 'suis']);
+});
+
+test('el dictado sin audio avisa y mantiene el campo', async () => {
+  renderQuiz(QUIZ_DICTATION_SILENT, RESULT_ONE);
+
+  expect(await screen.findByText(quizStrings.audioUnavailable)).toBeVisible();
+  const field = screen.getByRole('textbox', { name: /Lo que oyes/ });
+  expect(field).toBeEnabled();
+  await userEvent.type(field, 'bonjour');
+  expect(field).toHaveValue('bonjour');
+});
+
+test('Enter en una opción múltiple selecciona sin enviar', async () => {
+  const { transport } = renderQuiz(QUIZ_ONE, RESULT_ONE);
+
+  const option = await screen.findByRole('radio', { name: 'est' });
+  expect(option).toHaveAttribute('type', 'button');
+  option.focus();
+  await userEvent.keyboard('{Enter}');
+  expect(option).toHaveAttribute('aria-checked', 'true');
+  expect(transport.calls.some((call) => call.method === 'POST')).toBe(false);
+});
+
+test('la respuesta del quiz entra solo con opacidad', () => {
+  const css = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), 'quiz.css'),
+    'utf8',
+  );
+  expect(css).toContain('animation: quiz-in var(--dur-base) var(--ease) both;');
+  expect(css).toContain('@keyframes quiz-in');
+  expect(css).toMatch(/from\s*\{\s*opacity:\s*0;\s*\}/);
+  expect(css).toMatch(/to\s*\{\s*opacity:\s*1;\s*\}/);
+  expect(css).toContain('@media (prefers-reduced-motion: reduce)');
+  expect(css).toMatch(
+    /html\.motion-off\s+\.quiz-answer\s*\{[^}]*animation:\s*none;/,
+  );
+  expect(css).toMatch(
+    /\.quiz-count\s*\{[^}]*font-variant-numeric:\s*tabular-nums;/,
+  );
+  expect(css).not.toContain('--c-gold-3d');
+  expect(css).not.toContain('LazyScenes');
+  expect(css).not.toMatch(/\.paper\b/);
 });
