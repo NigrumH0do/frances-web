@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup, screen } from '@testing-library/react';
+import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, expect, test, vi } from 'vitest';
 import { jsonResponse, offline } from '../../api/testing';
 import type {
@@ -217,6 +220,23 @@ function renderPublicacion(
   });
 }
 
+const publicacionDir = dirname(fileURLToPath(import.meta.url));
+const publicacionCss = readFileSync(
+  join(publicacionDir, 'publicacion.css'),
+  'utf8',
+);
+
+function rulesTouching(source: string, selectorPart: string): string {
+  const noComments = source.replace(/\/\*[\s\S]*?\*\//g, '');
+  const parts: string[] = [];
+  for (const match of noComments.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if ((match[1] as string).includes(selectorPart)) {
+      parts.push(`${match[1] ?? ''}{${match[2] ?? ''}}`);
+    }
+  }
+  return parts.join('\n');
+}
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -399,6 +419,70 @@ test('la página de la cita abre solo el adjunto citado', async () => {
     },
   });
 
-  expect(await screen.findByText('Página 2 de 3')).toBeVisible();
+  const citedPage = await screen.findByText('Página 2 de 3');
+  expect(citedPage).toBeVisible();
   expect(screen.getByText('Página 1 de 3')).toBeVisible();
+  const bar = citedPage.closest('.pdf-toolbar');
+  expect(bar).not.toBeNull();
+  expect(bar?.parentElement?.closest('.is-cited')).not.toBeNull();
+});
+
+test('el encabezado de material precede al de tarjetas en el DOM', async () => {
+  renderPublicacion();
+
+  const material = await screen.findByRole('heading', {
+    level: 2,
+    name: 'Adjuntos',
+  });
+  const cards = screen.getByRole('heading', { level: 2, name: 'Tarjetas' });
+  expect(
+    material.compareDocumentPosition(cards) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
+test('un error de tarjetas deja el visor vivo y el reintento en la ficha', async () => {
+  renderPublicacion('/publicaciones/cw_1', {
+    'GET /api/cards?item_id=cw_1': () =>
+      jsonResponse({ code: 'internal', message_es: '' }, 500),
+  });
+
+  expect(
+    await screen.findByRole('img', { name: /Página 1 de 3/ }),
+  ).toBeVisible();
+  const cards = screen
+    .getByRole('heading', { level: 2, name: 'Tarjetas' })
+    .closest('section');
+  expect(cards).not.toBeNull();
+  const ficha = within(cards as HTMLElement);
+  expect(await ficha.findByRole('alert')).toBeVisible();
+  expect(ficha.getByRole('button', { name: 'Reintentar' })).toBeVisible();
+});
+
+test('publicacion.css no reordena .pub-split y deja la ficha sticky', () => {
+  expect(publicacionCss).toContain('@media (min-width: 960px)');
+  expect(publicacionCss).not.toMatch(/min-width:\s*900px/);
+  expect(publicacionCss).not.toMatch(/min-width:\s*1100px/);
+
+  const split = rulesTouching(publicacionCss, '.pub-split');
+  expect(split).toContain(
+    'grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr)',
+  );
+  expect(split).not.toMatch(/(^|[^a-zA-Z-])order\s*:/);
+
+  const second = split.match(/\.pub-split\s*>\s*:nth-child\(2\)\s*\{([^}]*)\}/);
+  expect(second).not.toBeNull();
+  const column = second?.[1] ?? '';
+  expect(column).toContain('position: sticky');
+  expect(column).toContain('top: var(--sp-4)');
+  expect(column).toContain('align-self: start');
+
+  const cited = publicacionCss.match(
+    /\.is-cited\s+\.pdf-toolbar\s*\{([^}]*)\}/,
+  );
+  expect(cited).not.toBeNull();
+  const flash = cited?.[1] ?? '';
+  expect(flash).toMatch(/background:\s*var\(--c-accent-soft\)/);
+  expect(flash).not.toMatch(/transition\s*:/);
+  expect(publicacionCss).not.toMatch(/--c-gold-3d/);
+  expect(publicacionCss).not.toMatch(/transition\s*:/);
 });

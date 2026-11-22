@@ -30,4 +30,15 @@
     gap: var(--sp-6);
     align-items: start;
   }
+
+  .pub-split > :nth-child(2) {
+    position: sticky;
+    top: var(--sp-4);
+    align-self: start;
+  }
+}
+
+/* Destello del deep link: fondo instantáneo, sin transition (GPU-only y motion-off). */
+.is-cited .pdf-toolbar {
+  background: var(--c-accent-soft);
 }

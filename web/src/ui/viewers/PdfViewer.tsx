@@ -16,6 +16,7 @@ GlobalWorkerOptions.workerSrc = workerUrl;
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 3;
 const SCALE_STEP = 0.25;
+const pdfRenderError = 'No se pudo mostrar esta página.';
 
 function PageCanvas({
   doc,
@@ -31,6 +32,8 @@ function PageCanvas({
   const [visible, setVisible] = useState(
     typeof IntersectionObserver === 'undefined',
   );
+  const [pageError, setPageError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (visible) {
@@ -51,6 +54,7 @@ function PageCanvas({
   }, [visible]);
 
   useEffect(() => {
+    setPageError(false);
     if (!visible) {
       return;
     }
@@ -64,12 +68,18 @@ function PageCanvas({
       }
       canvas.width = Math.floor(viewport.width);
       canvas.height = Math.floor(viewport.height);
-      await page.render({ canvas, viewport }).promise;
+      try {
+        await page.render({ canvas, viewport }).promise;
+      } catch {
+        if (!cancelled) {
+          setPageError(true);
+        }
+      }
     })().catch(() => undefined);
     return () => {
       cancelled = true;
     };
-  }, [doc, pageNumber, scale, visible]);
+  }, [attempt, doc, pageNumber, scale, visible]);
 
   return (
     <div ref={hostRef}>
@@ -78,6 +88,18 @@ function PageCanvas({
         role="img"
         aria-label={t('pdf.page', { n: pageNumber, total: doc.numPages })}
       />
+      {pageError ? (
+        <>
+          <p role="alert">{pdfRenderError}</p>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setAttempt((n) => n + 1)}
+          >
+            Reintentar
+          </button>
+        </>
+      ) : null}
     </div>
   );
 }
