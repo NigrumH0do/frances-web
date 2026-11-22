@@ -5,6 +5,7 @@ import { useApi } from '../api/ApiContext';
 import { useResource } from '../api/useResource';
 import { UpdatePrompt } from '../sw/PwaStatus';
 import { OfflineBanner } from './OfflineBanner';
+import { RouteAnnouncer } from './RouteAnnouncer';
 import { RouteFocus } from './RouteFocus';
 import { TabBar, type TabId } from './TabBar';
 import { shellStrings } from './strings';
@@ -25,6 +26,18 @@ function currentHandle(
   return undefined;
 }
 
+export function contentClass(pathname: string): string {
+  if (pathname === '/repasar') return 'content content-repasar';
+  const split =
+    pathname === '/' ||
+    pathname.startsWith('/repasar/texto') ||
+    pathname.startsWith('/publicacion') ||
+    pathname.startsWith('/chat') ||
+    pathname.startsWith('/mas/admin') ||
+    pathname.startsWith('/admin');
+  return split ? 'content content-split' : 'content';
+}
+
 // Marco de la app v2: enlace de salto, contenido, barra inferior y avisos de
 // conexión y versión nueva. Solo se monta dentro de `RequireSession`.
 export function Layout() {
@@ -34,10 +47,7 @@ export function Layout() {
   const handle = currentHandle(matches);
   const title = handle?.title ?? shellStrings.notFound.title;
   const active = handle?.tab ?? 'hoy';
-  const wide =
-    location.pathname.startsWith('/publicacion') ||
-    location.pathname.startsWith('/mas/admin') ||
-    location.pathname.startsWith('/admin');
+  const pathname = location.pathname;
 
   const stats = useResource('stats', (signal) => api.stats({ signal }));
   const reloadStats = useRef(stats.reload);
@@ -66,11 +76,7 @@ export function Layout() {
 
       <div className="shell-main">
         <OfflineBanner />
-        <main
-          id="main"
-          className={wide ? 'content content-wide' : 'content'}
-          tabIndex={-1}
-        >
+        <main id="main" className={contentClass(pathname)} tabIndex={-1}>
           <div key={location.pathname} className="route-enter">
             <Outlet />
           </div>
@@ -93,6 +99,7 @@ export function Layout() {
       </div>
 
       <RouteFocus title={title} />
+      <RouteAnnouncer title={title} />
     </div>
   );
 }
