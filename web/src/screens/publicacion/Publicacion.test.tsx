@@ -458,6 +458,31 @@ test('un error de tarjetas deja el visor vivo y el reintento en la ficha', async
   expect(ficha.getByRole('button', { name: 'Reintentar' })).toBeVisible();
 });
 
+test('publicacion.css acota el canvas del PDF a su columna', () => {
+  // B5 (LIVE-A2 H-A): la figura, el host y el canvas nunca son más anchos que
+  // la columna; a escala <= 1 el CSS recorta y con zoom el paneo queda dentro
+  // de `.pdf-page`, sin solaparse con la ficha sticky.
+  const figure = rulesTouching(publicacionCss, '.pdf-figure');
+  expect(figure).toContain('margin: 0');
+  expect(figure).toContain('max-width: 100%');
+  expect(figure).toContain('min-width: 0');
+
+  const page = rulesTouching(publicacionCss, '.pdf-page');
+  expect(page).toContain('max-width: 100%');
+  expect(page).toContain('overflow-x: auto');
+
+  const canvas = rulesTouching(publicacionCss, '.pdf-canvas');
+  expect(canvas).toContain('display: block');
+  expect(canvas).toContain('height: auto');
+  expect(canvas).toMatch(/\.pdf-canvas\.is-fit\s*\{/);
+  expect(canvas).toContain('max-width: 100%');
+
+  // Un hijo ancho no puede expandir la pista `minmax(0, …fr)` del split.
+  const children = publicacionCss.match(/\.pub-split\s*>\s*\*\s*\{([^}]*)\}/);
+  expect(children).not.toBeNull();
+  expect(children?.[1] ?? '').toContain('min-width: 0');
+});
+
 test('publicacion.css no reordena .pub-split y deja la ficha sticky', () => {
   expect(publicacionCss).toContain('@media (min-width: 960px)');
   expect(publicacionCss).not.toMatch(/min-width:\s*900px/);

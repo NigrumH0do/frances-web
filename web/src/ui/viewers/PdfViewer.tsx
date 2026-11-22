@@ -34,6 +34,24 @@ function PageCanvas({
   );
   const [pageError, setPageError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  // Ancho disponible del contenedor (B5): el canvas se ajusta a él y se vuelve
+  // a ajustar al girar el móvil o redimensionar la ventana. En jsdom mide 0 y
+  // la página se pinta a la escala pedida, sin cambios.
+  const [hostWidth, setHostWidth] = useState(0);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (host === null) {
+      return;
+    }
+    setHostWidth(host.clientWidth);
+    if (typeof ResizeObserver !== 'function') {
+      return;
+    }
+    const observer = new ResizeObserver(() => setHostWidth(host.clientWidth));
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (visible) {
@@ -61,7 +79,14 @@ function PageCanvas({
     let cancelled = false;
     (async () => {
       const page = await doc.getPage(pageNumber);
-      const viewport = page.getViewport({ scale });
+      // `fit` solo reduce: si el contenedor no se puede medir o es más ancho
+      // que la página, se respeta la escala pedida (y el zoom del usuario).
+      const unscaled = page.getViewport({ scale: 1 });
+      const fit =
+        hostWidth > 0 && unscaled.width > 0
+          ? Math.min(1, hostWidth / unscaled.width)
+          : 1;
+      const viewport = page.getViewport({ scale: fit * scale });
       const canvas = canvasRef.current;
       if (canvas === null || cancelled) {
         return;
@@ -79,12 +104,13 @@ function PageCanvas({
     return () => {
       cancelled = true;
     };
-  }, [attempt, doc, pageNumber, scale, visible]);
+  }, [attempt, doc, hostWidth, pageNumber, scale, visible]);
 
   return (
-    <div ref={hostRef}>
+    <div ref={hostRef} className="pdf-page">
       <canvas
         ref={canvasRef}
+        className={scale <= 1 ? 'pdf-canvas is-fit' : 'pdf-canvas'}
         role="img"
         aria-label={t('pdf.page', { n: pageNumber, total: doc.numPages })}
       />
@@ -153,7 +179,7 @@ export function PdfDocument({
   const total = doc?.numPages ?? 0;
 
   return (
-    <figure>
+    <figure className="pdf-figure">
       <figcaption>{title}</figcaption>
       {doc !== null && (
         <>

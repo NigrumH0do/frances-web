@@ -31,11 +31,40 @@
     align-items: start;
   }
 
+  /* Un hijo ancho (el canvas del PDF a tamaño natural) no puede expandir la
+     pista: `minmax(0, …fr)` solo funciona si el hijo no tiene ancho mínimo. */
+  .pub-split > * {
+    min-width: 0;
+  }
+
   .pub-split > :nth-child(2) {
     position: sticky;
     top: var(--sp-4);
     align-self: start;
   }
+}
+
+/* ---------- Visor de PDF dentro de la columna ---------- */
+
+/* B5: la figura, el host y el canvas nunca son más anchos que su columna. A
+   escala <= 1 (`.is-fit`) el CSS recorta cualquier sobrante; con zoom el
+   canvas crece y `.pdf-page` hace scroll horizontal dentro de la columna, sin
+   tapar ni solaparse con la ficha sticky. */
+.pdf-figure {
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+}
+.pdf-page {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.pdf-canvas {
+  display: block;
+  height: auto;
+}
+.pdf-canvas.is-fit {
+  max-width: 100%;
 }
 
 /* Destello del deep link: fondo instantáneo, sin transition (GPU-only y motion-off). */
