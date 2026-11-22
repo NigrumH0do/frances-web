@@ -52,7 +52,7 @@ function blockFor(css: string, selector: string): string {
 describe('motion.css duraciones', () => {
   test('no redefine --dur-fast y usa el token de tokens.css', () => {
     expect(motionCss).not.toMatch(/--dur-fast:\s*180ms/);
-    expect(tokensCss).toMatch(/--dur-fast:\s*120ms/);
+    expect(tokensCss).toMatch(/--dur-fast:\s*140ms/);
   });
 
   test('prefers-reduced-motion y motion-off ponen las duraciones a cero', () => {

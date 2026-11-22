@@ -53,8 +53,8 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     start_url: '.',
     scope: '.',
     display: 'standalone',
-    background_color: '#f7f7fb',
-    theme_color: '#2b37b8',
+    background_color: '#f8f6ed',
+    theme_color: '#2147a3',
     icons: [
       {
         src: 'icon.svg',
