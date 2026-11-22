@@ -1,7 +1,7 @@
 // Lee motion.css como texto: duraciones, propiedades compuestas y apagado del
 // movimiento por preferencia local (frances.motion3d === 'off').
 import { describe, expect, test } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -91,6 +91,45 @@ function classSelectors(cssChunk: string): string[] {
 
 const DUR_DECL = /--dur-(?:fast|base|med|flip|slow)\s*:/;
 
+const DURS = [
+  '--dur-fast',
+  '--dur-base',
+  '--dur-med',
+  '--dur-flip',
+  '--dur-slow',
+] as const;
+
+function listCss(dir: string): string[] {
+  const found: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) found.push(...listCss(path));
+    else if (entry.isFile() && entry.name.endsWith('.css')) found.push(path);
+  }
+  return found;
+}
+
+function splitTransitionItems(value: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    const ch = value[i];
+    if (ch === '(') depth += 1;
+    else if (ch === ')') depth = Math.max(0, depth - 1);
+    else if (ch === ',' && depth === 0) {
+      parts.push(value.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(value.slice(start));
+  return parts;
+}
+
+function firstIdent(item: string): string {
+  return /^([A-Za-z_-][\w-]*)/.exec(item.trim())?.[1] ?? '';
+}
+
 // Thinking (`.thinking` / `.dots`) no se apaga aquí: la puerta sigue en
 // components.css y la regla base vive en chat.css.
 const MOTION_OFF_SELECTORS = [
@@ -108,6 +147,20 @@ describe('motion.css duraciones', () => {
 
   test('no declara --dur-fast, --dur-base, --dur-med, --dur-flip ni --dur-slow', () => {
     expect(motionCss).not.toMatch(DUR_DECL);
+  });
+
+  test('tokens.css declara las cinco duraciones y las apaga en reduce y motion-off', () => {
+    const root = blockFor(tokensCss, ':root');
+    const reduced = blockFor(
+      tokensCss,
+      '@media (prefers-reduced-motion: reduce)',
+    );
+    const off = blockFor(tokensCss, 'html.motion-off');
+    for (const dur of DURS) {
+      expect(root, dur).toMatch(new RegExp(`${dur}\\s*:`));
+      expect(reduced, dur).toMatch(new RegExp(`${dur}\\s*:\\s*0ms`));
+      expect(off, dur).toMatch(new RegExp(`${dur}\\s*:\\s*0ms`));
+    }
   });
 
   test('html.motion-off apaga las mismas clases que reduced-motion, sin --dur-*', () => {
@@ -243,5 +296,29 @@ describe('motion.css anima solo transform y opacity', () => {
 
   test('.auth-cover h1 usa font-weight 700', () => {
     expect(ruleFor(authCss, '.auth-cover h1')).toMatch(/font-weight:\s*700/);
+  });
+});
+
+describe('transiciones de todo web/src', () => {
+  test('ningún ítem anima box-shadow, width ni background-position', () => {
+    const srcDir = join(designDir, '..');
+    const seen = new Set<string>();
+    for (const file of listCss(srcDir)) {
+      const clean = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      const rel = file.slice(srcDir.length + 1);
+      for (const match of clean.matchAll(
+        /(?:^|[{;])\s*transition\s*:([^;}]*)/g,
+      )) {
+        for (const item of splitTransitionItems(match[1] ?? '')) {
+          const ident = firstIdent(item);
+          seen.add(ident);
+          expect(ident, `${rel}: ${item.trim()}`).not.toMatch(
+            /^(?:box-shadow|width|background-position)$/,
+          );
+        }
+      }
+    }
+    expect(seen.has('none')).toBe(true);
+    expect(seen.has('stroke-dashoffset')).toBe(true);
   });
 });

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { setMotion3dPref } from './motionPref';
 import {
   __resetTierForTests,
   __setProbeResultForTests,
@@ -18,6 +19,25 @@ import {
 type ContextCall = { type: string; attrs?: WebGLContextAttributes };
 
 const originalUserAgent = navigator.userAgent;
+const originalMatchMedia = window.matchMedia;
+
+function setReducedMotion(matches: boolean): void {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    writable: true,
+    value: (query: string) =>
+      ({
+        matches: matches && query.includes('prefers-reduced-motion'),
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }) as unknown as MediaQueryList,
+  });
+}
 
 function setUserAgent(value: string): void {
   Object.defineProperty(navigator, 'userAgent', {
@@ -96,11 +116,35 @@ afterEach(() => {
   __resetTierForTests();
   setUserAgent(originalUserAgent);
   setDeviceMemory(undefined);
+  setMotion3dPref('auto');
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    writable: true,
+    value: originalMatchMedia,
+  });
   vi.restoreAllMocks();
 });
 
 describe('probeTier', () => {
   test('en jsdom devuelve css sin llamar a getContext', () => {
+    const calls = spyContext(mockGl('Apple GPU').gl);
+    expect(probeTier()).toBe('css');
+    expect(calls).toHaveLength(0);
+  });
+
+  test('motion3d off devuelve css', () => {
+    setUserAgent('Mozilla/5.0');
+    setReducedMotion(false);
+    setMotion3dPref('off');
+    const calls = spyContext(mockGl('Apple GPU').gl);
+    expect(probeTier()).toBe('css');
+    expect(calls).toHaveLength(0);
+  });
+
+  test('matchMedia(reduce) devuelve css', () => {
+    setUserAgent('Mozilla/5.0');
+    setMotion3dPref('auto');
+    setReducedMotion(true);
     const calls = spyContext(mockGl('Apple GPU').gl);
     expect(probeTier()).toBe('css');
     expect(calls).toHaveLength(0);

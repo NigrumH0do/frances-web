@@ -1,6 +1,6 @@
 // Lee tokens.css como texto y comprueba el contraste WCAG AA de cada paleta.
 import { describe, expect, test } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { contrastRatio } from '../ui/layout/contrast';
@@ -53,6 +53,16 @@ function blockFor(css: string, selector: string): string {
     }
   }
   return '';
+}
+
+function listCss(dir: string): string[] {
+  const found: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) found.push(...listCss(path));
+    else if (entry.isFile() && entry.name.endsWith('.css')) found.push(path);
+  }
+  return found;
 }
 
 const PAIRS_TEXT: [string, string][] = [
@@ -158,11 +168,86 @@ describe('tokens.css', () => {
   });
 
   test('prefers-reduced-motion y html.motion-off apagan las cinco duraciones', () => {
+    const root = blockFor(tokens, ':root');
     const reduced = blockFor(tokens, '@media (prefers-reduced-motion: reduce)');
     const off = blockFor(tokens, 'html.motion-off');
     for (const dur of DURS) {
+      expect(root, dur).toMatch(new RegExp(`${dur}\\s*:`));
       expect(reduced, dur).toMatch(new RegExp(`${dur}:\\s*0ms`));
       expect(off, dur).toMatch(new RegExp(`${dur}:\\s*0ms`));
     }
+  });
+
+  test.each(['light', 'dark', 'dark-forced'] as const)(
+    'grabar, subrayador, oro y la peor superficie pasan AA en %s',
+    (mode) => {
+      const p = palette(tokens, mode);
+      const record = p['--c-record'];
+      const onHighlight = p['--c-on-highlight'];
+      const highlight = p['--c-highlight'];
+      const gold = p['--c-gold'];
+      const goldSoft = p['--c-gold-soft'];
+      expect(record, mode).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(onHighlight, mode).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(highlight, mode).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(gold, mode).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(goldSoft, mode).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(
+        contrastRatio('#ffffff', record as string),
+        `${mode} #ffffff/${record}`,
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrastRatio(onHighlight as string, highlight as string),
+        `${mode} --c-on-highlight/--c-highlight`,
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrastRatio(gold as string, goldSoft as string),
+        `${mode} --c-gold/--c-gold-soft`,
+      ).toBeGreaterThanOrEqual(4.5);
+
+      let worst = Number.POSITIVE_INFINITY;
+      let worstName = '';
+      for (const bg of [
+        '--c-bg',
+        '--c-surface',
+        '--c-card',
+        '--c-card-raised',
+      ] as const) {
+        const surface = p[bg];
+        expect(surface, `${mode} ${bg}`).toMatch(/^#[0-9a-fA-F]{6}$/);
+        const ratio = contrastRatio(gold as string, surface as string);
+        if (ratio < worst) {
+          worst = ratio;
+          worstName = bg;
+        }
+      }
+      expect(worst, `${mode} --c-gold/${worstName}`).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    },
+  );
+
+  test('el cuerpo oscuro del sistema y el forzado coinciden sin comentarios ni whitespace', () => {
+    const media = blockFor(tokens, '@media (prefers-color-scheme: dark)');
+    const system = blockFor(media, ':root:not(.theme-light)');
+    const forced = blockFor(tokens, ':root.theme-dark');
+    const squash = (body: string) => body.replace(/\s+/g, '');
+    expect(squash(system).length).toBeGreaterThan(0);
+    expect(squash(system)).toBe(squash(forced));
+  });
+
+  test('ninguna declaración color usa var(--c-gold-3d)', () => {
+    const srcDir = join(dirname(fileURLToPath(import.meta.url)), '..');
+    const hits: string[] = [];
+    for (const file of listCss(srcDir)) {
+      const clean = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      for (const match of clean.matchAll(/(?:^|[{;])\s*color\s*:([^;}]*)/g)) {
+        const value = match[1] ?? '';
+        if (value.includes('var(--c-gold-3d)')) {
+          hits.push(`${file.slice(srcDir.length + 1)}: ${value.trim()}`);
+        }
+      }
+    }
+    expect(hits).toEqual([]);
   });
 });
