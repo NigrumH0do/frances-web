@@ -3,8 +3,11 @@
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import pytest
+
 from frances.accounts.repo import (
     OAUTH_ONLY_PASSWORD_HASH,
+    AccountError,
     approve_user,
     authenticate,
     consume_oauth_state,
@@ -123,5 +126,135 @@ def test_oauth_state_is_single_use_and_expires(tmp_path: Path) -> None:
             expires_at=format_ts(NOW + timedelta(minutes=5)),
         )
         assert consume_oauth_state(store.conn, "st-old", NOW + timedelta(minutes=6)) is None
+    finally:
+        store.close()
+
+
+def test_google_disabled_account_is_not_reactivated_by_admin_emails(tmp_path: Path) -> None:
+    """`FRANCES_ADMIN_EMAILS` es puerta de arranque, no un «desbloquear» de cuentas."""
+    store = Store.open(tmp_path / "state.db")
+    try:
+        pending, _ = login_or_register_google(
+            store.conn,
+            email="boss@uni.example.edu",
+            google_sub="sub-boss",
+            display_name="Profe",
+            avatar_url=None,
+            admin_emails=set(),
+            now=NOW,
+        )
+        approve_user(store.conn, pending.id, NOW)
+        set_disabled(store.conn, pending.id, True, NOW)
+
+        blocked, active = login_or_register_google(
+            store.conn,
+            email="boss@uni.example.edu",
+            google_sub="sub-boss",
+            display_name="Profe",
+            avatar_url=None,
+            admin_emails={"boss@uni.example.edu"},
+            now=NOW,
+        )
+
+        assert active is False
+        assert blocked.id == pending.id
+        assert blocked.role == "user" and blocked.status == "disabled" and blocked.disabled is True
+        assert store.conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 0
+        assert (
+            store.conn.execute("SELECT COUNT(*) FROM users WHERE disabled_at IS NULL").fetchone()[0]
+            == 0
+        )
+    finally:
+        store.close()
+
+
+def test_google_pending_account_in_admin_emails_is_promoted(tmp_path: Path) -> None:
+    store = Store.open(tmp_path / "state.db")
+    try:
+        pending, _ = login_or_register_google(
+            store.conn,
+            email="boss@uni.example.edu",
+            google_sub="sub-boss",
+            display_name="Profe",
+            avatar_url=None,
+            admin_emails=set(),
+            now=NOW,
+        )
+        assert pending.status == "pending" and pending.role == "user"
+
+        promoted, active = login_or_register_google(
+            store.conn,
+            email="boss@uni.example.edu",
+            google_sub="sub-boss",
+            display_name="Profe",
+            avatar_url=None,
+            admin_emails={"boss@uni.example.edu"},
+            now=NOW,
+        )
+
+        assert active is True
+        assert promoted.id == pending.id
+        assert (
+            promoted.role == "admin" and promoted.status == "active" and promoted.disabled is False
+        )
+    finally:
+        store.close()
+
+
+def test_google_registration_respects_max_users(tmp_path: Path) -> None:
+    store = Store.open(tmp_path / "state.db")
+    try:
+        first, _ = login_or_register_google(
+            store.conn,
+            email="uno@gmail.com",
+            google_sub="sub-uno",
+            display_name="Uno",
+            avatar_url=None,
+            admin_emails=set(),
+            now=NOW,
+            max_users=1,
+        )
+        with pytest.raises(AccountError) as capped:
+            login_or_register_google(
+                store.conn,
+                email="dos@gmail.com",
+                google_sub="sub-dos",
+                display_name="Dos",
+                avatar_url=None,
+                admin_emails=set(),
+                now=NOW,
+                max_users=1,
+            )
+        assert capped.value.code == "max_users"
+        assert len(list_users(store.conn)) == 1
+
+        # Una cuenta que ya existe nunca se bloquea por el tope ni pierde su sesión.
+        approve_user(store.conn, first.id, NOW)
+        again, again_active = login_or_register_google(
+            store.conn,
+            email="uno@gmail.com",
+            google_sub="sub-uno",
+            display_name="Uno",
+            avatar_url=None,
+            admin_emails=set(),
+            now=NOW,
+            max_users=1,
+        )
+        assert again.id == first.id and again_active is True
+        token, _ = create_session(store.conn, first.id, timedelta(days=1), NOW)
+        assert lookup_session(store.conn, token, NOW) is not None
+
+        # La puerta de arranque de ADR-021: el admin configurado entra aunque el tope esté lleno.
+        admin, admin_active = login_or_register_google(
+            store.conn,
+            email="boss@uni.example.edu",
+            google_sub="sub-boss",
+            display_name="Profe",
+            avatar_url=None,
+            admin_emails={"boss@uni.example.edu"},
+            now=NOW,
+            max_users=1,
+        )
+        assert admin_active is True and admin.role == "admin" and admin.status == "active"
     finally:
         store.close()

@@ -111,7 +111,7 @@ def run_why(
     counts: dict[str, int] = {result: 0 for result in _WHY_RESULTS}
     now = ctx.now()
     for (user_id,) in ctx.store.conn.execute(
-        "SELECT id FROM users WHERE disabled_at IS NULL ORDER BY id"
+        "SELECT id FROM users WHERE status = 'active' AND disabled_at IS NULL ORDER BY id"
     ).fetchall():
         if user_ids is not None and user_id not in user_ids:
             continue

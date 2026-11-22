@@ -68,6 +68,10 @@ def _reraise(exc: Exception) -> NoReturn:
     raise account_failure(exc) from None
 
 
+def _client_ip(request: Request) -> str:
+    return request.client.host if request.client else "desconocida"
+
+
 def _open_session(
     conn: sqlite3.Connection,
     ctx: ApiContext,
@@ -93,7 +97,7 @@ def login(
     limiter: Annotated[LoginLimiter, Depends(login_limiter)],
 ) -> Me:
     check_public_origin(request)
-    client_ip = request.client.host if request.client else "desconocida"
+    client_ip = _client_ip(request)
     ip_ok = limiter.hit(f"ip:{client_ip}")
     email_ok = limiter.hit(f"email:{body.email.strip().casefold()}")
     if not (ip_ok and email_ok):
@@ -170,8 +174,12 @@ def accept_invitation(
     response: Response,
     ctx: Annotated[ApiContext, Depends(get_ctx)],
     conn: Annotated[sqlite3.Connection, Depends(get_conn)],
+    limiter: Annotated[LoginLimiter, Depends(login_limiter)],
 ) -> Me:
     check_public_origin(request)
+    # Presupuesto propio por IP: aceptar invitaciones no consume el cupo del login.
+    if not limiter.hit(f"invite:ip:{_client_ip(request)}"):
+        raise ApiErrorResponse(429, "rate_limited", _RATE_LIMITED)
     try:
         user = accept_invite(
             conn,

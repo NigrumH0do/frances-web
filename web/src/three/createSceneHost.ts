@@ -24,19 +24,72 @@ function cssColorToHex(varName: string, fallback: number): number {
   }
 }
 
+function systemPrefersDark(): boolean {
+  if (
+    typeof window === 'undefined' ||
+    typeof window.matchMedia !== 'function'
+  ) {
+    return false;
+  }
+  try {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } catch {
+    return false;
+  }
+}
+
+// Tema efectivo: la clase forzada en <html> gana; sin clase se sigue al
+// sistema operativo, igual que hace tokens.css con sus @media.
+function isDarkTheme(): boolean {
+  if (typeof document === 'undefined') return false;
+  const root = document.documentElement;
+  if (root.classList.contains('theme-dark')) return true;
+  if (root.classList.contains('theme-light')) return false;
+  return systemPrefersDark();
+}
+
 export function readThemePalette(): ScenePalette {
-  const isDark =
-    typeof document !== 'undefined' &&
-    document.documentElement.classList.contains('theme-dark');
+  const isDark = isDarkTheme();
   return {
-    accent: cssColorToHex('--c-accent', isDark ? 0x7ea3ff : 0x2346b8),
-    accentSoft: cssColorToHex('--c-accent-soft', isDark ? 0x223052 : 0xe4ebff),
-    gold: isDark ? 0xe6be53 : 0xc99a1e,
-    ok: cssColorToHex('--c-ok', isDark ? 0x52c48c : 0x167a52),
-    danger: cssColorToHex('--c-danger', isDark ? 0xf27966 : 0xb93822),
-    paper: cssColorToHex('--c-card', isDark ? 0x1b202c : 0xfffcf6),
-    ink: cssColorToHex('--c-text', isDark ? 0xecf0f8 : 0x191c24),
+    accent: cssColorToHex('--c-accent', isDark ? 0xaab3ff : 0x2b37b8),
+    accentSoft: cssColorToHex('--c-accent-soft', isDark ? 0x232c52 : 0xe9ebfb),
+    gold: cssColorToHex('--c-gold', isDark ? 0xe6be53 : 0xc99a1e),
+    ok: cssColorToHex('--c-success', isDark ? 0x7fd9a6 : 0x17734a),
+    danger: cssColorToHex('--c-danger', isDark ? 0xff8f8a : 0xc22636),
+    paper: cssColorToHex('--c-card', isDark ? 0x1e2926 : 0xffffff),
+    ink: cssColorToHex('--c-text', isDark ? 0xecf0ea : 0x1f1d2b),
     isDark,
+  };
+}
+
+// Cambios de tema por clase (tema forzado desde Ajustes) o por el tema del
+// sistema operativo. Devolver la baja evita observadores y listeners vivos.
+export function subscribeToThemeChange(
+  callback: (palette: ScenePalette) => void,
+): () => void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return () => {};
+  }
+  const notify = () => callback(readThemePalette());
+
+  let observer: MutationObserver | null = null;
+  if (typeof MutationObserver === 'function') {
+    observer = new MutationObserver(notify);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+  }
+
+  let mql: MediaQueryList | null = null;
+  if (typeof window.matchMedia === 'function') {
+    mql = window.matchMedia('(prefers-color-scheme: dark)');
+    mql.addEventListener('change', notify);
+  }
+
+  return () => {
+    observer?.disconnect();
+    mql?.removeEventListener('change', notify);
   };
 }
 
@@ -69,11 +122,18 @@ export function mountThreeScene(
   const width = Math.max(container.clientWidth, 120);
   const height = Math.max(container.clientHeight, 96);
 
-  const renderer = new THREE.WebGLRenderer({
-    alpha: true,
-    antialias: true,
-    powerPreference: 'low-power',
-  });
+  let renderer: THREE.WebGLRenderer;
+  try {
+    renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      powerPreference: 'low-power',
+    });
+  } catch {
+    // Sin contexto WebGL en runtime (driver perdido, GPU bloqueada): no
+    // lanzamos el error a React; la escena cae al fallback editorial en CSS.
+    return () => {};
+  }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(width, height, false);
   renderer.domElement.style.width = '100%';
@@ -178,16 +238,9 @@ export function mountThreeScene(
     }
   };
 
-  const themeObserver =
-    typeof MutationObserver === 'function'
-      ? new MutationObserver(() => {
-          palette = readThemePalette();
-          hooks.onThemeChange?.(palette);
-        })
-      : null;
-  themeObserver?.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ['class'],
+  const unsubscribeTheme = subscribeToThemeChange((next) => {
+    palette = next;
+    hooks.onThemeChange?.(next);
   });
 
   container.addEventListener('pointermove', onPointerMove, { passive: true });
@@ -199,7 +252,7 @@ export function mountThreeScene(
     stopLoop();
     ro?.disconnect();
     io?.disconnect();
-    themeObserver?.disconnect();
+    unsubscribeTheme();
     container.removeEventListener('pointermove', onPointerMove);
     container.removeEventListener('pointerleave', onPointerLeave);
     document.removeEventListener('visibilitychange', onVisibility);

@@ -15,7 +15,6 @@
   "dependencies": {
     "@fontsource-variable/lexend": "5.3.0",
     "@fontsource/spectral": "5.3.0",
-    "@types/three": "0.187.0",
     "idb": "8.0.4",
     "microsoft-cognitiveservices-speech-sdk": "1.52.0",
     "pdfjs-dist": "6.4.299",
@@ -35,6 +34,7 @@
     "@types/node": "26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@types/three": "0.187.0",
     "@vitejs/plugin-react": "6.1.2",
     "eslint": "9.39.5",
     "eslint-plugin-jsx-a11y": "6.10.2",

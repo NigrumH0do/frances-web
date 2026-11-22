@@ -359,8 +359,59 @@ def fts_query(q: str) -> str | None:
     return " OR ".join(_quote_token(token) for token in tokens)
 
 
+#: Tildes del español que el prefiltro SQL pliega (``LIKE`` no lo hace solo).
+_ACCENT_FOLD: tuple[tuple[str, str], ...] = (
+    ("á", "a"),
+    ("é", "e"),
+    ("í", "i"),
+    ("ó", "o"),
+    ("ú", "u"),
+    ("ü", "u"),
+    ("ñ", "n"),
+)
+
+
+def _folded_sql(column: str) -> str:
+    """Expresión SQL con ``column`` en minúsculas ASCII sin tildes, para ``LIKE``."""
+    expr = f"lower({column})"
+    for accented, plain in _ACCENT_FOLD:
+        expr = f"replace({expr}, '{accented}', '{plain}')"
+        expr = f"replace({expr}, '{accented.upper()}', '{plain}')"
+    return expr
+
+
+def _candidate_card_fronts(
+    conn: sqlite3.Connection, base_tokens: list[str]
+) -> list[tuple[str, str]]:
+    """Tarjetas vivas cuyo ``back_es`` contiene alguno de ``base_tokens``.
+
+    El filtro va en SQL (``LIKE`` sobre ``back_es`` plegado a minúsculas sin
+    tildes) para no normalizar en Python toda la tabla en cada búsqueda. Es un
+    superconjunto: quien llama vuelve a comparar los tokens en Python.
+    """
+    tokens = [token for token in dict.fromkeys(base_tokens) if token]
+    if not tokens:
+        return []
+    conditions = " OR ".join("folded LIKE ?" for _ in tokens)
+    sql = (
+        "SELECT front_fr, back_es FROM ("
+        f"SELECT id, front_fr, back_es, {_folded_sql('back_es')} AS folded"
+        " FROM cards WHERE removed_at IS NULL"
+        f") WHERE {conditions} ORDER BY id"
+    )
+    try:
+        rows = conn.execute(sql, [f"%{token}%" for token in tokens]).fetchall()
+    except sqlite3.OperationalError:  # base sin la tabla `cards`
+        return []
+    return [(str(front_fr), str(back_es)) for front_fr, back_es in rows]
+
+
 def _expanded_tokens(conn: sqlite3.Connection, base_tokens: list[str]) -> list[str]:
-    """Amplía consultas en español con el glosario A1-A2 y las tarjetas ya enseñadas."""
+    """Amplía consultas en español con el glosario A1-A2 y las tarjetas ya enseñadas.
+
+    La expansión por tarjetas solo mira las filas cuyo ``back_es`` menciona algún
+    token base (filtro SQL) y se corta en cuanto hay tokens suficientes.
+    """
     max_expanded = MAX_QUERY_TOKENS * 2
     expanded: list[str] = list(base_tokens)
     seen = set(base_tokens)
@@ -378,18 +429,12 @@ def _expanded_tokens(conn: sqlite3.Connection, base_tokens: list[str]) -> list[s
             add_token(fr)
 
     if len(expanded) < max_expanded and base_tokens:
-        try:
-            card_rows = conn.execute(
-                "SELECT front_fr, back_es FROM cards WHERE removed_at IS NULL"
-            ).fetchall()
-        except sqlite3.OperationalError:
-            card_rows = []
         base_set = set(base_tokens)
-        for front_fr, back_es in card_rows:
-            back_tokens = _TOKEN_RE.findall(_strip_accents(norm_key(str(back_es))))
+        for front_fr, back_es in _candidate_card_fronts(conn, base_tokens):
+            back_tokens = _TOKEN_RE.findall(_strip_accents(norm_key(back_es)))
             if not any(tok in base_set for tok in back_tokens):
                 continue
-            for fr_tok in _TOKEN_RE.findall(_strip_accents(norm_key(str(front_fr)))):
+            for fr_tok in _TOKEN_RE.findall(_strip_accents(norm_key(front_fr))):
                 add_token(fr_tok)
             if len(expanded) >= max_expanded:
                 break

@@ -16,6 +16,8 @@ def test_sensitive_env_lists_secret_names() -> None:
         "AZURE_TRANSLATOR_KEY",
         "FRANCES_PASSPHRASE",
         "FRANCES_SECRETS_KEY",
+        "FRANCES_ADMIN_EMAILS",
+        "FRANCES_FORWARDED_ALLOW_IPS",
         "LLM_BASE_URL",
         "LLM_API_KEY",
         "R2_ACCESS_KEY_ID",
@@ -23,6 +25,33 @@ def test_sensitive_env_lists_secret_names() -> None:
         "FRANCES_BACKUP_ACCESS_KEY_ID",
         "FRANCES_BACKUP_SECRET_ACCESS_KEY",
     )
+
+
+def test_redact_hides_admin_emails_and_forwarded_ips() -> None:
+    """`FRANCES_ADMIN_EMAILS` y `FRANCES_FORWARDED_ALLOW_IPS` son sensibles (AGENTS.md)."""
+    env = {
+        "FRANCES_ADMIN_EMAILS": "boss@uni.example.edu, otro@uni.example.edu",
+        "FRANCES_FORWARDED_ALLOW_IPS": "172.28.0.0/24",
+    }
+    out = redact(
+        "admins=boss@uni.example.edu, otro@uni.example.edu proxy=172.28.0.0/24 desde 1.2.3.4",
+        env,
+    )
+    assert "boss@uni" not in out and "otro@uni" not in out
+    assert "172.28.0.0" not in out
+    assert "1.2.3.4" in out  # solo se redacta el valor de la variable
+    assert out.count("[REDACTED]") == 2
+
+
+def test_logger_filter_redacts_admin_emails(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setenv("FRANCES_ADMIN_EMAILS", "jefa@uni.example.edu")
+    logger = get_logger("test-fnd04-admin")
+    with caplog.at_level(logging.WARNING, logger="test-fnd04-admin"):
+        logger.warning("admin promovido: %s", "jefa@uni.example.edu")
+    assert "jefa@uni.example.edu" not in caplog.text
+    assert "[REDACTED]" in caplog.text
 
 
 def test_redact_env_values_and_patterns() -> None:

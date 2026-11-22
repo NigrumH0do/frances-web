@@ -75,16 +75,18 @@ def _user(
     *,
     disabled: bool = False,
     display_name: str | None = None,
+    status: str = "active",
 ) -> None:
     conn.execute(
-        "INSERT INTO users (id, email, display_name, password_hash, role, created_at, disabled_at)"
-        " VALUES (?, ?, ?, 'x', 'user', ?, ?)",
+        "INSERT INTO users (id, email, display_name, password_hash, role, created_at,"
+        " disabled_at, status) VALUES (?, ?, ?, 'x', 'user', ?, ?, ?)",
         (
             user_id,
             f"{user_id}@example.test",
             display_name or user_id,
             _T0,
             _T0 if disabled else None,
+            status,
         ),
     )
 
@@ -288,5 +290,29 @@ def test_run_why_respects_user_filter(tmp_path: Path) -> None:
         assert counts["written"] == 1 and llm.calls == 1
         assert plan_day_view(context.store.conn, "u_1", _DAY).entries[0].why_llm_es is None
         assert plan_day_view(context.store.conn, "u_3", _DAY).entries[0].why_llm_es is not None
+    finally:
+        context.store.close()
+
+
+def test_run_why_skips_pending_users_without_calling_llm(tmp_path: Path) -> None:
+    """Una cuenta `pending` no dispara el LLM del «por qué» ni recibe texto."""
+    context = make_context(tmp_path, {})
+    try:
+        _user(context.store.conn, "u_1", status="pending")
+        _plan(context.store.conn, "u_1")
+        llm = FakeLlm(model="m", replies=[_valid_why()])
+
+        counts = run_why(replace(context, now=lambda: NOW), llm)
+
+        assert counts == {
+            "written": 0,
+            "cached": 0,
+            "skipped_budget": 0,
+            "skipped_llm": 0,
+            "empty": 0,
+        }
+        assert llm.calls == 0
+        pending = plan_day_view(context.store.conn, "u_1", _DAY).entries
+        assert all(entry.why_llm_es is None for entry in pending)
     finally:
         context.store.close()

@@ -4,6 +4,7 @@ import dataclasses
 import hashlib
 import json
 import sys
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -68,8 +69,22 @@ def courses(scenario: str) -> list[dict]:
 CALC = next(c["id"] for c in courses("v1") if "lculo" in c["name"])
 
 
+#: Recursos abiertos por los helpers del módulo: el fixture `_close_resources` los cierra.
+_OPEN_STORES: list[Store] = []
+
+
+@pytest.fixture(autouse=True)
+def _close_resources() -> Iterator[None]:
+    """Cierra los `Store` que abren los helpers del módulo (una conexión `sqlite` cada uno)."""
+    yield
+    while _OPEN_STORES:
+        _OPEN_STORES.pop().close()
+
+
 def make_ctx(tmp_path: Path) -> Any:
-    return dataclasses.replace(make_context(tmp_path, FAKE_ENV), now=lambda: FIXED)
+    ctx = dataclasses.replace(make_context(tmp_path, FAKE_ENV), now=lambda: FIXED)
+    _OPEN_STORES.append(ctx.store)
+    return ctx
 
 
 def make_app() -> typer.Typer:

@@ -1,16 +1,26 @@
-"""Pool multicuenta de Azure Speech y Translator: CRUD, cuotas y failover (ADR-022)."""
+"""Pool multicuenta de Azure Speech y Translator: CRUD, cuotas y failover (ADR-022).
+
+El enfriamiento de las cuentas guardadas en la base vive en
+``azure_accounts.cooldown_until``. El del respaldo del entorno (``env-speech`` y
+``env-translator``, que no tienen fila propia) vive en memoria con un lock y
+queda acotado a la base donde se registró, igual que los medidores de uso.
+"""
 
 from __future__ import annotations
 
 import json
 import secrets
 import sqlite3
+import threading
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
+from cryptography.fernet import Fernet
+
 from frances.azure.crypto import (
+    SecretsKeyInvalidError,
     decrypt_secret,
     encrypt_secret,
     fernet_from_env,
@@ -53,6 +63,84 @@ _COOLDOWN_AUTH = timedelta(hours=24)
 _COOLDOWN_TRANSIENT = timedelta(minutes=5)
 
 _log = get_logger(__name__)
+
+#: Lock de los enfriamientos del respaldo del entorno (no hay fila en la base).
+_cooldown_lock = threading.Lock()
+#: ``(base de datos, cuenta) -> hasta cuándo`` de ``env-speech`` y ``env-translator``.
+_env_cooldowns: dict[tuple[str, str], datetime] = {}
+
+
+def _db_scope(conn: sqlite3.Connection) -> str:
+    """Clave de la base a la que pertenece ``conn``.
+
+    Los medidores de uso y las cuotas ya viven en la base: el enfriamiento del
+    entorno se acota igual, para que dos bases del mismo proceso no se pisen.
+    """
+    try:
+        row = conn.execute("PRAGMA database_list").fetchone()
+    except sqlite3.Error:  # conexión cerrada: sin ámbito propio
+        return ""
+    return "" if row is None else str(row[2] or "")
+
+
+def _active_env_cooldown(
+    conn: sqlite3.Connection, account_id: str, now: datetime
+) -> datetime | None:
+    """Fin del enfriamiento vigente de una cuenta del entorno; al caducar se olvida."""
+    key = (_db_scope(conn), account_id)
+    with _cooldown_lock:
+        until = _env_cooldowns.get(key)
+        if until is None:
+            return None
+        if until <= now:
+            del _env_cooldowns[key]
+            return None
+        return until
+
+
+def _env_in_cooldown(conn: sqlite3.Connection, account_id: str, now: datetime) -> bool:
+    """``True`` si la cuenta del entorno sigue en pausa."""
+    return _active_env_cooldown(conn, account_id, now) is not None
+
+
+def _env_cooldown_field(conn: sqlite3.Connection, account_id: str, now: datetime) -> str | None:
+    """``cooldown_until`` para la API, o ``None`` si no hay enfriamiento vigente."""
+    until = _active_env_cooldown(conn, account_id, now)
+    return None if until is None else format_ts(until)
+
+
+def _set_env_cooldown(conn: sqlite3.Connection, account_id: str, until: datetime) -> None:
+    key = (_db_scope(conn), account_id)
+    with _cooldown_lock:
+        _env_cooldowns[key] = until
+
+
+def _clear_env_cooldown(conn: sqlite3.Connection, account_id: str) -> None:
+    key = (_db_scope(conn), account_id)
+    with _cooldown_lock:
+        _env_cooldowns.pop(key, None)
+
+
+def reset_env_cooldowns() -> None:
+    """Olvida todos los enfriamientos del entorno (aislamiento entre pruebas)."""
+    with _cooldown_lock:
+        _env_cooldowns.clear()
+
+
+def _fernet_or_none(env: Mapping[str, str]) -> Fernet | None:
+    """``Fernet`` de ``FRANCES_SECRETS_KEY``, o ``None`` si falta o no es válida.
+
+    Una clave malformada se avisa aquí y no se usa para nada: sin ella las
+    cuentas guardadas en la base se omiten y solo queda el respaldo del entorno.
+    """
+    try:
+        return fernet_from_env(env)
+    except SecretsKeyInvalidError:
+        _log.warning(
+            "azure pool: FRANCES_SECRETS_KEY no es una clave Fernet válida;"
+            " se omiten las cuentas guardadas en la base"
+        )
+        return None
 
 
 class AzureAccountNotFound(LookupError):
@@ -138,10 +226,18 @@ def get_strategy(conn: sqlite3.Connection) -> AzurePoolStrategy:
     if row is not None:
         try:
             parsed = json.loads(str(row[0]))
+        except ValueError:
+            _log.warning(
+                "azure pool: la estrategia guardada no es JSON válido (%r); se usa 'priority'",
+                str(row[0])[:40],
+            )
+        else:
             if parsed in ("priority", "least_used"):
                 return parsed  # type: ignore[no-any-return]
-        except ValueError:
-            pass
+            _log.warning(
+                "azure pool: estrategia guardada desconocida (%r); se usa 'priority'",
+                parsed,
+            )
     return "priority"
 
 
@@ -162,7 +258,7 @@ def set_strategy(
 
 
 def _env_virtual_accounts(
-    conn: sqlite3.Connection, env: Mapping[str, str], month: str
+    conn: sqlite3.Connection, env: Mapping[str, str], month: str, now: datetime
 ) -> list[AzureAccountOut]:
     out: list[AzureAccountOut] = []
     speech_key = (env.get("AZURE_SPEECH_KEY") or "").strip()
@@ -181,6 +277,7 @@ def _env_virtual_accounts(
                 monthly_stt_seconds_cap=_DEFAULT_SPEECH_STT_CAP,
                 monthly_tts_chars_cap=_DEFAULT_SPEECH_TTS_CAP,
                 monthly_translator_chars_cap=0,
+                cooldown_until=_env_cooldown_field(conn, ENV_SPEECH_ID, now),
                 usage=AzureAccountUsage(
                     stt_seconds=usage_get(conn, month, _ENV_LEGACY_METERS["stt_seconds"]),
                     tts_chars=usage_get(conn, month, _ENV_LEGACY_METERS["tts_chars"]),
@@ -205,6 +302,7 @@ def _env_virtual_accounts(
                 monthly_stt_seconds_cap=0,
                 monthly_tts_chars_cap=0,
                 monthly_translator_chars_cap=_DEFAULT_TRANSLATOR_CAP,
+                cooldown_until=_env_cooldown_field(conn, ENV_TRANSLATOR_ID, now),
                 usage=AzureAccountUsage(
                     translator_chars=usage_get(conn, month, _ENV_LEGACY_METERS["translator_chars"]),
                 ),
@@ -231,7 +329,7 @@ def list_accounts(
         f"SELECT {_ACC_COLS} FROM azure_accounts ORDER BY kind, priority, created_at, id"
     ).fetchall()
     out = [_row_to_out(tuple(row), usage_by_acc) for row in rows]
-    out.extend(_env_virtual_accounts(conn, env, month))
+    out.extend(_env_virtual_accounts(conn, env, month, now))
     return out
 
 
@@ -244,7 +342,7 @@ def get_account_out(
     ).fetchone()
     if row is not None:
         return _row_to_out(tuple(row), _month_usage_map(conn, month))
-    for virt in _env_virtual_accounts(conn, env, month):
+    for virt in _env_virtual_accounts(conn, env, month, now):
         if virt.id == account_id:
             return virt
     return None
@@ -380,7 +478,7 @@ def pool_summary(
         translator_chars_cap=sum(
             acc.monthly_translator_chars_cap for acc in translator if acc.enabled
         ),
-        encryption_ready=fernet_from_env(env) is not None,
+        encryption_ready=_fernet_or_none(env) is not None,
     )
 
 
@@ -464,7 +562,7 @@ def candidate_accounts(
     now_s = format_ts(now)
     strategy = get_strategy(conn)
     usage_by_acc = _month_usage_map(conn, month)
-    fernet = fernet_from_env(env)
+    fernet = _fernet_or_none(env)
 
     rows = conn.execute(
         "SELECT id, label, region, key_ciphertext, priority,"
@@ -536,7 +634,7 @@ def candidate_accounts(
         env_label = "Entorno (AZURE_TRANSLATOR_KEY)"
         default_cap = _DEFAULT_TRANSLATOR_CAP
 
-    if env_key and env_region:
+    if env_key and env_region and not _env_in_cooldown(conn, env_id, now):
         register_runtime_secret(env_key)
         env_cap = env_cap_override if env_cap_override is not None else default_cap
         legacy_meter = _ENV_LEGACY_METERS[meter]
@@ -593,6 +691,15 @@ def record_usage(
     )
 
 
+def _failure_cooldown(status_code: int | None) -> timedelta:
+    """Enfriamiento según el fallo: cuota, credenciales o error transitorio."""
+    if status_code == 429:
+        return _COOLDOWN_RATE_LIMIT
+    if status_code in (401, 403):
+        return _COOLDOWN_AUTH
+    return _COOLDOWN_TRANSIENT
+
+
 def record_failure(
     conn: sqlite3.Connection,
     account_id: str,
@@ -600,14 +707,10 @@ def record_failure(
     detail: str,
     now: datetime,
 ) -> None:
+    delta = _failure_cooldown(status_code)
     if account_id in (ENV_SPEECH_ID, ENV_TRANSLATOR_ID):
+        _set_env_cooldown(conn, account_id, now + delta)
         return
-    if status_code == 429:
-        delta = _COOLDOWN_RATE_LIMIT
-    elif status_code in (401, 403):
-        delta = _COOLDOWN_AUTH
-    else:
-        delta = _COOLDOWN_TRANSIENT
     stamp = format_ts(now)
     until = format_ts(now + delta)
     clean_detail = redact(detail)[:240]
@@ -620,6 +723,7 @@ def record_failure(
 
 def clear_cooldown(conn: sqlite3.Connection, account_id: str, now: datetime) -> None:
     if account_id in (ENV_SPEECH_ID, ENV_TRANSLATOR_ID):
+        _clear_env_cooldown(conn, account_id)
         return
     stamp = format_ts(now)
     conn.execute(

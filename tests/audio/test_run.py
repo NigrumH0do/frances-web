@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import math
 import struct
 import wave
@@ -368,12 +369,26 @@ def test_make_engines_azure_from_env(tmp_path: Path) -> None:
         assert isinstance(engines.azure, AzureTtsEngine)
     finally:
         ctx.store.close()
-    # Sin región explícita también se configura Azure (usa "eastus" por defecto).
-    default = make_context(tmp_path / "data2", env={"AZURE_SPEECH_KEY": key})
+
+
+@pytest.mark.parametrize("region", [None, "", "   "])
+def test_make_engines_without_region_does_not_invent_one(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, region: str | None
+) -> None:
+    """Con `AZURE_SPEECH_KEY` pero sin región no se inventa `eastus`: aviso y solo Edge."""
+    env = {"AZURE_SPEECH_KEY": "clave-azure-fake-0001"}
+    if region is not None:
+        env["AZURE_SPEECH_REGION"] = region
+    ctx = make_context(tmp_path / "data", env=env)
     try:
-        assert isinstance(audio_run.make_engines(default).azure, AzureTtsEngine)
+        with caplog.at_level(logging.WARNING, logger="frances.audio.run"):
+            engines = audio_run.make_engines(ctx)
+        assert isinstance(engines.edge, EdgeEngine)
+        assert engines.azure is None
     finally:
-        default.store.close()
+        ctx.store.close()
+    mensajes = [record.getMessage() for record in caplog.records]
+    assert any("AZURE_SPEECH_REGION" in mensaje for mensaje in mensajes)
 
 
 def test_forced_azure_without_key_raises(tmp_path: Path) -> None:

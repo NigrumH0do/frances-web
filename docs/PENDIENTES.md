@@ -1,7 +1,7 @@
 # Pendientes de Frances Classroom (v2)
 
 Lo que falta para producción, lo que solo decide el dueño y los límites conocidos.
-Actualizado el 2026-11-19. Marca cada casilla al resolverla y anota la decisión.
+Actualizado el 2026-11-21. Marca cada casilla al resolverla y anota la decisión.
 
 La lista de la v1 (R2, Worker de Cloudflare, GitHub Pages con bundle cifrado) quedó
 sin efecto con la spec v2; su historia está en el git. El demo v2 tampoco se
@@ -33,6 +33,10 @@ e [`../infra/README.md`](../infra/README.md). Cada uno deja un ADR firmado.
 
 - [x] **ADR-018 (Cahier y Texto libre):** aprobado (ampliado con Cahier Atelier 3D en ADR-023; Spectral + Lexend autoalojadas bajo `font-src 'self'`).
 - [x] **ADR-019 (RapidOCR y Office):** aprobado para OCR local y extracción de PowerPoint y Word.
+- [ ] **SPK-05 (ADR-005):** OAuth con la cuenta institucional de la universidad
+  (Google Workspace UNAL): proyecto GCP, cliente OAuth en producción y refresh
+  token de Classroom/Drive. `LIVE-01` depende de esta tarea y `GOL-02` reutiliza
+  sus pasos 2–5 y 7; el ADR-005 sigue sin escribir.
 - [ ] **Voces jóvenes (SPK-02, ADR-002):** escuchar las 4 voces sintéticas y fijar su
   tono. Hoy usan valores provisionales de `src/frances/audio/voices_default.yaml`.
 - [ ] **Archivos de más de 50 MB:** subir `classroom.max_download_mb` o dejarlos

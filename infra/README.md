@@ -41,9 +41,11 @@ sudo install -m 644 -o root -g root infra/caddy.env.example /srv/frances/caddy.e
 ```
 
 Editar `/srv/frances/.env` con los valores reales (nunca se commitea) y
-`/srv/frances/caddy.env` con el dominio, el correo de Let's Encrypt y la región
-de Azure Speech. El clon del repo vive en `/srv/frances/app`; los contenedores
-no montan ese directorio, solo se usa como contexto de build.
+`/srv/frances/caddy.env` con el dominio y el correo de Let's Encrypt. La región
+de Azure Speech no va en `caddy.env`: la CSP del `Caddyfile` permite el comodín
+`wss://*.stt.speech.microsoft.com` para el pool multicuenta (ADR-022). El clon
+del repo vive en `/srv/frances/app`; los contenedores no montan ese directorio,
+solo se usa como contexto de build.
 
 Copiar la configuración de producción al volumen de datos:
 
@@ -123,7 +125,6 @@ docker compose -f infra/compose.yaml config -q
 
 # Valida el Caddyfile con variables de ejemplo.
 docker run --rm -e FRANCES_DOMAIN=localhost -e FRANCES_ACME_EMAIL=admin@example.org \
-  -e AZURE_SPEECH_REGION=brazilsouth \
   -v "$PWD/infra/Caddyfile:/etc/caddy/Caddyfile:ro" \
   caddy:2.11.7 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 

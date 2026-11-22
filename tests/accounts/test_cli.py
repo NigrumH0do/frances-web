@@ -1,7 +1,6 @@
 """CLI admin: create-user, invite, disable (plan SRV-03)."""
 
-import sqlite3
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -114,13 +113,16 @@ def test_cli_disable_user_succeeds(cli_runner: CliRunner, tmp_path: Path) -> Non
         _app(), ["admin", "disable", "--email", "BEA@ex.org", "--data", str(tmp_path)]
     )
     assert r.exit_code == 0, r.output
-    check: sqlite3.Connection = Store.connect(DataPaths(tmp_path).state_db).conn
-    assert (
-        check.execute(
-            "SELECT disabled_at IS NOT NULL FROM users WHERE email = 'bea@ex.org'"
-        ).fetchone()[0]
-        == 1
-    )
+    check = Store.connect(DataPaths(tmp_path).state_db)
+    try:
+        assert (
+            check.conn.execute(
+                "SELECT disabled_at IS NOT NULL FROM users WHERE email = 'bea@ex.org'"
+            ).fetchone()[0]
+            == 1
+        )
+    finally:
+        check.close()
 
 
 def test_cli_create_user_invalid_email_is_clean_error(
@@ -145,3 +147,46 @@ def test_cli_create_user_invalid_email_is_clean_error(
     assert r.exit_code != 0
     assert "Traceback" not in r.output
     assert "correo no válido" in r.output
+
+
+def test_cli_invite_attributes_to_an_active_admin_not_a_pending_one(
+    cli_runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("FRANCES_PUBLIC_ORIGIN", "https://frances.example.org")
+    store = _seeded_store(tmp_path)
+    pending = create_user(
+        store.conn,
+        "profe@ex.org",
+        "Profe",
+        "clave muy larga 1",
+        "admin",
+        NOW - timedelta(minutes=5),
+    )
+    active = create_user(store.conn, "ana@ex.org", "Ana", "clave muy larga 2", "admin", NOW)
+    store.conn.execute("UPDATE users SET status = 'pending' WHERE id = ?", (pending.id,))
+    store.close()
+
+    r = cli_runner.invoke(_app(), ["admin", "invite", "--data", str(tmp_path)])
+
+    assert r.exit_code == 0, r.output
+    check = Store.connect(DataPaths(tmp_path).state_db)
+    try:
+        created_by = check.conn.execute("SELECT created_by FROM invites").fetchone()[0]
+    finally:
+        check.close()
+    assert created_by == active.id
+
+
+def test_cli_invite_fails_without_an_active_admin(
+    cli_runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("FRANCES_PUBLIC_ORIGIN", "https://frances.example.org")
+    store = _seeded_store(tmp_path)
+    admin = create_user(store.conn, "ana@ex.org", "Ana", "clave muy larga 1", "admin", NOW)
+    store.conn.execute("UPDATE users SET status = 'pending' WHERE id = ?", (admin.id,))
+    store.close()
+
+    r = cli_runner.invoke(_app(), ["admin", "invite", "--data", str(tmp_path)])
+
+    assert r.exit_code == 1
+    assert "administrador activo" in r.output

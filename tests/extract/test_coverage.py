@@ -1,13 +1,22 @@
 """Informe de cobertura: qué adjuntos tienen texto y cuáles no, y por qué (EXT-07)."""
 
+from collections.abc import Iterator
 from pathlib import Path
 
+import pytest
 import typer
 from typer.testing import CliRunner
 
 from frances.extract import run
 from frances.extract.coverage import coverage
-from tests.extract.test_run import ATT_COLUMNS, NOW, ctx_with_blobs, sha_of
+from tests.extract.test_run import ATT_COLUMNS, NOW, close_open_contexts, ctx_with_blobs, sha_of
+
+
+@pytest.fixture(autouse=True)
+def _close_contexts() -> Iterator[None]:
+    """Cierra los `StageContext` que abre `ctx_with_blobs` (una conexión `sqlite` cada uno)."""
+    yield
+    close_open_contexts()
 
 
 def _add(ctx, key: str, kind: str, status: str, mime: str | None = None) -> None:  # type: ignore[no-untyped-def]

@@ -69,8 +69,8 @@ def _disable_cmd(data: Path, email: str) -> None:
 def _first_active_admin(conn: sqlite3.Connection) -> str:
     """Id del primer admin activo: la invitación de la CLI se atribuye a él (`created_by`)."""
     row = conn.execute(
-        "SELECT id FROM users WHERE role = 'admin' AND disabled_at IS NULL ORDER BY created_at, id"
-        " LIMIT 1"
+        "SELECT id FROM users WHERE role = 'admin' AND status = 'active'"
+        " AND disabled_at IS NULL ORDER BY created_at, id LIMIT 1"
     ).fetchone()
     if row is None:
         raise AccountError("not_found", "no hay ningún administrador activo; crea uno primero")

@@ -95,11 +95,19 @@ def test_tick_records_slot_with_its_job(conn: sqlite3.Connection, settings: Sett
 def test_restart_after_fire_does_not_enqueue_twice(db_path: Path, settings: Settings) -> None:
     # REVIEW FOCUS 4 (plan maestro v2)
     at = datetime(2026, 11, 2, 10, 17, 3, tzinfo=UTC)
-    with Store.connect(db_path).tx() as c:
-        Scheduler(settings, DAILY_KINDS).tick(c, at)
-    with Store.connect(db_path).tx() as c:  # nuevo proceso, el trabajo ya terminó
-        c.execute("UPDATE jobs SET state='done'")
-        assert Scheduler(settings, DAILY_KINDS).tick(c, at + timedelta(hours=1)) == []
+    first = Store.connect(db_path)
+    try:
+        with first.tx() as c:
+            Scheduler(settings, DAILY_KINDS).tick(c, at)
+    finally:
+        first.close()
+    second = Store.connect(db_path)  # nuevo proceso, el trabajo ya terminó
+    try:
+        with second.tx() as c:
+            c.execute("UPDATE jobs SET state='done'")
+            assert Scheduler(settings, DAILY_KINDS).tick(c, at + timedelta(hours=1)) == []
+    finally:
+        second.close()
 
 
 def test_missed_slot_catches_up_within_window(conn: sqlite3.Connection, settings: Settings) -> None:

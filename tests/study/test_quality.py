@@ -226,6 +226,27 @@ def test_grounded_ignores_line_breaks_and_repeated_spaces() -> None:
     assert not grounded("Je m'appelle Paul", blocks)
 
 
+def test_grounded_lemmas_must_share_one_block() -> None:
+    """El respaldo por lemas no mezcla palabras sueltas de bloques distintos."""
+    blocks = [
+        TextBlock(text="Nous voyageons demain en train.", lang="fr", source="item"),
+        TextBlock(text="Le croissant est chaud.", lang="fr", source="item"),
+    ]
+    assert grounded("voyager", blocks)  # lema de « voyageons » en el bloque 1
+    assert grounded("les croissants", blocks)  # lema de « croissant » en el bloque 2
+    # Cada palabra existe en un bloque, pero ninguna frase vive en uno solo.
+    assert not grounded("voyager avec un croissant", blocks)
+    assert not grounded("croissant de voyageons", blocks)
+
+
+def test_grounded_lemmas_still_match_inside_a_single_block() -> None:
+    blocks = [
+        TextBlock(text="Nous voyageons demain avec un croissant chaud.", lang="fr", source="item"),
+        TextBlock(text="La maison est grande.", lang="fr", source="item"),
+    ]
+    assert grounded("voyager avec un croissant", blocks)
+
+
 def test_topics_problems_accepts_complete_plan() -> None:
     out = TopicsLlmOut(
         topics=[_topic("a", ["syn-saludos"]), _topic("b", ["syn-numeros"], title="Contar")]

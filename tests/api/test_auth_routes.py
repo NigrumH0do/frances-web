@@ -343,3 +343,40 @@ def test_parallel_wrong_password_changes_cannot_exceed_limit(
     assert calls == 5
     assert sorted(statuses) == [400] * 5 + [429] * 15
     conn.close()
+
+
+def test_invite_accept_is_rate_limited_per_ip(tmp_path: Path) -> None:
+    client, conn, _ = _seed(tmp_path)
+    login(client, "ana@ex.org")
+    token = client.post("/api/admin/invites", json={}).json()["url"].split("#", 1)[1]
+    anon = TestClient(client.app, base_url=BASE_URL)
+    bogus = {
+        "token": "token-que-no-existe",
+        "email": "nueva@ex.org",
+        "display_name": "Nueva",
+        "password": PASSWORD,
+    }
+
+    codes = [
+        anon.post("/api/auth/invite/accept", json=bogus, headers={"Origin": ORIGIN}).status_code
+        for _ in range(6)
+    ]
+
+    assert codes[:5] == [400] * 5 and codes[5] == 429
+    blocked = anon.post(
+        "/api/auth/invite/accept",
+        json={
+            "token": token,
+            "email": "libre@ex.org",
+            "display_name": "Libre",
+            "password": PASSWORD,
+        },
+        headers={"Origin": ORIGIN},
+    )
+    assert blocked.status_code == 429 and blocked.json()["code"] == "rate_limited"
+    # El límite corta antes del repositorio: la invitación sigue sin gastarse.
+    still_valid = anon.post(
+        "/api/auth/invite/check", json={"token": token}, headers={"Origin": ORIGIN}
+    )
+    assert still_valid.json()["valid"] is True
+    conn.close()

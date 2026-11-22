@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+import pytest
 import respx
 import typer
 from typer.testing import CliRunner
@@ -41,8 +42,22 @@ DRIVE_FILES_URL = "https://www.googleapis.com/drive/v3/files"
 KINDS = ("coursework", "material", "announcement")
 
 
+#: Contextos abiertos por los helpers del módulo: el fixture `_close_contexts` los cierra.
+_OPEN_CONTEXTS: list[StageContext] = []
+
+
+@pytest.fixture(autouse=True)
+def _close_contexts() -> Iterator[None]:
+    """Cierra los `StageContext` que abren los helpers (una conexión `sqlite` cada uno)."""
+    yield
+    while _OPEN_CONTEXTS:
+        _OPEN_CONTEXTS.pop().store.close()
+
+
 def make_ctx(tmp_path: Path) -> StageContext:
-    return dataclasses.replace(make_context(tmp_path, FAKE_ENV), now=lambda: FIXED)
+    ctx = dataclasses.replace(make_context(tmp_path, FAKE_ENV), now=lambda: FIXED)
+    _OPEN_CONTEXTS.append(ctx)
+    return ctx
 
 
 def raws(scenario: str, kind: str) -> list[dict[str, Any]]:

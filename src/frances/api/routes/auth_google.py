@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
 import secrets
 import sqlite3
 from datetime import timedelta
@@ -11,12 +12,13 @@ from typing import Annotated, Any
 from urllib.parse import urlencode, urlsplit
 
 import httpx
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import RedirectResponse
 from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.oauth2 import id_token as google_id_token
 
 from frances.accounts.repo import (
+    AccountError,
     consume_oauth_state,
     create_session,
     login_or_register_google,
@@ -24,8 +26,13 @@ from frances.accounts.repo import (
 )
 from frances.api.app import ApiContext
 from frances.api.deps import ApiErrorResponse, get_conn, get_ctx
-from frances.api.security import session_ttl, set_session_cookies
-from frances.config import GoogleLoginConfig, admin_bootstrap_emails, google_login_config
+from frances.api.security import LoginLimiter, login_limiter, session_ttl, set_session_cookies
+from frances.config import (
+    GoogleLoginConfig,
+    admin_bootstrap_emails,
+    google_login_config,
+    public_origin,
+)
 from frances.log import get_logger
 from frances.models.accounts import AuthProvidersOut
 from frances.timeutil import format_ts
@@ -37,7 +44,83 @@ _GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 _OAUTH_STATE_TTL = timedelta(minutes=10)
 _TOKEN_TIMEOUT_S = 15.0
 
+#: Cookie de flujo OIDC atada al navegador: `__Host-` exige https, Secure, Path=/ y sin Domain.
+OAUTH_COOKIE = "frances_oauth"
+OAUTH_HOST_COOKIE = "__Host-frances_oauth"
+_OAUTH_COOKIE_MAX_AGE_S = 600
+
+_RATE_LIMITED = "Demasiados intentos. Espera un minuto y vuelve a intentarlo."
+
 _log = get_logger(__name__)
+
+
+def _client_ip(request: Request) -> str:
+    return request.client.host if request.client else "desconocida"
+
+
+def _is_https(ctx: ApiContext) -> bool:
+    """True si el origen público es https; ``http`` solo se admite en localhost."""
+    return public_origin(ctx.settings).startswith("https://")
+
+
+def _oauth_cookie_name(ctx: ApiContext) -> str:
+    return OAUTH_HOST_COOKIE if _is_https(ctx) else OAUTH_COOKIE
+
+
+def _oauth_nonce(code_verifier: str) -> str:
+    """``nonce`` OIDC determinista derivado del PKCE guardado en el servidor.
+
+    Se puede recalcular en el callback sin columnas nuevas, y no viaja en ninguna URL.
+    """
+    digest = hashlib.sha256(b"oidc-nonce:" + code_verifier.encode("ascii")).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+
+
+def _oauth_cookie_value(state: str) -> str:
+    """Valor de la cookie: el hash del ``state``, nunca el ``state`` en claro."""
+    digest = hashlib.sha256(state.encode("ascii")).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+
+
+def _set_oauth_cookie(response: RedirectResponse, ctx: ApiContext, state: str) -> None:
+    """Ata el flujo OIDC a este navegador; solo el navegador que empezó puede terminarlo."""
+    response.set_cookie(
+        _oauth_cookie_name(ctx),
+        _oauth_cookie_value(state),
+        max_age=_OAUTH_COOKIE_MAX_AGE_S,
+        path="/",
+        secure=_is_https(ctx),
+        httponly=True,
+        samesite="lax",
+    )
+
+
+def _clear_oauth_cookie(response: RedirectResponse, ctx: ApiContext) -> None:
+    """Borra la cookie de flujo OIDC, ya consumida o inválida, en cualquier salida del callback."""
+    response.delete_cookie(
+        _oauth_cookie_name(ctx),
+        path="/",
+        secure=_is_https(ctx),
+        httponly=True,
+        samesite="lax",
+    )
+
+
+def _back_to_login(ctx: ApiContext, query: str) -> RedirectResponse:
+    """Vuelve a `/entrar` sin caché y borrando la cookie de flujo, ya consumida o inválida."""
+    response = RedirectResponse(
+        url=f"/entrar?{query}", status_code=302, headers={"Cache-Control": "no-store"}
+    )
+    _clear_oauth_cookie(response, ctx)
+    return response
+
+
+def _oauth_cookie_matches(request: Request, ctx: ApiContext, state: str) -> bool:
+    """True si la cookie del navegador corresponde al ``state`` recibido (tiempo constante)."""
+    received = request.cookies.get(_oauth_cookie_name(ctx))
+    if received is None:
+        return False
+    return hmac.compare_digest(received, _oauth_cookie_value(state))
 
 
 def _sanitize_next(raw: str | None) -> str:
@@ -99,11 +182,17 @@ def auth_providers(ctx: Annotated[ApiContext, Depends(get_ctx)]) -> AuthProvider
 
 @router.get("/google/start")
 def google_start(
+    request: Request,
     ctx: Annotated[ApiContext, Depends(get_ctx)],
     conn: Annotated[sqlite3.Connection, Depends(get_conn)],
+    limiter: Annotated[LoginLimiter, Depends(login_limiter)],
     next: Annotated[str | None, Query()] = None,
 ) -> RedirectResponse:
     """Inicia flujo OIDC + PKCE con selector de cuenta de Google (cualquier cuenta)."""
+    # Presupuesto propio por IP: empezar un flujo OAuth no consume el cupo del login.
+    if not limiter.hit(f"google:ip:{_client_ip(request)}"):
+        raise ApiErrorResponse(429, "rate_limited", _RATE_LIMITED)
+
     cfg = google_login_config(ctx.settings)
     if cfg is None:
         raise ApiErrorResponse(
@@ -132,20 +221,24 @@ def google_start(
             "response_type": "code",
             "scope": "openid email profile",
             "state": state,
+            "nonce": _oauth_nonce(code_verifier),
             "code_challenge": _pkce_challenge(code_verifier),
             "code_challenge_method": "S256",
             "prompt": "select_account",
         }
     )
-    return RedirectResponse(
+    response = RedirectResponse(
         url=f"{_GOOGLE_AUTH_URL}?{params}",
         status_code=302,
         headers={"Cache-Control": "no-store"},
     )
+    _set_oauth_cookie(response, ctx, state)
+    return response
 
 
 @router.get("/google/callback")
 def google_callback(
+    request: Request,
     ctx: Annotated[ApiContext, Depends(get_ctx)],
     conn: Annotated[sqlite3.Connection, Depends(get_conn)],
     code: Annotated[str | None, Query()] = None,
@@ -153,22 +246,19 @@ def google_callback(
     error: Annotated[str | None, Query()] = None,
 ) -> RedirectResponse:
     """Completa el flujo OIDC, registra o enlaza cuenta y crea sesión si está activa."""
-    no_store = {"Cache-Control": "no-store"}
     if error is not None:
-        return RedirectResponse(url="/login?error=google_denied", status_code=302, headers=no_store)
+        return _back_to_login(ctx, "error=google_denied")
 
     cfg = google_login_config(ctx.settings)
     if cfg is None:
-        return RedirectResponse(
-            url="/login?error=google_disabled", status_code=302, headers=no_store
-        )
+        return _back_to_login(ctx, "error=google_disabled")
 
-    if not code or not state:
-        return RedirectResponse(url="/login?error=oauth_state", status_code=302, headers=no_store)
+    if not code or not state or not _oauth_cookie_matches(request, ctx, state):
+        return _back_to_login(ctx, "error=oauth_state")
 
     consumed = consume_oauth_state(conn, state, ctx.now())
     if consumed is None:
-        return RedirectResponse(url="/login?error=oauth_state", status_code=302, headers=no_store)
+        return _back_to_login(ctx, "error=oauth_state")
     code_verifier, next_path = consumed
 
     try:
@@ -179,7 +269,12 @@ def google_callback(
         claims = _verify_id_token(raw_id_token, cfg.client_id)
     except Exception as exc:
         _log.warning("google oauth callback rechazado (%s)", type(exc).__name__)
-        return RedirectResponse(url="/login?error=google_failed", status_code=302, headers=no_store)
+        return _back_to_login(ctx, "error=google_failed")
+
+    nonce = claims.get("nonce")
+    if not isinstance(nonce, str) or not hmac.compare_digest(nonce, _oauth_nonce(code_verifier)):
+        _log.warning("google oauth callback con nonce ausente o distinto")
+        return _back_to_login(ctx, "error=oauth_state")
 
     email = claims.get("email")
     sub = claims.get("sub")
@@ -188,31 +283,36 @@ def google_callback(
         or not isinstance(email, str)
         or not isinstance(sub, str)
     ):
-        return RedirectResponse(
-            url="/login?error=google_unverified", status_code=302, headers=no_store
-        )
+        return _back_to_login(ctx, "error=google_unverified")
 
     display_name = claims.get("name")
     picture = claims.get("picture")
-    user, is_active = login_or_register_google(
-        conn,
-        email=email,
-        google_sub=sub,
-        display_name=display_name if isinstance(display_name, str) else email,
-        avatar_url=picture if isinstance(picture, str) else None,
-        admin_emails=admin_bootstrap_emails(ctx.settings),
-        now=ctx.now(),
-    )
+    try:
+        user, is_active = login_or_register_google(
+            conn,
+            email=email,
+            google_sub=sub,
+            display_name=display_name if isinstance(display_name, str) else email,
+            avatar_url=picture if isinstance(picture, str) else None,
+            admin_emails=admin_bootstrap_emails(ctx.settings),
+            now=ctx.now(),
+            max_users=ctx.settings.server.max_users,
+        )
+    except AccountError as exc:
+        if exc.code != "max_users":
+            raise
+        return _back_to_login(ctx, "error=max_users")
 
     if user.status == "pending":
-        return RedirectResponse(url="/login?status=pending", status_code=302, headers=no_store)
+        return _back_to_login(ctx, "status=pending")
     if not is_active:
-        return RedirectResponse(
-            url="/login?error=account_disabled", status_code=302, headers=no_store
-        )
+        return _back_to_login(ctx, "error=account_disabled")
 
     ttl = session_ttl(ctx)
     token, session = create_session(conn, user.id, ttl, ctx.now())
-    response = RedirectResponse(url=next_path, status_code=302, headers=no_store)
+    response = RedirectResponse(
+        url=next_path, status_code=302, headers={"Cache-Control": "no-store"}
+    )
     set_session_cookies(response, token, session.csrf_token, max_age_s=int(ttl.total_seconds()))
+    _clear_oauth_cookie(response, ctx)
     return response

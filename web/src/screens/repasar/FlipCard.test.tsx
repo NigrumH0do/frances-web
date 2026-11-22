@@ -1,9 +1,10 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { MemoryRouter } from 'react-router';
-import { expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
+import { setMotion3dPref } from '../../three/motionPref';
 import type {
   CardView,
   FsrsCard,
@@ -14,6 +15,13 @@ import type {
 import { renderScreen } from '../../shell/testing';
 import { FlipCard } from './FlipCard';
 import { RatingBar } from './RatingBar';
+
+afterEach(() => {
+  setMotion3dPref('auto');
+  document.documentElement.className = '';
+  localStorage.clear();
+  vi.restoreAllMocks();
+});
 
 const FSRS: FsrsCard = {
   due: '2026-11-05T10:00:00.000000Z',
@@ -345,6 +353,40 @@ test('al voltear sin ejemplo ni nota igual muestra el recordatorio en francés e
   expect(scoped.getByText('Ella es china.')).toBeVisible();
   expect(scoped.queryByText('Ejemplo')).not.toBeInTheDocument();
   expect(scoped.queryByText('Nota')).not.toBeInTheDocument();
+});
+
+test('con motion3d off no aplica tilt al mover el puntero', () => {
+  const rect = {
+    left: 0,
+    top: 0,
+    width: 200,
+    height: 100,
+    right: 200,
+    bottom: 100,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  } as DOMRect;
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+    rect,
+  );
+
+  const { container } = render(
+    <MemoryRouter>
+      <FlipCard card={CARD} flipped={false} onFlip={vi.fn()} />
+    </MemoryRouter>,
+  );
+  const tilt = container.querySelector('.flip-tilt') as HTMLElement;
+
+  setMotion3dPref('off');
+  fireEvent.pointerMove(tilt, { clientX: 150, clientY: 25 });
+  expect(tilt.style.getPropertyValue('--rx')).toBe('');
+  expect(tilt.style.getPropertyValue('--ry')).toBe('');
+
+  setMotion3dPref('auto');
+  fireEvent.pointerMove(tilt, { clientX: 150, clientY: 25 });
+  expect(tilt.style.getPropertyValue('--rx')).not.toBe('');
+  expect(tilt.style.getPropertyValue('--ry')).not.toBe('');
 });
 
 test('voltea cuando keydown trae code Space aunque key sea Spacebar', () => {

@@ -244,7 +244,7 @@ lee `FRANCES_DATA_DIR`.
 | `auth check` | Prueba el token de Google |
 | `admin create-user`, `admin invite`, `admin disable` | Cuentas |
 | `jobs enqueue`, `jobs list`, `jobs retry` | Cola de trabajos |
-| `backup run`, `backup list`, `backup restore` | Respaldo |
+| `backup run`, `backup list`, `backup restore`, `backup loop` | Respaldo (el `loop` corre el backup diario) |
 | `dump`, `restore` | Volcado SQL determinista del estado |
 | `schema export DIR` | JSON Schema de los contratos |
 

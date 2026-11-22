@@ -47,3 +47,23 @@ def test_smoke_runs_arm64_image_and_wheels_gate():
     assert WF["jobs"]["docker"]["needs"] == "wheels"
     wheels_run = "\n".join(s.get("run", "") for s in WF["jobs"]["wheels"]["steps"])
     assert "check_aarch64_wheels.py" in wheels_run
+
+
+def test_smoke_imports_onnxruntime_and_rapidocr_on_arm64():
+    """El smoke ARM64 comprueba que RapidOCR/ONNX cargan dentro de la imagen."""
+    run = "\n".join(s.get("run", "") for s in WF["jobs"]["docker"]["steps"])
+    assert "import onnxruntime, rapidocr" in run
+
+
+def test_ci_is_read_only_and_guards_the_real_build():
+    """`ci.yml` limita permisos y valida el build sin demo, igual que `e2e.yml`."""
+    ci_text = Path(".github/workflows/ci.yml").read_text()
+    ci = yaml.safe_load(ci_text)
+    assert ci["permissions"] == {"contents": "read"}
+    steps = ci["jobs"]["web"]["steps"]
+    guarded = [
+        s for s in steps if s.get("run") == "npm run build && node scripts/check-no-demo.mjs dist"
+    ]
+    assert guarded and guarded[0]["working-directory"] == "web"
+    uses = [s["uses"] for j in ci["jobs"].values() for s in j["steps"] if "uses" in s]
+    assert uses and all(PINNED.fullmatch(u.split(" ")[0]) for u in uses)

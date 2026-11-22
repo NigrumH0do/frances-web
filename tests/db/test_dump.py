@@ -161,3 +161,35 @@ def test_restore_rejects_broken_fk(tmp_path: Path, populated_store: Store) -> No
     sql += bad_row + "\n"
     with pytest.raises(ValueError):
         restore_sql(sql, tmp_path / "bad.db")
+
+
+def test_restore_failure_leaves_no_tmp_and_allows_retry(
+    tmp_path: Path, populated_store: Store
+) -> None:
+    """Un restore fallido no deja `.tmp` huérfano ni la base a medias."""
+    db_path = tmp_path / "retry.db"
+    good = dump_sql(populated_store)
+    bad = good + f"INSERT INTO topics VALUES ('t_bad','no_existe','X','{NOW}');\n"
+    with pytest.raises(ValueError):
+        restore_sql(bad, db_path)
+    assert not db_path.with_suffix(".tmp").exists()
+    assert not db_path.exists()
+
+    restored = restore_sql(good, db_path)
+    try:
+        assert dump_sql(restored) == good
+    finally:
+        restored.close()
+
+
+def test_restore_discards_stale_tmp_before_start(tmp_path: Path, populated_store: Store) -> None:
+    """Un `.tmp` de un intento anterior se borra antes de empezar, no se reutiliza."""
+    db_path = tmp_path / "stale.db"
+    stale = db_path.with_suffix(".tmp")
+    stale.write_bytes(b"basura de un restore interrumpido")
+    sql = dump_sql(populated_store)
+    restored = restore_sql(sql, db_path)
+    try:
+        assert dump_sql(restored) == sql
+    finally:
+        restored.close()

@@ -43,7 +43,7 @@ guarda como registro de decisiones.
 | 010–014 | Go-live: instancia, secretos, primer despliegue, backfill, aceptación | Sin escribir: los firma el dueño en GOL-01…GOL-05 |
 | [015](decisions/ADR-015-groq-llm.md) | LLM en Groq | Reemplazado por 016 |
 | [016](decisions/ADR-016-onerouter-llm.md) | LLM en OneRouter | Aceptado |
-| [017](decisions/ADR-017-ai17-rules-cards-quiz.md) | Evaluación del LLM sin tarjetas ni quiz | Aceptado |
+| [017](decisions/ADR-017-ai17-rules-cards-quiz.md) | Evaluación del LLM sin tarjetas ni quiz | Aceptado; reemplazado en parte por [024](decisions/ADR-024-tarjetas-ia-lematizacion-y-temas.md): `--task cards` volvió al LLM (`cards-3`) y solo `quiz` sale 0 con reglas |
 | [018](decisions/ADR-018-cahier-y-texto-libre.md) | Sistema visual «Cahier» y Texto libre | Aceptado |
 | [019](decisions/ADR-019-ocr-rapidocr-y-office.md) | RapidOCR y lectura de Office | Aceptado |
 | [020](decisions/ADR-020-sin-github-pages.md) | Sin GitHub Pages; solo el servidor | Aceptado |

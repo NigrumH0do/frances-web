@@ -136,6 +136,21 @@ describe('contraste AA de tabs y grabación (CHG-16)', () => {
   });
 });
 
+describe('components.css: sin reglas v1 que colisionen con la v3', () => {
+  test('no queda el .score-ring de conic-gradient (solo el SVG de motion.css)', () => {
+    expect(ruleFor(css, '.score-ring')).toBe('');
+    expect(css).not.toContain('.score-ring > span');
+    expect(css).not.toContain('conic-gradient');
+  });
+});
+
+describe('components.css: esqueletos sin animar background-position', () => {
+  test('el brillo del esqueleto se anima con opacity', () => {
+    expect(css).not.toContain('@keyframes shimmer');
+    expect(css).toMatch(/@keyframes skeletonPulse\s*\{[\s\S]*?opacity/);
+  });
+});
+
 describe('components.css: estado activo y esqueletos (UI-03)', () => {
   test('la opción activa de Segmented se ve con aria-checked', () => {
     expect(ruleFor(css, ".segmented [aria-checked='true']")).toMatch(

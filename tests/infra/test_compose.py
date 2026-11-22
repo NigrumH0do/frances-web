@@ -39,6 +39,15 @@ def test_data_paths_and_env_files() -> None:
     assert "/srv/frances/.env" not in str(C["services"]["caddy"])  # caddy no recibe secretos
 
 
+def test_services_drop_capabilities_and_block_privilege_escalation() -> None:
+    s = C["services"]
+    for name in ("caddy", "api", "worker", "backup"):
+        assert s[name]["cap_drop"] == ["ALL"], name
+        assert s[name]["security_opt"] == ["no-new-privileges:true"], name
+    assert s["caddy"]["cap_add"] == ["NET_BIND_SERVICE"]
+    assert all("cap_add" not in s[n] for n in ("api", "worker", "backup"))
+
+
 def test_examples_have_every_variable_and_no_real_values() -> None:
     env = Path("infra/env.example").read_text()
     for v in (

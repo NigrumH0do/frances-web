@@ -1,6 +1,7 @@
 """Repo de sync: watermarks, items, adjuntos, tombstones (SYN-04)."""
 
 import sqlite3
+from collections.abc import Iterator
 
 import pytest
 
@@ -45,7 +46,7 @@ LINK = Attachment(
 
 
 @pytest.fixture
-def conn(tmp_path) -> sqlite3.Connection:  # type: ignore[no-untyped-def]
+def conn(tmp_path) -> Iterator[sqlite3.Connection]:  # type: ignore[no-untyped-def]
     store = Store.open(tmp_path / "repo.db")
     store.conn.row_factory = sqlite3.Row
     c = store.conn
@@ -100,7 +101,8 @@ def conn(tmp_path) -> sqlite3.Connection:  # type: ignore[no-untyped-def]
             None,
         ),
     )
-    return c
+    yield c
+    store.close()
 
 
 def status_of(conn: sqlite3.Connection, att_id: str) -> str | None:

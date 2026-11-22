@@ -9,6 +9,7 @@ import re
 import unicodedata
 from collections import Counter
 from collections.abc import Collection, Mapping, Sequence
+from functools import lru_cache
 
 from frances.extract.lang import detect_lang
 from frances.models.content import CardDraft, GenerationInput, TextBlock
@@ -170,8 +171,13 @@ def _flat(text: str) -> str:
     return " ".join(norm_key(text).split())
 
 
+@lru_cache(maxsize=256)
 def _lemma_vocab(text: str) -> frozenset[str]:
-    """Formas superficiales y lemas franceses sin tildes ni mayúsculas."""
+    """Formas superficiales y lemas franceses sin tildes ni mayúsculas.
+
+    Cacheado por texto de bloque: `grounded` se llama una vez por tarjeta y el
+    material es el mismo en todas.
+    """
     from frances.cards.rules import _load_nlp
 
     nlp = _load_nlp()
@@ -190,7 +196,11 @@ def _lemma_vocab(text: str) -> frozenset[str]:
 
 
 def grounded(phrase: str, blocks: Sequence[TextBlock]) -> bool:
-    """La frase (o sus lemas franceses) aparece en el texto de algún bloque."""
+    """La frase (o sus lemas franceses) aparece en el texto de **un mismo** bloque.
+
+    El respaldo por lemas compara bloque a bloque: aceptar palabras sueltas de
+    bloques distintos daría por buena una frase que el material no dice.
+    """
     core = _core(phrase)
     if not core:
         return False
@@ -214,9 +224,11 @@ def grounded(phrase: str, blocks: Sequence[TextBlock]) -> bool:
 
     if not content_pairs:
         return False
-    material_text = "\n".join(block.text for block in blocks)
-    vocab = _lemma_vocab(material_text)
-    return all(surf in vocab or lemma in vocab for surf, lemma in content_pairs)
+    for block in blocks:
+        vocab = _lemma_vocab(block.text)
+        if all(surf in vocab or lemma in vocab for surf, lemma in content_pairs):
+            return True
+    return False
 
 
 def card_problems(draft: CardDraft, inp: GenerationInput) -> list[str]:

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import frances.accounts.repo as accounts_repo
 from frances.accounts.passwords import WeakPassword
 from frances.accounts.repo import (
     AccountError,
@@ -65,9 +66,13 @@ def test_disabling_user_revokes_sessions(conn: sqlite3.Connection, user_id: str)
 
 
 def test_invite_is_single_use_under_race(db_path: Path) -> None:  # REVIEW FOCUS 3 (plan maestro v2)
-    with Store.open(db_path).tx() as c:
-        admin = create_user(c, "ana@ex.org", "Ana", "clave muy larga 1", "admin", NOW)
-        _, token = create_invite(c, admin.id, "user", None, timedelta(hours=72), NOW)
+    seed = Store.open(db_path)
+    try:
+        with seed.tx() as c:
+            admin = create_user(c, "ana@ex.org", "Ana", "clave muy larga 1", "admin", NOW)
+            _, token = create_invite(c, admin.id, "user", None, timedelta(hours=72), NOW)
+    finally:
+        seed.close()
 
     def accept(i: int) -> object:
         s = Store.connect(db_path)
@@ -236,3 +241,51 @@ def test_touch_session_does_not_extend_revoked_session(
         "SELECT expires_at FROM sessions WHERE token_sha256 = ?", (row.token_sha256,)
     ).fetchone()[0]
     assert stored == row.expires_at
+
+
+def _forbidden_hash(_password: str) -> str:
+    raise AssertionError("hash_password se ejecutó antes de validar la invitación")
+
+
+def test_accept_invite_validates_before_hashing_password(
+    conn: sqlite3.Connection, admin_id: str, user_id: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """El argon2id (caro) va al final: token, correo y `max_users` se comprueban antes."""
+    _, token = create_invite(conn, admin_id, "user", None, timedelta(hours=72), NOW)
+    monkeypatch.setattr(accounts_repo, "hash_password", _forbidden_hash)
+
+    with pytest.raises(AccountError) as bogus:
+        accept_invite(
+            conn, "token-que-no-existe", "nueva@ex.org", "Nueva", "clave muy larga 4", NOW, 25
+        )
+    assert bogus.value.code == "invite_invalid"
+
+    with pytest.raises(WeakPassword):
+        accept_invite(conn, "token-que-no-existe", "nueva@ex.org", "Nueva", "corta", NOW, 25)
+
+    with pytest.raises(AccountError) as taken:
+        accept_invite(conn, token, "user@ex.org", "Otra", "clave muy larga 4", NOW, 25)
+    assert taken.value.code == "invite_invalid"
+
+    with pytest.raises(AccountError) as capped:
+        accept_invite(conn, token, "libre@ex.org", "Libre", "clave muy larga 4", NOW, max_users=1)
+    assert capped.value.code == "max_users"
+    assert invite_status(conn, token, NOW) is not None  # ningún intento la gastó
+
+
+def test_accept_invite_hashes_password_once_when_the_invite_is_valid(
+    conn: sqlite3.Connection, admin_id: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[str] = []
+    real_hash = accounts_repo.hash_password
+
+    def spy(password: str) -> str:
+        calls.append(password)
+        return real_hash(password)
+
+    monkeypatch.setattr(accounts_repo, "hash_password", spy)
+    _, token = create_invite(conn, admin_id, "user", None, timedelta(hours=72), NOW)
+    user = accept_invite(conn, token, "nueva@ex.org", "Nueva", "clave muy larga 4", NOW, 25)
+
+    assert calls == ["clave muy larga 4"]
+    assert authenticate(conn, "nueva@ex.org", "clave muy larga 4", NOW).id == user.id  # type: ignore[union-attr]

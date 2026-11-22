@@ -1,7 +1,7 @@
 """GET /api/health y el mapeo de errores de base de datos."""
 
 import sqlite3
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -19,6 +19,16 @@ from frances.timeutil import format_ts
 from tests.api.conftest import NOW
 
 
+def _heartbeat(ctx: ApiContext, seen_at: datetime) -> None:
+    """Registra un latido del worker cerrando el `Store` (nada de conexiones sueltas)."""
+    store = Store.connect(ctx.db_path)
+    try:
+        with store.tx() as c:
+            c.execute("INSERT INTO worker_heartbeat VALUES ('w1', ?, NULL)", (format_ts(seen_at),))
+    finally:
+        store.close()
+
+
 def test_health_degraded_without_worker(api: tuple[TestClient, ApiContext]) -> None:
     client, _ = api
     r = client.get("/api/health")
@@ -34,21 +44,13 @@ def test_health_degraded_without_worker(api: tuple[TestClient, ApiContext]) -> N
 
 def test_health_ok_with_recent_heartbeat(api: tuple[TestClient, ApiContext]) -> None:
     client, ctx = api
-    with Store.connect(ctx.db_path).tx() as c:
-        c.execute(
-            "INSERT INTO worker_heartbeat VALUES ('w1', ?, NULL)",
-            (format_ts(NOW - timedelta(minutes=2)),),
-        )
+    _heartbeat(ctx, NOW - timedelta(minutes=2))
     assert client.get("/api/health").json()["status"] == "ok"
 
 
 def test_health_degraded_with_stale_heartbeat(api: tuple[TestClient, ApiContext]) -> None:
     client, ctx = api
-    with Store.connect(ctx.db_path).tx() as c:
-        c.execute(
-            "INSERT INTO worker_heartbeat VALUES ('w1', ?, NULL)",
-            (format_ts(NOW - timedelta(minutes=11)),),
-        )
+    _heartbeat(ctx, NOW - timedelta(minutes=11))
     body = client.get("/api/health").json()
     assert body["status"] == "degraded"
     assert body["worker_seen_at"] is not None

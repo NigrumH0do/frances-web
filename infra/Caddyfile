@@ -3,7 +3,10 @@
 }
 
 {$FRANCES_DOMAIN} {
-	encode zstd gzip
+	# `text/event-stream` (chat) no se comprime: gzip/zstd amortigua el flujo
+	# y rompe la entrega incremental de tokens.
+	@compressible not path /api/chat/*
+	encode @compressible zstd gzip
 
 	request_body /api/* {
 		max_size 1MB

@@ -1,7 +1,8 @@
 # Configuración de producción de Frances Classroom v2 (→ Settings).
 # Se copia a /srv/frances/data/frances.toml antes del primer arranque
-# (ver infra/README.md). Las secciones que no están aquí ([server], [llm],
-# [jobs], [scheduler], [backup]) usan los valores de frances.example.toml.
+# (ver infra/README.md). Las secciones que no están aquí ([bundle], [server],
+# [llm], [jobs], [scheduler], [backup]) usan los valores por defecto de Settings
+# en frances.config, documentados en frances.example.toml.
 # Los secretos NUNCA van aquí: solo en /srv/frances/.env (ver README.md).
 
 [classroom]

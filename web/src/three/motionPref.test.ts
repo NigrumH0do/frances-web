@@ -14,6 +14,7 @@ const origMatchMedia = window.matchMedia;
 
 beforeEach(() => {
   localStorage.clear();
+  document.documentElement.className = '';
   resetWebGLSupportCacheForTests();
 });
 
@@ -54,4 +55,23 @@ test('motion3d preferencia persiste auto/off y respeta prefers-reduced-motion', 
   setMotion3dPref('auto');
   expect(prefersReducedMotion()).toBe(true);
   expect(shouldRender3d()).toBe(false);
+});
+
+test('setMotion3dPref sincroniza la clase motion-off en <html>', () => {
+  expect(document.documentElement).not.toHaveClass('motion-off');
+
+  setMotion3dPref('off');
+  expect(document.documentElement).toHaveClass('motion-off');
+
+  setMotion3dPref('auto');
+  expect(document.documentElement).not.toHaveClass('motion-off');
+});
+
+test('al cargar el módulo con la preferencia off aplica motion-off', async () => {
+  localStorage.setItem(MOTION_3D_KEY, 'off');
+  vi.resetModules();
+
+  await import('./motionPref');
+
+  expect(document.documentElement).toHaveClass('motion-off');
 });

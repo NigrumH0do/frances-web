@@ -45,11 +45,13 @@ def ctx(tmp_path: Path) -> Iterator[StageContext]:
         context.store.close()
 
 
-def _user(conn: sqlite3.Connection, user_id: str, disabled: bool = False) -> None:
+def _user(
+    conn: sqlite3.Connection, user_id: str, disabled: bool = False, status: str = "active"
+) -> None:
     conn.execute(
-        "INSERT INTO users (id, email, display_name, password_hash, role, created_at, disabled_at)"
-        " VALUES (?, ?, ?, 'x', 'user', ?, ?)",
-        (user_id, f"{user_id}@example.test", user_id, _T0, _T0 if disabled else None),
+        "INSERT INTO users (id, email, display_name, password_hash, role, created_at,"
+        " disabled_at, status) VALUES (?, ?, ?, 'x', 'user', ?, ?, ?)",
+        (user_id, f"{user_id}@example.test", user_id, _T0, _T0 if disabled else None, status),
     )
 
 
@@ -359,4 +361,17 @@ def test_run_plans_skips_disabled_users(ctx: StageContext) -> None:
     assert counts["users"] == 1
     assert counts["errors"] == 0
     assert counts["entries"] > 0
+    assert conn.execute("SELECT COUNT(*) FROM study_plan WHERE user_id = 'u_2'").fetchone() == (0,)
+
+
+def test_run_plans_skips_pending_users(ctx: StageContext) -> None:
+    """Una cuenta de Google sin aprobar (`pending`) no recibe plan diario."""
+    conn = ctx.store.conn
+    _user(conn, "u_2", status="pending")
+    _item(conn, "cw_9", title="Tarea 3", due="2026-11-03T22:00:00.000000Z")
+
+    counts = run_plans(_at(ctx, NOW))
+
+    assert counts["users"] == 1
+    assert counts["errors"] == 0
     assert conn.execute("SELECT COUNT(*) FROM study_plan WHERE user_id = 'u_2'").fetchone() == (0,)
