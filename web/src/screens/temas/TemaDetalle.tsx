@@ -11,6 +11,7 @@ import { TopicCards } from './TopicCards';
 import { TopicItems } from './TopicItems';
 import { TopicQuizzes } from './TopicQuizzes';
 import { TopicSummary } from './TopicSummary';
+import './temas.css';
 
 function subtitleFor(topic: StudyTopic): string {
   const publications =

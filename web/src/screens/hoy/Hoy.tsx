@@ -20,6 +20,7 @@ import { UpcomingCard } from './UpcomingCard';
 import { WeekStrip } from './WeekStrip';
 import { SafeStreakCompassScene } from '../../three/LazyScenes';
 import { hoyStrings } from './strings';
+import './hoy.css';
 
 interface HoyData {
   plan: StudyPlanDay;

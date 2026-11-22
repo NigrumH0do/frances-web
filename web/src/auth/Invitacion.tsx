@@ -13,6 +13,7 @@ import { common } from '../l10n/es';
 import { useAuth } from './AuthContext';
 import { passwordProblems, type PasswordProblem } from './password';
 import { authStrings } from './strings';
+import './auth.css';
 
 type CheckState =
   | { status: 'checking' }

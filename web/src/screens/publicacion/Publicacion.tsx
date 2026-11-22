@@ -27,6 +27,7 @@ import { AttachmentBlock } from '../../media/AttachmentView';
 import { CardAudio } from '../../media/CardAudio';
 import { SheetView } from './SheetView';
 import { publicacionStrings as s } from './strings';
+import './publicacion.css';
 
 function pageFromParams(raw: string | null): number | null {
   if (raw === null) return null;

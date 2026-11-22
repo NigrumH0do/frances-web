@@ -22,6 +22,7 @@ import { MessageList, type PendingAsk } from './MessageList';
 import { ThreadList } from './ThreadList';
 import { useAsk, type AskPhase } from './useAsk';
 import { chatStrings } from './strings';
+import './chat.css';
 
 // Claves de navegación cuya primera pregunta ya se envió: el modo estricto de
 // React monta dos veces y la pregunta no debe salir dos veces.

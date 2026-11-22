@@ -9,6 +9,7 @@ import { SafeAuthNotebookScene } from '../three/LazyScenes';
 import { useAuth } from './AuthContext';
 import { safeNext } from './next';
 import { authStrings } from './strings';
+import './auth.css';
 
 const DEMO_EMAIL = 'demo@example.com';
 const DEMO_PASSWORD = 'demo-demo-demo';

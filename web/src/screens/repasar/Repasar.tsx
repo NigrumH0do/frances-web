@@ -19,6 +19,7 @@ import { FlipCard } from './FlipCard';
 import { RatingBar } from './RatingBar';
 import { ReviewTabs } from './ReviewTabs';
 import { remainingLabel, repasarStrings } from './strings';
+import './repasar.css';
 
 type Notice =
   | { kind: 'suspend' | 'hard'; cardId: string; text: string }

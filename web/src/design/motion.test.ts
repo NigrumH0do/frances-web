@@ -5,14 +5,21 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const motionCss = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'motion.css'),
+const designDir = dirname(fileURLToPath(import.meta.url));
+const motionCss = readFileSync(join(designDir, 'motion.css'), 'utf8');
+const tokensCss = readFileSync(join(designDir, 'tokens.css'), 'utf8');
+const authCss = readFileSync(join(designDir, '../auth/auth.css'), 'utf8');
+const hoyCss = readFileSync(join(designDir, '../screens/hoy/hoy.css'), 'utf8');
+const repasarCss = readFileSync(
+  join(designDir, '../screens/repasar/repasar.css'),
   'utf8',
 );
-const tokensCss = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'tokens.css'),
+const pronCss = readFileSync(join(designDir, '../ui/pron/pron.css'), 'utf8');
+const chatCss = readFileSync(
+  join(designDir, '../screens/chat/chat.css'),
   'utf8',
 );
+const adminCss = readFileSync(join(designDir, '../admin/admin.css'), 'utf8');
 
 // Cuerpo de todas las reglas cuyo selector (lista separada por comas) incluye `sel`.
 function ruleFor(css: string, sel: string): string {
@@ -84,7 +91,8 @@ function classSelectors(cssChunk: string): string[] {
 
 const DUR_DECL = /--dur-(?:fast|base|med|flip|slow)\s*:/;
 
-// Thinking (`.thinking` / `.dots`) vive en components.css, no en esta hoja.
+// Thinking (`.thinking` / `.dots`) no se apaga aquí: la puerta sigue en
+// components.css y la regla base vive en chat.css.
 const MOTION_OFF_SELECTORS = [
   '.flip-tilt',
   '.route-enter',
@@ -145,30 +153,33 @@ describe('motion.css anima solo transform y opacity', () => {
   });
 
   test('los controles no animan background ni border-color', () => {
+    const owned: Record<string, string> = {
+      '.btn-google': authCss,
+      '.starter-chip': chatCss,
+    };
     for (const sel of ['.btn-google', '.starter-chip']) {
-      const transition = transitionFor(motionCss, sel);
+      const transition = transitionFor(owned[sel] ?? '', sel);
       expect(transition, sel).toMatch(/transform/);
       expect(transition, sel).not.toMatch(/background|border-color/);
     }
   });
 
   test('el medidor no anima width', () => {
-    const meter = transitionFor(motionCss, '.usage-meter-fill');
+    expect(ruleFor(adminCss, '.usage-meter-fill')).not.toBe('');
+    const meter = transitionFor(adminCss, '.usage-meter-fill');
     expect(meter).not.toMatch(/width/);
   });
 
-  test('el anillo SVG usa --c-success y no el inexistente --c-ok', () => {
+  test('el arco SVG no usa el inexistente --c-ok', () => {
     expect(motionCss).not.toContain('var(--c-ok)');
-    expect(ruleFor(motionCss, '.score-ring-fg.good')).toMatch(
-      /stroke:\s*var\(--c-success\)/,
-    );
+    expect(pronCss).not.toContain('var(--c-ok)');
     // stroke-dashoffset es la única propiedad no compuesta permitida: progresa
-    // el arco SVG y está documentada en el archivo.
-    expect(motionCss).toMatch(/stroke-dashoffset/);
+    // el arco SVG y está documentada junto a la regla, en pron.css.
+    expect(ruleFor(pronCss, '.score-ring-fg')).toMatch(/stroke-dashoffset/);
   });
 
   test('.usage-meter-fill.warn usa --c-warning y no --c-danger', () => {
-    const warn = ruleFor(motionCss, '.usage-meter-fill.warn');
+    const warn = ruleFor(adminCss, '.usage-meter-fill.warn');
     expect(warn).toMatch(/background:\s*var\(--c-warning\)/);
     expect(warn).not.toMatch(/var\(--c-danger\)/);
   });
@@ -186,7 +197,7 @@ describe('motion.css anima solo transform y opacity', () => {
   });
 
   test('.flip-tilt no declara will-change ni un 200ms literal', () => {
-    const tilt = ruleFor(motionCss, '.flip-tilt');
+    const tilt = ruleFor(repasarCss, '.flip-tilt');
     expect(tilt).not.toMatch(/will-change/);
     expect(tilt).not.toMatch(/200ms/);
     expect(tilt).toMatch(
@@ -195,7 +206,7 @@ describe('motion.css anima solo transform y opacity', () => {
   });
 
   test('.burst-overlay queda acotado y no usa inset: 0', () => {
-    const burst = ruleFor(motionCss, '.burst-overlay');
+    const burst = ruleFor(repasarCss, '.burst-overlay');
     expect(burst).toContain('min(440px, 100vw)');
     expect(burst).toMatch(/height:\s*280px/);
     expect(burst).not.toMatch(/inset:\s*0/);
@@ -218,19 +229,19 @@ describe('motion.css anima solo transform y opacity', () => {
   });
 
   test('.hoy-compass-slot mide 96px y la ceja y .week-counts usan --sp-2', () => {
-    const slot = ruleFor(motionCss, '.hoy-compass-slot');
+    const slot = ruleFor(hoyCss, '.hoy-compass-slot');
     expect(slot).toMatch(/width:\s*96px/);
     expect(slot).toMatch(/height:\s*96px/);
     expect(slot).not.toMatch(/88px/);
-    expect(ruleFor(motionCss, '.auth-cover-eyebrow')).toMatch(
+    expect(ruleFor(authCss, '.auth-cover-eyebrow')).toMatch(
       /gap:\s*var\(--sp-2\)/,
     );
-    expect(ruleFor(motionCss, '.auth-cover-eyebrow')).not.toMatch(/gap:\s*6px/);
-    expect(ruleFor(motionCss, '.week-counts')).toMatch(/gap:\s*var\(--sp-2\)/);
-    expect(ruleFor(motionCss, '.week-counts')).not.toMatch(/gap:\s*6px/);
+    expect(ruleFor(authCss, '.auth-cover-eyebrow')).not.toMatch(/gap:\s*6px/);
+    expect(ruleFor(hoyCss, '.week-counts')).toMatch(/gap:\s*var\(--sp-2\)/);
+    expect(ruleFor(hoyCss, '.week-counts')).not.toMatch(/gap:\s*6px/);
   });
 
   test('.auth-cover h1 usa font-weight 700', () => {
-    expect(ruleFor(motionCss, '.auth-cover h1')).toMatch(/font-weight:\s*700/);
+    expect(ruleFor(authCss, '.auth-cover h1')).toMatch(/font-weight:\s*700/);
   });
 });

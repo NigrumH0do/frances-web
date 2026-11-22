@@ -1,0 +1,33 @@
+/* Ficha de publicación. */
+
+/* ---------- Ficha de estudio: frase arriba, audio debajo ---------- */
+
+.sheet-phrase {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-4);
+}
+.sheet-phrase-fr {
+  font-family: var(--font-read);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.sheet-phrase .audio-player,
+.sheet-phrase .audio-empty {
+  margin-top: var(--sp-2);
+}
+
+/* ---------- Publicación split desktop ---------- */
+
+@media (min-width: 960px) {
+  .pub-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: var(--sp-6);
+    align-items: start;
+  }
+}
