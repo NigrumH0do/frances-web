@@ -17,6 +17,7 @@ from frances.accounts.passwords import (
     _DUMMY_HASH,
     MAX_LEN,
     MIN_LEN,
+    WeakPassword,
     _normalize,
     hash_password,
     needs_rehash,
@@ -97,6 +98,17 @@ def _clean_name(raw: str) -> str:
     if not 1 <= len(name) <= _NAME_MAX:
         raise AccountInputError(f"el nombre debe tener entre 1 y {_NAME_MAX} caracteres")
     return name
+
+
+def _check_password_rules(password: str) -> None:
+    """Reglas de contraseña sin argon2id, para no gastar CPU con datos inválidos.
+
+    Es la misma comprobación que hace ``passwords.hash_password`` (que vuelve a
+    validar): aquí solo se adelanta lo barato, el hash caro viene después.
+    """
+    normalized = _normalize(password)
+    if not MIN_LEN <= len(normalized) <= MAX_LEN:
+        raise WeakPassword(f"la contraseña debe tener entre {MIN_LEN} y {MAX_LEN} caracteres")
 
 
 def _user(row: tuple[object, ...]) -> UserOut:
@@ -292,11 +304,19 @@ def login_or_register_google(
     avatar_url: str | None,
     admin_emails: Collection[str],
     now: datetime,
+    max_users: int | None = None,
 ) -> tuple[UserOut, bool]:
     """Inicia sesión o registra con Google (cualquier cuenta válida).
 
-    Nuevos usuarios quedan ``pending`` salvo correos incluidos en ``admin_emails``
-    que se activan automáticamente como ``admin``.
+    Nuevos usuarios quedan ``pending`` salvo los correos de ``admin_emails``, que se
+    activan como ``admin`` (puerta de arranque de ADR-021). Una cuenta que ya existe
+    conserva su estado: si está deshabilitada solo se enlaza ``google_sub`` y nunca se
+    reactiva ni se promueve, aunque su correo esté en ``admin_emails``; una cuenta
+    ``pending`` de ``admin_emails`` sí se promueve.
+
+    ``max_users`` limita solo el alta de cuentas nuevas (igual que ``accept_invite``),
+    con la excepción de la puerta de arranque: sin ella, un tope lleno dejaría el panel
+    de administración inaccesible. Las cuentas ya existentes nunca se bloquean.
     """
     clean_email = _clean_email(email).lower()
     name = _safe_google_name(display_name, clean_email)
@@ -320,7 +340,14 @@ def login_or_register_google(
             user_id = str(existing[0])
             pwd_hash = str(existing[1])
             provider: AuthProvider = "google" if pwd_hash == OAUTH_ONLY_PASSWORD_HASH else "both"
-            if is_bootstrap_admin:
+            disabled = existing[4] is not None or str(existing[3]) == "disabled"
+            if disabled:
+                # Cuenta deshabilitada: se enlaza la identidad y se respeta el bloqueo.
+                conn.execute(
+                    "UPDATE users SET google_sub = ?, auth_provider = ? WHERE id = ?",
+                    (google_sub, provider, user_id),
+                )
+            elif is_bootstrap_admin:
                 conn.execute(
                     "UPDATE users SET google_sub = ?, auth_provider = ?, display_name = ?,"
                     " avatar_url = ?, role = 'admin', status = 'active', disabled_at = NULL"
@@ -334,6 +361,9 @@ def login_or_register_google(
                     (google_sub, provider, name, avatar, user_id),
                 )
         else:
+            total = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+            if max_users is not None and not is_bootstrap_admin and total >= max_users:
+                raise AccountError("max_users", "se alcanzó el número máximo de usuarios")
             user_id = new_user_id()
             role: Role = "admin" if is_bootstrap_admin else "user"
             status: UserStatus = "active" if is_bootstrap_admin else "pending"
@@ -354,8 +384,10 @@ def login_or_register_google(
                 ),
             )
 
-        row_status = conn.execute("SELECT status FROM users WHERE id = ?", (user_id,)).fetchone()
-        if row_status is not None and str(row_status[0]) == "active":
+        row_state = conn.execute(
+            "SELECT status, disabled_at FROM users WHERE id = ?", (user_id,)
+        ).fetchone()
+        if row_state is not None and str(row_state[0]) == "active" and row_state[1] is None:
             conn.execute("UPDATE users SET last_login_at = ? WHERE id = ?", (stamp, user_id))
 
     user = get_user(conn, user_id)
@@ -471,12 +503,15 @@ def accept_invite(
 ) -> UserOut:
     """Crea el usuario de la invitación y la marca usada, en una sola transacción.
 
-    La contraseña se valida antes de tocar la invitación. El `UPDATE` condicional
-    es la barrera: si no cambia exactamente una fila, otra aceptación ganó la carrera.
+    Primero lo barato: formato de correo y nombre, reglas de contraseña (sin argon2) y
+    vigencia de la invitación. El hash caro se calcula solo cuando la aceptación va a
+    ocurrir, así un token inválido o un correo ya tomado no gastan CPU ni consumen la
+    invitación. El `UPDATE` condicional es la barrera: si no cambia exactamente una
+    fila, otra aceptación ganó la carrera.
     """
     clean_email = _clean_email(email)
     name = _clean_name(display_name)
-    password_hash = hash_password(password)
+    _check_password_rules(password)
     digest = _sha256(token)
     now_s = format_ts(now)
     user_id = new_user_id()
@@ -493,6 +528,7 @@ def accept_invite(
         total = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
         if total >= max_users:
             raise AccountError("max_users", "se alcanzó el número máximo de usuarios")
+        password_hash = hash_password(password)
         conn.execute(
             "INSERT INTO users (id, email, display_name, password_hash, role, invited_by,"
             " created_at, last_login_at, disabled_at) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL)",

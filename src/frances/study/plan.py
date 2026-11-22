@@ -301,7 +301,7 @@ def run_plans(ctx: StageContext, *, user_ids: Sequence[str] | None = None) -> di
     now = ctx.now()
     counts = {"users": 0, "entries": 0, "errors": 0}
     rows = store.conn.execute(
-        "SELECT id FROM users WHERE disabled_at IS NULL ORDER BY id"
+        "SELECT id FROM users WHERE status = 'active' AND disabled_at IS NULL ORDER BY id"
     ).fetchall()
     for (user_id,) in rows:
         if user_ids is not None and user_id not in user_ids:
