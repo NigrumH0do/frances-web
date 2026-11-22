@@ -54,10 +54,23 @@ export function createLevelMeter(env?: LevelMeterEnv): LevelMeter | null {
     return null;
   }
 
-  const ctx = new Ctor();
-  const analyser = ctx.createAnalyser();
-  analyser.fftSize = 256;
-  analyser.smoothingTimeConstant = 0.7;
+  let ctx!: AudioContext;
+  let analyser!: AnalyserNode;
+  try {
+    ctx = new Ctor();
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.7;
+  } catch {
+    try {
+      if (ctx !== undefined) {
+        void Promise.resolve(ctx.close()).catch(() => undefined);
+      }
+    } catch {
+      // sin salida de audio
+    }
+    return null;
+  }
   const timeBuf = new Uint8Array(new ArrayBuffer(analyser.fftSize));
   const freqBuf = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
   const sample: LevelSample = {
@@ -80,7 +93,11 @@ export function createLevelMeter(env?: LevelMeterEnv): LevelMeter | null {
     },
 
     resumeFromGesture() {
-      void ctx.resume();
+      try {
+        void Promise.resolve(ctx.resume()).catch(() => undefined);
+      } catch {
+        // sin salida de audio
+      }
     },
 
     connect(stream) {
@@ -155,9 +172,9 @@ export function createLevelMeter(env?: LevelMeterEnv): LevelMeter | null {
       }
       sourceNode = null;
       try {
-        void ctx.close();
+        void Promise.resolve(ctx.close()).catch(() => undefined);
       } catch {
-        // El contexto ya estaba cerrado.
+        // ya cerrado
       }
     },
   };
