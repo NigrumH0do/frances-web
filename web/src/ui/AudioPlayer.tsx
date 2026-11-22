@@ -89,6 +89,7 @@ export function ClipPlayer({
   voices,
   preferred,
   voiceId,
+  slowLabel,
 }: {
   clips: PlayableClip[];
   pendingVoiceIds: string[];
@@ -96,6 +97,8 @@ export function ClipPlayer({
   // `null`: las preferencias aún se cargan; el selector de voz no se muestra.
   preferred: string[] | null;
   voiceId?: string;
+  // La tarjeta de repaso pide «Lento»; el resto conserva «Más lento».
+  slowLabel?: string;
 }): JSX.Element {
   const selectId = useId();
   const [override, setOverride] = useState<string | null>(null);
@@ -258,7 +261,7 @@ export function ClipPlayer({
         aria-pressed={slow}
         onClick={onSlow}
       >
-        {t('audio.slow')}
+        {slowLabel ?? t('audio.slow')}
       </button>
       <audio ref={audioRef} hidden onEnded={onEnded}>
         <track kind="captions" />

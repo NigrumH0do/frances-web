@@ -13,6 +13,7 @@ export const repasarStrings = {
   remaining: 'Quedan {n} · ~{min} min',
   progress: '{i}/{total}',
   showAnswer: 'Mostrar respuesta',
+  slow: 'Lento',
   answer: 'Respuesta',
   exampleLabel: 'Ejemplo',
   noteLabel: 'Nota',
@@ -30,6 +31,7 @@ export const repasarStrings = {
   suspendedNotice: 'Tarjeta suspendida.',
   hardNotice: 'Tarjeta marcada como difícil.',
   undo: 'Deshacer',
+  swipePending: '{grade} se aplicará en breve.',
   undoQueuedOffline: 'Sin conexión: el cambio se enviará al volver la red.',
   undoQueuedStale:
     'El cambio se guardó; la cola guardada no se recarga para no repetir reseñas.',

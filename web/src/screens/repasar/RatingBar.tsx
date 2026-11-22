@@ -20,6 +20,48 @@ function isTextEntry(target: EventTarget | null): boolean {
   );
 }
 
+function RatingGlyph({ rating }: { rating: Rating }) {
+  const shared = {
+    'aria-hidden': true as const,
+    viewBox: '0 0 24 24',
+    width: 18,
+    height: 18,
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.75,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  };
+  switch (rating) {
+    case 1:
+      return (
+        <svg {...shared}>
+          <path d="M4.5 13a7.5 7.5 0 1 0 2-5.5" />
+          <path d="M4.5 4.5V9H9" />
+        </svg>
+      );
+    case 2:
+      return (
+        <svg {...shared}>
+          <rect x="9" y="5" width="6" height="14" rx="1.5" />
+        </svg>
+      );
+    case 3:
+      return (
+        <svg {...shared}>
+          <path d="M5 12.5 10 17.5 19 7" />
+        </svg>
+      );
+    case 4:
+      return (
+        <svg {...shared}>
+          <path d="M2.5 12.5 7 17l6.5-8" />
+          <path d="M10 12.5 14.5 17 22 7" />
+        </svg>
+      );
+  }
+}
+
 function ratingFromKey(key: string): Rating | null {
   switch (key) {
     case '1':
@@ -81,7 +123,10 @@ export function RatingBar({
           aria-keyshortcuts={String(rating)}
           onClick={() => onRate(rating)}
         >
-          {repasarStrings.ratings[rating]}
+          <span className="rating-name">
+            <RatingGlyph rating={rating} />
+            {repasarStrings.ratings[rating]}
+          </span>
           <small>{intervals[rating]}</small>
         </button>
       ))}

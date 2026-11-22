@@ -10,9 +10,11 @@ import { useVoices } from './useVoices';
 export function CardAudio({
   card,
   field,
+  slowLabel,
 }: {
   card: CardView;
   field: 'front' | 'example';
+  slowLabel?: string;
 }): JSX.Element {
   const api = useApi();
   const { voices, preferred } = useVoices();
@@ -85,6 +87,7 @@ export function CardAudio({
       pendingVoiceIds={pendingVoiceIds}
       voices={voices}
       preferred={preferred}
+      slowLabel={slowLabel}
     />
   );
 }
