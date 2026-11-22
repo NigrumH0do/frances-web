@@ -1,0 +1,162 @@
+/* Fallbacks de SceneHost cuando el 3D no pinta. Sin animación propia.
+ * --c-gold-3d solo como background o trazo, nunca en color. */
+
+.scene-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.scene-fallback-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.scene-contact {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: -8%;
+  height: 18%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--c-text) 8%, transparent),
+    transparent 70%
+  );
+}
+
+.notebook-fallback {
+  position: relative;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: 5 / 4;
+  margin-inline: auto;
+}
+
+.notebook-fallback-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8px minmax(0, 1fr);
+  height: 100%;
+}
+
+.notebook-fallback [data-part='cover-left'],
+.notebook-fallback [data-part='cover-right'],
+.notebook-fallback [data-part='spine'] {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.notebook-fallback [data-part='cover-left'] {
+  background: var(--c-card);
+  border: 1px solid var(--c-border-strong);
+  border-right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+.notebook-fallback [data-part='cover-left']::after {
+  content: '';
+  position: absolute;
+  top: 8%;
+  bottom: 8%;
+  left: 16%;
+  width: 1px;
+  background: var(--rule-margin);
+}
+
+.notebook-fallback [data-part='spine'] {
+  background: linear-gradient(
+    90deg,
+    var(--c-accent-strong),
+    var(--c-accent) 46%,
+    var(--c-accent-strong)
+  );
+}
+
+.notebook-fallback [data-part='cover-right'] {
+  background-color: var(--c-card);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 7px,
+    var(--rule-line) 7px,
+    var(--rule-line) 8px
+  );
+  border: 1px solid var(--c-border-strong);
+  border-left: 0;
+  border-radius: 0 4px 4px 0;
+  box-shadow: var(--shadow-2);
+}
+
+.notebook-fallback [data-part='ribbon'] {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 68%;
+  width: 8px;
+  height: 62%;
+  background: linear-gradient(180deg, var(--c-accent), var(--c-accent-strong));
+}
+
+.notebook-fallback [data-part='ribbon-tip'] {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--c-gold-3d, #d3ac41);
+}
+
+.compass-fallback {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.compass-fallback svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.compass-milestone-14 {
+  stroke: var(--c-gold-3d, #d3ac41);
+}
+
+.orb-anchor {
+  position: absolute;
+  inset: 0;
+  width: 96px;
+  height: 96px;
+  margin: auto;
+}
+
+.orb-fallback {
+  position: relative;
+  z-index: 1;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+
+.orb-fallback.orb-band-excelente {
+  background: var(--c-score-excelente);
+}
+
+.orb-fallback.orb-band-bien {
+  background: var(--c-score-bien);
+}
+
+.orb-fallback.orb-band-mejorable {
+  background: var(--c-score-mejorable);
+}
+
+.orb-fallback.orb-band-repetir {
+  background: var(--c-score-repetir);
+}
