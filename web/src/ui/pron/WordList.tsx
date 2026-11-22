@@ -80,14 +80,23 @@ export function WordList({ words }: { words: WordScore[] }): JSX.Element {
                 >
                   {word.phonemes
                     .filter((phoneme) => phoneme.phoneme !== '')
-                    .map((phoneme, j) => (
-                      <li
-                        key={j}
-                        className={`pron-phoneme pron-band-${scoreBand(phoneme.accuracy)}`}
-                      >
-                        {`${phoneme.phoneme} ${formatScore(phoneme.accuracy)}`}
-                      </li>
-                    ))}
+                    .map((phoneme, j) => {
+                      const band = scoreBand(phoneme.accuracy);
+                      return (
+                        <li
+                          key={j}
+                          className={`pron-phoneme pron-band-${band}`}
+                        >
+                          {`${phoneme.phoneme} ${formatScore(phoneme.accuracy)}`}
+                          {band === 'repetir' ? (
+                            <span className="pron-phoneme-repeat">
+                              {' '}
+                              repetir
+                            </span>
+                          ) : null}
+                        </li>
+                      );
+                    })}
                 </ul>
               )}
           </li>

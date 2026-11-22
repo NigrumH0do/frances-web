@@ -18,8 +18,29 @@
   font-weight: 700;
 }
 .pron-score-band {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+.score-band-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.score-band-icon[data-band='excelente'] {
+  color: var(--c-score-excelente);
+}
+.score-band-icon[data-band='bien'] {
+  color: var(--c-score-bien);
+}
+.score-band-icon[data-band='mejorable'] {
+  color: var(--c-score-mejorable);
+}
+.score-band-icon[data-band='repetir'] {
+  color: var(--c-score-repetir);
 }
 .pron-score-parts {
   display: grid;
@@ -105,6 +126,8 @@
   border-radius: var(--r-md);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
+  font-family: var(--font-mono);
+  font-style: normal;
 }
 .pron-phoneme.pron-band-repetir {
   border-color: var(--c-score-repetir);
@@ -222,11 +245,51 @@
 
 /* ---------- Pronunciación: orbe acústico + anillo de puntaje + palabras ---------- */
 
+.acoustic-slot,
 .orb-wrap {
-  width: 120px;
-  height: 120px;
+  width: 160px;
+  height: 160px;
   margin-inline: auto;
   position: relative;
+}
+
+.acoustic-cabin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.record-orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--c-record);
+  color: var(--c-on-record);
+  font: inherit;
+  cursor: pointer;
+}
+
+.record-orb:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.record-orb-label {
+  position: absolute;
+  left: calc(100% + var(--sp-3));
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--c-text);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .score-ring-wrap {
@@ -250,7 +313,6 @@
 
 .score-ring-fg {
   fill: none;
-  stroke: var(--c-accent);
   stroke-width: 7;
   stroke-linecap: round;
   transform: rotate(-90deg);
@@ -258,14 +320,6 @@
   /* Excepción documentada (ver cabecera): el arco SVG solo puede progresar
    * con stroke-dashoffset; el cambio de color es instantáneo bajo motion-off. */
   transition: stroke-dashoffset var(--dur-slow) var(--ease);
-}
-
-.score-ring-fg.good {
-  stroke: var(--c-success);
-}
-
-.score-ring-fg.warn {
-  stroke: var(--c-danger);
 }
 
 .word-play-btn {

@@ -42,12 +42,6 @@
   padding-bottom: calc(var(--rule-step) * 2);
   padding-right: var(--sp-4);
 }
-.lab-sheet:focus-within {
-  border-color: var(--c-accent);
-  box-shadow:
-    0 0 0 1px var(--c-accent),
-    var(--shadow-2);
-}
 .lab-textarea {
   display: block;
   width: 100%;
@@ -60,7 +54,7 @@
   color: var(--c-text);
   font-family: var(--font-read);
   font-size: var(--fs-lg);
-  line-height: calc(var(--rule-step) * 4);
+  line-height: 32px; /* --rule-step * 4 */
   resize: vertical;
   field-sizing: content;
   caret-color: var(--c-accent);
@@ -76,7 +70,8 @@
   font-style: italic;
 }
 .lab-textarea:focus-visible {
-  outline: none;
+  outline: var(--focus-ring);
+  outline-offset: 2px;
 }
 .lab-editor-head {
   min-height: var(--tap);
