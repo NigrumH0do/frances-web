@@ -37,6 +37,47 @@ function ruleFor(css: string, selector: string): string {
   return body;
 }
 
+// Reglas de primer nivel: descarta los bloques `@media` completos.
+function withoutMedia(css: string): string {
+  let out = '';
+  let index = 0;
+  while (index < css.length) {
+    if (css.startsWith('@media', index)) {
+      const open = css.indexOf('{', index);
+      let depth = 0;
+      let cursor = open;
+      for (; cursor < css.length; cursor += 1) {
+        if (css[cursor] === '{') depth += 1;
+        else if (css[cursor] === '}') {
+          depth -= 1;
+          if (depth === 0) break;
+        }
+      }
+      index = cursor + 1;
+      continue;
+    }
+    out += css[index];
+    index += 1;
+  }
+  return out;
+}
+
+// Cuerpo del quiebre que empieza con `query`.
+function mediaBody(css: string, query: string): string {
+  const at = css.indexOf(query);
+  if (at < 0) return '';
+  const open = css.indexOf('{', at);
+  let depth = 0;
+  for (let cursor = open; cursor < css.length; cursor += 1) {
+    if (css[cursor] === '{') depth += 1;
+    else if (css[cursor] === '}') {
+      depth -= 1;
+      if (depth === 0) return css.slice(open + 1, cursor);
+    }
+  }
+  return '';
+}
+
 // La suite completa de la web crea muchas instancias de jsdom; estos tests
 // esperan IndexedDB y no deben fallar por la carga del runner.
 vi.setConfig({ testTimeout: 15_000 });
@@ -449,4 +490,67 @@ test('hoy.css parte la rejilla en 960, mide el slot y traza el eje', () => {
       /(?:^|[\s,])(?:none|transform|opacity|stroke-dashoffset)\b/,
     );
   }
+});
+
+test('la racha va en singular con 1 día y en plural con 0 o varios', async () => {
+  setMotion3dPref('off');
+
+  renderScreen(<Hoy />, {
+    routes: routes({ 'GET /api/me/stats': { ...STATS, streak_days: 1 } }),
+  });
+  expect(await screen.findByText('racha · 1 día')).toBeVisible();
+  cleanup();
+
+  renderScreen(<Hoy />, {
+    routes: routes({ 'GET /api/me/stats': { ...STATS, streak_days: 0 } }),
+  });
+  expect(await screen.findByText('racha · 0 días')).toBeVisible();
+  cleanup();
+
+  renderScreen(<Hoy />, {
+    routes: routes({ 'GET /api/me/stats': { ...STATS, streak_days: 3 } }),
+  });
+  expect(await screen.findByText('racha · 3 días')).toBeVisible();
+});
+
+test('brújula y chip comparten .hoy-streak sin estilos en línea', async () => {
+  setMotion3dPref('off');
+  renderScreen(<Hoy />, { routes: routes() });
+
+  const label = await screen.findByText('racha · 6 días');
+  const streak = label.closest('.hoy-streak');
+  expect(streak).not.toBeNull();
+  expect(streak?.getAttribute('style')).toBeNull();
+  expect(streak?.contains(label)).toBe(true);
+  expect(streak?.querySelector('.hoy-compass-slot svg')).not.toBeNull();
+});
+
+test('hoy.css apila el hero bajo 560 px para no recortar la racha', () => {
+  const clean = hoyCss.replace(/\/\*[\s\S]*?\*\//g, '');
+  const base = ruleFor(withoutMedia(clean), '.hoy-hero');
+  expect(base).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)\s*;/);
+  expect(base).not.toMatch(/minmax\(0,\s*1fr\)\s+auto/);
+
+  const wide = ruleFor(
+    mediaBody(clean, '@media (min-width: 560px)'),
+    '.hoy-hero',
+  );
+  expect(wide).toMatch(
+    /grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto\s*;/,
+  );
+
+  expect(ruleFor(clean, '.hoy-hero > :first-child')).toMatch(
+    /min-width:\s*0\s*;/,
+  );
+  expect(ruleFor(clean, '.hoy-hero h1')).toMatch(/overflow-wrap:\s*break-word/);
+
+  const streak = ruleFor(clean, '.hoy-streak');
+  expect(streak).toMatch(/display:\s*flex\s*;/);
+  expect(streak).toMatch(/align-items:\s*center\s*;/);
+  expect(streak).toMatch(/gap:\s*var\(--sp-2\)\s*;/);
+  expect(streak).toMatch(/flex-wrap:\s*wrap\s*;/);
+
+  // El slot de la brújula conserva su medida (contrato de la escena 3D).
+  expect(ruleFor(clean, '.hoy-compass-slot')).toMatch(/width:\s*96px\s*;/);
+  expect(hoyCss).not.toContain('--s-2');
 });

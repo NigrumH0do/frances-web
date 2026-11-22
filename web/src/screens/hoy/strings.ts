@@ -11,6 +11,7 @@ export const hoyStrings = {
   speakBody: 'Écris-le, écoute-le, dis-le.',
 
   streak: 'racha · {n} días',
+  streakOne: 'racha · {n} día',
 
   planTitle: 'Tu plan de hoy',
   planProgress: '{done} de {total} hecho',
