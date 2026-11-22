@@ -6,6 +6,7 @@
 // siempre antes de terminar. El audio nunca se persiste.
 
 import type { PronResult } from '../contracts/generated';
+import { createLevelMeter, type LevelMeter } from './levelMeter';
 import { parseAzureResult } from './parse';
 import type { Recognizer } from './recognizer';
 import { RecognizerError } from './recognizer';
@@ -21,6 +22,12 @@ export interface Recorder {
   subscribe(fn: (state: RecorderState) => void): () => void;
   start(referenceText: string, cardId: string | null): Promise<void>;
   abort(): void;
+  getLevelMeter(): LevelMeter | null;
+}
+
+export interface RecorderOptions {
+  captureTake?: boolean;
+  meterRef?: { current: LevelMeter | null };
 }
 
 // Cadenas propias de P06 (R-18): no van a `es.ts` de WEB-01.
@@ -92,7 +99,8 @@ export function createRecorder(
   now: () => Date = () => new Date(),
   // `captureTake`: además de evaluar, graba la voz del usuario en memoria
   // (`take` del estado `done`) para que pueda oírse (ADR-018).
-  options: { captureTake?: boolean } = {},
+  // `meterRef`: medidor del mismo stream, creado en el gesto de `start`.
+  options: RecorderOptions = {},
 ): Recorder {
   let state: RecorderState = { status: 'idle' };
   const listeners = new Set<(state: RecorderState) => void>();
@@ -102,7 +110,36 @@ export function createRecorder(
     controller: AbortController;
     stream: MediaStream | null;
     take: Take | null;
+    meter: LevelMeter | null;
   } | null = null;
+  let activeMeter: LevelMeter | null = null;
+
+  const releaseMeter = (mine: NonNullable<typeof session>) => {
+    const meter = mine.meter;
+    mine.meter = null;
+    if (meter !== null) {
+      try {
+        meter.close();
+      } catch {
+        // Un fallo del medidor no cambia el estado de la toma.
+      }
+    }
+    if (options.meterRef !== undefined && options.meterRef.current === meter) {
+      options.meterRef.current = null;
+    }
+    if (activeMeter === meter) {
+      activeMeter = null;
+    }
+  };
+
+  const stopStream = (mine: NonNullable<typeof session>) => {
+    const stream = mine.stream;
+    mine.stream = null;
+    releaseMeter(mine);
+    if (stream) {
+      stopTracks(stream);
+    }
+  };
 
   const setState = (next: RecorderState) => {
     state = next;
@@ -113,6 +150,7 @@ export function createRecorder(
 
   return {
     getState: () => state,
+    getLevelMeter: () => activeMeter,
 
     subscribe(fn) {
       listeners.add(fn);
@@ -129,21 +167,41 @@ export function createRecorder(
       ) {
         return;
       }
+      let meter: LevelMeter | null = null;
+      if (options.meterRef) {
+        try {
+          meter = createLevelMeter();
+          options.meterRef.current = meter;
+          meter?.resumeFromGesture();
+        } catch {
+          try {
+            meter?.close();
+          } catch {
+            // El medidor no llegó a abrirse.
+          }
+          meter = null;
+          options.meterRef.current = null;
+        }
+        activeMeter = meter;
+      }
       const mine: {
         controller: AbortController;
         stream: MediaStream | null;
         take: Take | null;
-      } = { controller: new AbortController(), stream: null, take: null };
+        meter: LevelMeter | null;
+      } = {
+        controller: new AbortController(),
+        stream: null,
+        take: null,
+        meter,
+      };
       session = mine;
       const signal = mine.controller.signal;
       const isCurrent = () => session === mine && !signal.aborted;
       const finish = (next: RecorderState) => {
         mine.take?.cancel();
         mine.take = null;
-        if (mine.stream) {
-          stopTracks(mine.stream);
-          mine.stream = null;
-        }
+        stopStream(mine);
         if (isCurrent()) {
           session = null;
           setState(next);
@@ -159,10 +217,16 @@ export function createRecorder(
         return;
       }
       if (!isCurrent()) {
+        releaseMeter(mine);
         stopTracks(captured);
         return;
       }
       mine.stream = captured;
+      try {
+        mine.meter?.connect(captured);
+      } catch {
+        // Un stream falso no puede tumbar la evaluación.
+      }
       if (options.captureTake === true) {
         mine.take = startTake(captured);
       }
@@ -178,10 +242,7 @@ export function createRecorder(
       const take = mine.take;
       mine.take = null;
       const takeBlob = take === null ? null : await take.stop();
-      if (mine.stream) {
-        stopTracks(mine.stream);
-        mine.stream = null;
-      }
+      stopStream(mine);
       if (!isCurrent()) {
         return;
       }
@@ -215,10 +276,7 @@ export function createRecorder(
         current.controller.abort();
         current.take?.cancel();
         current.take = null;
-        if (current.stream) {
-          stopTracks(current.stream);
-          current.stream = null;
-        }
+        stopStream(current);
       }
       if (state.status !== 'idle') {
         setState({ status: 'idle' });
