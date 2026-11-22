@@ -42,6 +42,20 @@ const shellCss = readFileSync(
   'utf8',
 );
 
+// Cuerpo de las reglas que declaran `selector` (incluye los quiebres: para el
+// contrato del marco basta con que la propiedad esté declarada una vez).
+function ruleFor(css: string, selector: string): string {
+  const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  let body = '';
+  for (const match of clean.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selectors = (match[1] as string)
+      .split(',')
+      .map((item) => item.trim());
+    if (selectors.includes(selector)) body += match[2] as string;
+  }
+  return body;
+}
+
 const CONTENT_CLASS: ReadonlyArray<readonly [string, string]> = [
   ['/', 'content content-split'],
   ['/repasar', 'content content-repasar'],
@@ -109,4 +123,21 @@ test('shell.css quiebra en 960px y no reserva la barra dos veces', () => {
   expect(base).toMatch(/\.shell-tabbar\s*\{[^}]*height:\s*0\s*;/);
   expect(base).toMatch(/\.shell-tabbar\s*\{[^}]*overflow:\s*visible\s*;/);
   expect(wide).toMatch(/\.shell-tabbar\s*\{[^}]*height:\s*auto\s*;/);
+});
+
+test('el shell acota su alto para que .content sea el scroller real', () => {
+  // Sin `height`, `<main class="content">` crece con el documento
+  // (`clientHeight === scrollHeight`), `overscroll-behavior: contain` se traga
+  // la rueda y el `position: sticky` de `.admin-subnav` y `.pub-split` no tiene
+  // caja contra la que pegarse.
+  const shell = ruleFor(shellCss, '.shell');
+  expect(shell).toMatch(/(^|\n)\s*height:\s*100dvh\s*;/);
+  expect(shell).toMatch(/min-height:\s*0\s*;/);
+
+  const main = ruleFor(shellCss, '.shell-main');
+  expect(main).toMatch(/min-height:\s*0\s*;/);
+  expect(main).toMatch(/min-width:\s*0\s*;/);
+
+  // El hijo flex debe poder encogerse por debajo de su alto de contenido.
+  expect(ruleFor(shellCss, '.content')).toMatch(/min-height:\s*0\s*;/);
 });
