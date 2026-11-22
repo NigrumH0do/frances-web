@@ -77,6 +77,31 @@ function makeEnv(options?: { sourceThrows?: boolean }): {
   };
 }
 
+const audioNotInitialized = () =>
+  new DOMException(
+    'AudioDestinationNode is not initialized',
+    'InvalidStateError',
+  );
+
+async function unhandledDuring(run: () => void): Promise<unknown[]> {
+  const reasons: unknown[] = [];
+  const onUnhandled = (reason: unknown) => {
+    reasons.push(reason);
+  };
+  process.on('unhandledRejection', onUnhandled);
+  try {
+    run();
+    await Promise.resolve();
+    await Promise.resolve();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+    return reasons;
+  } finally {
+    process.off('unhandledRejection', onUnhandled);
+  }
+}
+
 function openMeter(): {
   meter: LevelMeter;
   analyser: FakeAnalyser;
@@ -223,4 +248,117 @@ test('sin constructor de audio devuelve null', () => {
   expect(createLevelMeter()).toBeNull();
   expect(createLevelMeter({})).toBeNull();
   vi.unstubAllGlobals();
+});
+
+function analyserNode() {
+  return {
+    fftSize: 2048,
+    smoothingTimeConstant: 0.8,
+    get frequencyBinCount() {
+      return this.fftSize / 2;
+    },
+    getByteTimeDomainData() {},
+    getByteFrequencyData() {},
+  };
+}
+
+test('resumeFromGesture llama a resume en el mismo turno aunque la promesa rechace', async () => {
+  const order: string[] = [];
+  let resumeCalls = 0;
+  function FakeAudioContext(this: unknown) {
+    return {
+      resume() {
+        resumeCalls += 1;
+        order.push('resume');
+        return Promise.reject(audioNotInitialized());
+      },
+      close() {
+        return Promise.resolve();
+      },
+      createAnalyser: analyserNode,
+      createMediaStreamSource() {
+        return { connect() {}, disconnect() {} };
+      },
+    };
+  }
+  const meter = createLevelMeter({
+    AudioContext: FakeAudioContext as unknown as typeof AudioContext,
+  });
+  if (meter === null) {
+    throw new Error('createLevelMeter devolvió null');
+  }
+  const reasons = await unhandledDuring(() => {
+    meter.resumeFromGesture();
+    order.push('returned');
+    expect(order).toEqual(['resume', 'returned']);
+    expect(resumeCalls).toBe(1);
+  });
+  expect(reasons).toEqual([]);
+});
+
+test('close no deja un rechazo asíncrono del contexto sin manejar', async () => {
+  let closeCalls = 0;
+  function FakeAudioContext(this: unknown) {
+    return {
+      resume() {
+        return Promise.resolve();
+      },
+      close() {
+        closeCalls += 1;
+        return Promise.reject(audioNotInitialized());
+      },
+      createAnalyser: analyserNode,
+      createMediaStreamSource() {
+        return { connect() {}, disconnect() {} };
+      },
+    };
+  }
+  const meter = createLevelMeter({
+    AudioContext: FakeAudioContext as unknown as typeof AudioContext,
+  });
+  if (meter === null) {
+    throw new Error('createLevelMeter devolvió null');
+  }
+  const reasons = await unhandledDuring(() => {
+    expect(() => meter.close()).not.toThrow();
+    expect(closeCalls).toBe(1);
+  });
+  expect(reasons).toEqual([]);
+});
+
+test('un constructor de AudioContext que lanza devuelve null', () => {
+  function BrokenAudioContext(this: unknown) {
+    throw audioNotInitialized();
+  }
+  const env = {
+    AudioContext: BrokenAudioContext as unknown as typeof AudioContext,
+  };
+  expect(() => {
+    expect(createLevelMeter(env)).toBeNull();
+  }).not.toThrow();
+});
+
+test('createAnalyser que lanza devuelve null y cierra el contexto sin rechazos sueltos', async () => {
+  let closeCalls = 0;
+  function FakeAudioContext(this: unknown) {
+    return {
+      close() {
+        closeCalls += 1;
+        return Promise.reject(audioNotInitialized());
+      },
+      createAnalyser() {
+        throw audioNotInitialized();
+      },
+    };
+  }
+  const env = {
+    AudioContext: FakeAudioContext as unknown as typeof AudioContext,
+  };
+  const reasons = await unhandledDuring(() => {
+    expect(() => {
+      expect(createLevelMeter(env)).toBeNull();
+    }).not.toThrow();
+    expect(closeCalls).toBe(1);
+  });
+  expect(reasons).toEqual([]);
 });
