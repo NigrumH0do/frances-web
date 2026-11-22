@@ -8,13 +8,15 @@ import {
 } from 'react';
 import { useApi } from '../../api/ApiContext';
 import { Button, Icon } from '../../components';
-import { cx } from '../../components/cx';
 import type { PracticeTtsOut, PronResult } from '../../contracts/generated';
 import { tr } from '../../l10n/es';
 import { useBlobPlayer } from '../../media/useBlobPlayer';
+import { createLevelMeter } from '../../pron/levelMeter';
+import { usePracticeLevelMeter } from '../../pron/practiceHooks';
 import type { Recognizer } from '../../pron/recognizer';
 import { createRecorder, type RecorderState } from '../../pron/recorder';
 import { startTake, type Take } from '../../pron/take';
+import { AcousticCabin } from '../../ui/pron/AcousticCabin';
 import { persistPracticeResult } from '../../ui/pron/PracticeSession';
 import { ScoreSummary } from '../../ui/pron/ScoreSummary';
 import { WordList } from '../../ui/pron/WordList';
@@ -56,6 +58,7 @@ export function SpeakPanel({
   const headingId = useId();
   const statusId = useId();
   const player = useBlobPlayer();
+  const { meterRef } = usePracticeLevelMeter();
   const [recState, setRecState] = useState<RecorderState>({ status: 'idle' });
   const [result, setResult] = useState<PronResult | null>(null);
   const [take, setTake] = useState<Blob | null>(null);
@@ -79,6 +82,7 @@ export function SpeakPanel({
     let active = true;
     const recorder = createRecorder(recognizer, undefined, undefined, {
       captureTake: true,
+      meterRef,
     });
     recorderRef.current = recorder;
     const unsubscribe = recorder.subscribe((state) => {
@@ -117,6 +121,12 @@ export function SpeakPanel({
     if (current === null) return;
     clearTimeout(current.timer);
     const blob = current.take === null ? null : await current.take.stop();
+    try {
+      meterRef.current?.close();
+    } catch {
+      // El medidor no puede impedir soltar el micrófono.
+    }
+    meterRef.current = null;
     for (const track of current.stream.getTracks()) track.stop();
     setTake(blob);
     setSolo({ status: 'idle' });
@@ -129,6 +139,12 @@ export function SpeakPanel({
       if (current !== null) {
         clearTimeout(current.timer);
         current.take?.cancel();
+        try {
+          meterRef.current?.close();
+        } catch {
+          // Igual hay que soltar las pistas.
+        }
+        meterRef.current = null;
         for (const track of current.stream.getTracks()) track.stop();
       }
     },
@@ -136,6 +152,9 @@ export function SpeakPanel({
   );
 
   async function startSolo(): Promise<void> {
+    const meter = createLevelMeter();
+    meterRef.current = meter;
+    meter?.resumeFromGesture();
     setResult(null);
     setTake(null);
     player.stop();
@@ -143,11 +162,28 @@ export function SpeakPanel({
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
+      try {
+        meterRef.current?.close();
+      } catch {
+        // No llegó a haber stream.
+      }
+      meterRef.current = null;
       setSolo({ status: 'error', message: s.micError });
       return;
     }
+    try {
+      meter?.connect(stream);
+    } catch {
+      // Un stream falso no tumba la grabación.
+    }
     const recording = startTake(stream);
     if (recording === null) {
+      try {
+        meterRef.current?.close();
+      } catch {
+        // Igual hay que soltar las pistas.
+      }
+      meterRef.current = null;
       for (const track of stream.getTracks()) track.stop();
       setSolo({ status: 'error', message: s.micError });
       return;
@@ -207,8 +243,6 @@ export function SpeakPanel({
   else if (recording) status = s.recording;
   else if (scoring) status = '…';
 
-  const micLabel = recording ? s.stop : recordOnly ? s.recordOnly : s.record;
-
   return (
     <section className="lab-panel lab-speak" aria-labelledby={headingId}>
       <div className="lab-panel-head">
@@ -223,18 +257,17 @@ export function SpeakPanel({
       ) : null}
 
       <div className="lab-record">
-        <button
-          type="button"
-          className={cx('lab-mic', recording && 'is-recording')}
-          aria-label={micLabel}
-          aria-describedby={statusId}
+        <AcousticCabin
+          active={recording}
+          score={result?.scores.pron}
+          meterRef={meterRef}
           disabled={!ready || scoring}
-          onClick={onMic}
-        >
-          <Icon name={recording ? 'stop' : 'mic'} />
-        </button>
+          recordLabel={recordOnly ? s.recordOnly : s.record}
+          stopLabel={s.stop}
+          describedBy={statusId}
+          onToggle={onMic}
+        />
         <div className="lab-record-text">
-          <strong aria-hidden="true">{micLabel}</strong>
           <span
             id={statusId}
             className="small muted"

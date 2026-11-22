@@ -1,16 +1,22 @@
 import '@testing-library/jest-dom/vitest';
 import 'fake-indexeddb/auto';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import type { ReactElement } from 'react';
+import type { JSX, ReactElement } from 'react';
 import bonjour from '../../../../tests/fixtures/azure/bonjour.json';
 import { closeFrancesDbForTests } from '../../db/idb';
 import { listAttempts } from '../../pron/attempts';
+import type { LevelMeter } from '../../pron/levelMeter';
 import { getUsage } from '../../pron/quota';
 import type { Recognizer } from '../../pron/recognizer';
 import { RecognizerError } from '../../pron/recognizer';
+import * as recorderModule from '../../pron/recorder';
 import { loadStats } from '../../pron/stats';
+import { setMotion3dPref } from '../../three/motionPref';
 import { PracticeSession, type PracticeCard } from './PracticeSession';
 
 function makeCard(partial: Partial<PracticeCard> = {}): PracticeCard {
@@ -339,4 +345,161 @@ test('score summary muestra anillo SVG y WordList reproduce palabra con voz fran
       value: origUtterance,
     });
   }
+});
+
+const pronCss = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), 'pron.css'),
+  'utf8',
+);
+
+function matchMediaReducing(reduce: boolean) {
+  return (query: string) =>
+    ({
+      matches: reduce && query.includes('prefers-reduced-motion'),
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    }) as unknown as MediaQueryList;
+}
+
+test('la cabina usa record-orb, aria-pressed y la raíz no es papel', async () => {
+  const user = userEvent.setup();
+  const pending: Recognizer = {
+    assess: () => new Promise(() => undefined),
+  };
+  renderSession(<PracticeSession card={card} recognizer={pending} />);
+  const root = document.querySelector('.practice-session');
+  expect(root).not.toBeNull();
+  expect(root).not.toHaveClass('paper');
+  expect(screen.getByText('Allez vite !')).toHaveClass('paper');
+  const record = screen.getByRole('button', { name: 'Grabar' });
+  expect(record).toHaveClass('record-orb');
+  expect(record).toHaveAttribute('aria-pressed', 'false');
+  await user.click(record);
+  const stopButton = await screen.findByRole('button', { name: 'Detener' });
+  expect(stopButton).toHaveClass('record-orb');
+  expect(stopButton).toHaveAttribute('aria-pressed', 'true');
+  expect(document.querySelector('.acoustic-slot')).not.toBeNull();
+});
+
+test('con motion-off el hueco acústico muestra el orbe de respaldo', () => {
+  setMotion3dPref('off');
+  try {
+    renderSession(<PracticeSession card={card} recognizer={null} />);
+    const slot = document.querySelector('.acoustic-slot');
+    expect(slot).not.toBeNull();
+    expect(slot?.querySelector('.orb-fallback')).not.toBeNull();
+  } finally {
+    setMotion3dPref('auto');
+  }
+});
+
+test('navigator.vibrate no se llama con reduced-motion', async () => {
+  const vibrate = vi.fn();
+  const originalMatchMedia = window.matchMedia;
+  Object.defineProperty(navigator, 'vibrate', {
+    configurable: true,
+    value: vibrate,
+  });
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    writable: true,
+    value: matchMediaReducing(true),
+  });
+  setMotion3dPref('auto');
+  try {
+    const user = userEvent.setup();
+    const pending: Recognizer = {
+      assess: () => new Promise(() => undefined),
+    };
+    renderSession(<PracticeSession card={card} recognizer={pending} />);
+    await user.click(screen.getByRole('button', { name: 'Grabar' }));
+    expect(vibrate).not.toHaveBeenCalled();
+  } finally {
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      writable: true,
+      value: originalMatchMedia,
+    });
+    setMotion3dPref('auto');
+  }
+});
+
+test('al iniciar la grabación vibra 15 ms si el movimiento está permitido', async () => {
+  const vibrate = vi.fn();
+  Object.defineProperty(navigator, 'vibrate', {
+    configurable: true,
+    value: vibrate,
+  });
+  setMotion3dPref('auto');
+  const user = userEvent.setup();
+  const pending: Recognizer = {
+    assess: () => new Promise(() => undefined),
+  };
+  renderSession(<PracticeSession card={card} recognizer={pending} />);
+  await user.click(screen.getByRole('button', { name: 'Grabar' }));
+  expect(vibrate).toHaveBeenCalledTimes(1);
+  expect(vibrate).toHaveBeenCalledWith(15);
+});
+
+test('leer el medidor diez veces no re-renderiza PracticeSession', async () => {
+  const spy = vi.spyOn(recorderModule, 'createRecorder');
+  let probeRenders = 0;
+  function Probe(): JSX.Element {
+    probeRenders += 1;
+    return <span data-testid="render-probe" />;
+  }
+  try {
+    renderSession(
+      <PracticeSession card={card} recognizer={fakeRec} audio={<Probe />} />,
+    );
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+    const options = spy.mock.calls[0]?.[3] as
+      { meterRef?: { current: LevelMeter | null } } | undefined;
+    const meterRef = options?.meterRef;
+    expect(meterRef).toBeDefined();
+    const read = vi.fn(() => ({
+      rms: 0.4,
+      low: 0,
+      mid: 0,
+      high: 0,
+      source: 'live' as const,
+    }));
+    meterRef!.current = {
+      resumeFromGesture() {},
+      connect() {},
+      close() {},
+      read,
+      get silentEpisodes() {
+        return 0;
+      },
+    };
+    const baseline = probeRenders;
+    for (let i = 0; i < 10; i += 1) {
+      meterRef!.current!.read(1 / 60, true);
+    }
+    expect(read).toHaveBeenCalledTimes(10);
+    expect(probeRenders).toBe(baseline);
+  } finally {
+    spy.mockRestore();
+  }
+});
+
+test('pron.css dibuja la cabina a 160 y el botón a 72 sin oro de escena', () => {
+  expect(pronCss).toMatch(/\.orb-wrap\s*\{[^}]*width:\s*160px/);
+  expect(pronCss).toMatch(/\.orb-wrap\s*\{[^}]*height:\s*160px/);
+  expect(pronCss).toMatch(/\.acoustic-slot[\s\S]*?width:\s*160px/);
+  const orb = pronCss.match(/\.record-orb\s*\{[^}]*\}/)?.[0] ?? '';
+  expect(orb).toMatch(/width:\s*72px/);
+  expect(orb).toMatch(/height:\s*72px/);
+  expect(orb).toContain('var(--c-record)');
+  expect(orb).toContain('var(--c-on-record)');
+  expect(pronCss).not.toMatch(/color:\s*var\(--c-gold-3d\)/);
+  const total = pronCss.match(/\.pron-score-total\s*\{[^}]*\}/)?.[0] ?? '';
+  expect(total).toMatch(/color:\s*var\(--c-text\)/);
+  expect(total).toMatch(/font-variant-numeric:\s*tabular-nums/);
 });
