@@ -1,5 +1,7 @@
 # ADR-023: Sistema visual «Cahier Atelier 3D» y animaciones WebGL
 
+Aceptado. El oro único `--c-gold`, el reloj duplicado en `motion.css` y el renderer por ruta quedan reemplazados por ADR-025.
+
 **Estado:** Aceptado (2026-11-19)
 **Tarea:** CHG-25
 

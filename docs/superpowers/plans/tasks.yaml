@@ -17,6 +17,7 @@ plans:
   P10: docs/superpowers/plans/2026-11-02-10-ia-estudio.md
   P11: docs/superpowers/plans/2026-11-02-11-gestion.md
   P12: docs/superpowers/plans/2026-11-02-12-golive.md
+  P13: docs/superpowers/plans/2026-11-21-13-cahier-edicion-definitiva.md
 tasks:
   # ---------- Spikes (salida: ADR + fixtures) ----------
   - {id: SPK-01, plan: P01, human: false, deps: [], title: "Edge-TTS: confirmar las 13 voces, formato y límites", owns: [docs/decisions/ADR-001-edge-tts.md, scripts/spikes/spk01_edge_voices.py]}
@@ -228,3 +229,38 @@ tasks:
   - {id: CHG-24, plan: P08, human: false, deps: [SRV-10, AUD-04, CRD-03, CHG-07], title: "Pool multicuenta de Azure Speech y Translator cifrado, migración 0006 (ADR-022)", owns: []}
   - {id: CHG-25, plan: P09, human: false, deps: [UI-02, UI-09], title: "Cahier Atelier 3D: escenas WebGL, movimiento CSS y preferencia (ADR-023)", owns: []}
   - {id: PRACTICE-01, plan: P09, human: false, deps: [UI-16, SRV-10, CHG-24], title: "Texto libre: TTS, grabación y puntuación de pronunciación (ADR-018)", owns: []}
+
+  # ================= P13 — Cahier Atelier 3D, Edición Definitiva (ADR-025) =================
+  # R-31: no se mutan tareas ni owns de P01–P12. owns solo lista rutas sin dueño
+  # previo; el resto de cada ficha está en Touches del plan P13. Deps = DAG de P13.
+  # BUG-01, GOV-01 y DS-01 no tienen predecesor P13 (D0 y fix/post-audit-f1-f4
+  # no son IDs). El ancla histórica los saca de la Ola 0: el test del grafo
+  # exige «Ola 0 (6)», las seis raíces v1. GOV-01 y DS-01 siguen en paralelo.
+  - {id: BUG-01, plan: P13, human: false, deps: [CHG-01], title: "Cerrar fugas de conexión SQLite (0 ResourceWarning)", owns: []}
+  - {id: GOV-01, plan: P13, human: false, deps: [CHG-25, PRACTICE-01], title: "ADR-025, skill, índice y registro P13 en tasks.yaml", owns: [docs/decisions/ADR-025-cahier-atelier-3d-edicion-definitiva.md, docs/superpowers/plans/2026-11-21-13-cahier-edicion-definitiva.md]}
+  - {id: DS-01, plan: P13, human: false, deps: [CHG-25], title: "Paleta Papel Seyès / Pizarra nocturna, escala y reloj único en tokens.css", owns: []}
+  - {id: DS-02, plan: P13, human: false, deps: [GOV-01, DS-01], title: "Cascada única de movimiento y correcciones de motion.css", owns: []}
+  - {id: DS-03, plan: P13, human: false, deps: [GOV-01, DS-01], title: "Quiebre único 960 px, riel 232 px, IPA mono y transiciones de components.css", owns: []}
+  - {id: DS-04, plan: P13, human: false, deps: [DS-02, DS-03], title: "Extracción de CSS por pantalla, Spectral 700 y cifras tabulares", owns: []}
+  - {id: SHL-01, plan: P13, human: false, deps: [DS-03], title: "Shell a 960 px, contentClass y RouteAnnouncer", owns: []}
+  - {id: SHL-02, plan: P13, human: false, deps: [DS-01], title: "theme-color dinámico y script previo a la hidratación", owns: []}
+  - {id: GL-01, plan: P13, human: false, deps: [GOV-01, DS-01], title: "SceneHost v2 singleton, tier, spring, sceneGate y lights", owns: [web/src/three/createSceneHost.ts, web/src/three/createSceneHost.test.ts, web/src/three/tier.ts, web/src/three/tier.test.ts, web/src/three/spring.ts, web/src/three/spring.test.ts, web/src/three/sceneGate.ts, web/src/three/sceneGate.test.ts, web/src/three/lights.ts, web/src/three/lights.test.ts]}
+  - {id: GL-02, plan: P13, human: false, deps: [GL-01, GL-04, GL-05, GL-06, GL-07], title: "Fallbacks editoriales, LazyScenes v2 y barrera de imports 3D", owns: [web/src/three/LazyScenes.tsx, web/src/three/LazyScenes.test.tsx, web/src/three/fallbacks.tsx, web/src/three/fallbacks.css, web/src/three/fallbacks.test.tsx, web/src/three/sceneImports.test.ts]}
+  - {id: GL-03, plan: P13, human: false, deps: [GOV-01], title: "Medidor de audio createLevelMeter sin tercera captura", owns: [web/src/pron/levelMeter.ts, web/src/pron/levelMeter.test.ts]}
+  - {id: GL-04, plan: P13, human: false, deps: [GL-01], title: "AuthNotebookScene v2, cuaderno atelier y texturas", owns: [web/src/three/AuthNotebookScene.tsx, web/src/three/AuthNotebookScene.test.tsx, web/src/three/textures.ts, web/src/three/textures.test.ts]}
+  - {id: GL-05, plan: P13, human: false, deps: [GL-01], title: "StreakCompassScene v2, brújula de maestría", owns: [web/src/three/StreakCompassScene.tsx, web/src/three/StreakCompassScene.test.tsx, web/src/three/compassDial.ts, web/src/three/compassDial.test.ts]}
+  - {id: GL-06, plan: P13, human: false, deps: [GL-01, GL-03], title: "VoiceOrbScene v2 y shader GLSL del audio real", owns: [web/src/three/VoiceOrbScene.tsx, web/src/three/VoiceOrbScene.test.tsx, web/src/three/orbShader.ts, web/src/three/orbShader.test.ts]}
+  - {id: GL-07, plan: P13, human: false, deps: [GL-01, DS-01], title: "CardBurstScene v2 y caché PWA del chunk three", owns: [web/src/three/burstPhysics.ts, web/src/three/burstPhysics.test.ts, web/src/three/CardBurstScene.tsx, web/src/three/CardBurstScene.test.tsx, web/src/three/burstShader.ts]}
+  - {id: SCR-01, plan: P13, human: false, deps: [DS-01, DS-04, GL-02, GL-04], title: "Portada de acceso e invitación", owns: []}
+  - {id: SCR-02, plan: P13, human: false, deps: [DS-01, DS-04, SHL-01, GL-02, GL-05], title: "Pantalla Hoy", owns: []}
+  - {id: SCR-03, plan: P13, human: false, deps: [DS-01, DS-04, SHL-01], title: "Temas y detalle de tema", owns: []}
+  - {id: SCR-04, plan: P13, human: false, deps: [DS-01, DS-04, SHL-01], title: "Publicación y visor PDF resiliente", owns: []}
+  - {id: SCR-05, plan: P13, human: false, deps: [DS-01, DS-02, DS-03, DS-04, SHL-01, GL-02, GL-07], title: "Repasar: FlipCard, audio lento, FSRS y ráfaga única", owns: []}
+  - {id: SCR-06, plan: P13, human: false, deps: [DS-01, DS-03, DS-04, SHL-01, GL-02, GL-03, GL-06], title: "Pronunciación y texto libre", owns: [web/src/screens/texto/]}
+  - {id: SCR-07, plan: P13, human: false, deps: [DS-01, DS-04, SHL-01], title: "Quiz", owns: []}
+  - {id: SCR-08, plan: P13, human: false, deps: [DS-01, DS-04, SHL-01], title: "Chat con split a 960 px y citas sin POST", owns: []}
+  - {id: SCR-09, plan: P13, human: false, deps: [DS-01, DS-02, DS-04, SHL-01], title: "Más y consola de administración", owns: []}
+  - {id: QA-01, plan: P13, human: false, deps: [DS-01, GL-07, SCR-01, SCR-02, SCR-05, SCR-06], title: "Compuerta de build, manualChunks y presupuesto three de 160 KiB", owns: [web/scripts/check-three-budget.mjs, web/scripts/check-three-budget.test.ts]}
+  - {id: QA-02, plan: P13, human: false, deps: [DS-01, DS-02, DS-03, DS-04, GL-01, GL-03, GL-04, GL-05, GL-06, GL-07], title: "Contratos visuales, paridad motion-off, imports con nombre y física pura", owns: [web/src/three/namedImports.test.ts, web/src/three/orbPalette.test.ts]}
+  - {id: QA-03, plan: P13, human: false, deps: [SCR-01, SCR-02, SCR-03, SCR-04, SCR-05, SCR-06, SCR-07, SCR-08, SCR-09, GL-02, QA-01, QA-02], title: "Playwright E2E v2: 3D, estrés, axe y LCP", owns: []}
+  - {id: QA-04, plan: P13, human: true, deps: [QA-01, QA-02, QA-03], title: "Matriz integral de cierre y acta ADR-026", owns: [docs/decisions/ADR-026-cahier-aceptacion.md]}
