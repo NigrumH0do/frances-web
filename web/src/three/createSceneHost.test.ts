@@ -138,6 +138,32 @@ function rafQueue() {
   };
 }
 
+function mountPaletteSession(systemDark: boolean) {
+  const system = stubSystemDark(systemDark);
+  const frames = rafQueue();
+  __setRendererFactoryForTests(() => fakeRenderer().renderer);
+  const container = document.createElement('div');
+  let palette: Palette | null = null;
+  const cleanup = mountSceneHost(container, 'full', (_scene, _camera, live) => {
+    palette = live;
+    return idleHooks();
+  });
+  return {
+    system,
+    frames,
+    cleanup,
+    getPalette: () => palette,
+  };
+}
+
+async function drainThemeFrame(
+  frames: ReturnType<typeof rafQueue>,
+): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+  frames.flush(16);
+}
+
 beforeEach(() => {
   document.documentElement.className = '';
   delete document.documentElement.dataset.palette;
@@ -493,6 +519,50 @@ describe('mountSceneHost', () => {
     expect(live?.accent.r).toBe(target.r);
     expect(live?.accent.g).toBe(target.g);
     expect(live?.accent.b).toBe(target.b);
+    cleanup();
+  });
+
+  test('theme-light sustituye el data-palette oscuro publicado en modo sistema', async () => {
+    const { frames, cleanup, getPalette } = mountPaletteSession(true);
+
+    expect(document.documentElement.dataset.palette).toBe('dark');
+    expect(getPalette()?.isDark).toBe(true);
+
+    document.documentElement.classList.add('theme-light');
+    await drainThemeFrame(frames);
+
+    expect(document.documentElement.dataset.palette).toBe('light');
+    expect(getPalette()?.isDark).toBe(false);
+    cleanup();
+  });
+
+  test('quitar theme-light devuelve el data-palette al sistema oscuro', async () => {
+    const { frames, cleanup, getPalette } = mountPaletteSession(true);
+
+    document.documentElement.classList.add('theme-light');
+    await drainThemeFrame(frames);
+    expect(document.documentElement.dataset.palette).toBe('light');
+    expect(getPalette()?.isDark).toBe(false);
+
+    document.documentElement.classList.remove('theme-light');
+    await drainThemeFrame(frames);
+
+    expect(document.documentElement.dataset.palette).toBe('dark');
+    expect(getPalette()?.isDark).toBe(true);
+    cleanup();
+  });
+
+  test('cambiar prefers-color-scheme actualiza data-palette sin quedarse en la escritura propia', async () => {
+    const { system, frames, cleanup, getPalette } = mountPaletteSession(true);
+
+    expect(document.documentElement.dataset.palette).toBe('dark');
+    expect(getPalette()?.isDark).toBe(true);
+
+    system.setDark(false);
+    await drainThemeFrame(frames);
+
+    expect(document.documentElement.dataset.palette).toBe('light');
+    expect(getPalette()?.isDark).toBe(false);
     cleanup();
   });
 });
