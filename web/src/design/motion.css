@@ -4,21 +4,15 @@
  * SVG de puntaje, que no tiene equivalente compuesto para progresar el arco.
  */
 
-:root {
-  --ease-atelier: cubic-bezier(0.22, 1, 0.36, 1);
-  --dur-med: 320ms;
-  --dur-slow: 520ms;
-}
-
 /* ---------- Entrada editorial por ruta y elevación ---------- */
 
 .route-enter {
-  animation: atelierFadeRise var(--dur-med) var(--ease-atelier);
+  animation: atelierFadeRise var(--dur-med) var(--ease) both;
 }
 
 @keyframes atelierFadeRise {
   from {
-    opacity: 0.01;
+    opacity: 0;
     transform: translateY(6px);
   }
   to {
@@ -31,31 +25,21 @@
 .list-item,
 .hoy-speak,
 .source {
-  transition: transform var(--dur-fast) var(--ease-atelier);
+  transition: transform var(--dur-fast) var(--ease);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
+  .card:hover,
   .list-item:hover,
   .hoy-speak:hover,
   .source:hover {
     transform: translateY(-1px);
-    box-shadow: var(--shadow-2, 0 8px 24px rgba(18, 22, 34, 0.08));
   }
 }
 
 .btn:active,
 .list-item:active {
   transform: scale(0.99);
-}
-
-/* ---------- Ancho adaptable en escritorio ---------- */
-
-@media (min-width: 960px) {
-  .content.content-wide {
-    max-width: 1020px;
-    margin-inline: auto;
-    width: 100%;
-  }
 }
 
 /* ---------- Portada editorial de acceso (.auth-cover) ---------- */
@@ -95,7 +79,7 @@
 .auth-cover-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
   letter-spacing: 0.08em;
@@ -107,7 +91,7 @@
 .auth-cover h1 {
   font-family: var(--font-display);
   font-size: var(--fs-2xl);
-  font-weight: var(--fw-semibold);
+  font-weight: 700;
   line-height: 1.08;
   margin: 0;
 }
@@ -164,7 +148,7 @@
   font-weight: var(--fw-semibold);
   text-decoration: none;
   box-shadow: var(--shadow-1);
-  transition: transform var(--dur-fast) var(--ease-atelier);
+  transition: transform var(--dur-fast) var(--ease);
 }
 
 .btn-google:hover {
@@ -194,15 +178,15 @@
 /* ---------- Hoy: brújula 3D + barras con cifras ---------- */
 
 .hoy-compass-slot {
-  width: 88px;
-  height: 88px;
+  width: 96px;
+  height: 96px;
   flex: none;
 }
 
 .week-counts {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: var(--sp-2);
   text-align: center;
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 0.72rem;
@@ -229,7 +213,11 @@
 
 .burst-overlay {
   position: fixed;
-  inset: 0;
+  left: 50%;
+  top: 12vh;
+  width: min(440px, 100vw);
+  height: 280px;
+  transform: translateX(-50%);
   z-index: 40;
   pointer-events: none;
 }
@@ -242,8 +230,7 @@
 .flip-tilt {
   transform: perspective(1000px) rotateX(var(--rx, 0deg))
     rotateY(var(--ry, 0deg));
-  transition: transform 200ms var(--ease-atelier);
-  will-change: transform;
+  transition: transform var(--dur-fast) var(--ease);
 }
 
 .kbd-hint {
@@ -298,7 +285,7 @@
   transform-origin: center;
   /* Excepción documentada (ver cabecera): el arco SVG solo puede progresar
    * con stroke-dashoffset; el cambio de color es instantáneo bajo motion-off. */
-  transition: stroke-dashoffset var(--dur-slow) var(--ease-atelier);
+  transition: stroke-dashoffset var(--dur-slow) var(--ease);
 }
 
 .score-ring-fg.good {
@@ -350,7 +337,7 @@
   font-size: var(--fs-sm);
   text-align: left;
   cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease-atelier);
+  transition: transform var(--dur-fast) var(--ease);
 }
 
 .starter-chip:hover {
@@ -383,17 +370,15 @@
 }
 
 .usage-meter-fill.warn {
-  background: var(--c-danger);
+  background: var(--c-warning);
 }
 
 /* ---------- Movimiento reducido y preferencia local «motion-off» ---------- */
+/* Las duraciones a 0 ms viven en tokens.css. Aquí las dos puertas apagan
+ * los mismos selectores: la entrada de ruta, el tilt, el arco y el medidor.
+ * Thinking no está en esta hoja. El anillo conserva rotate(-90deg). */
 
 @media (prefers-reduced-motion: reduce) {
-  :root {
-    --dur-fast: 0ms;
-    --dur-med: 0ms;
-    --dur-slow: 0ms;
-  }
   .route-enter {
     animation: none !important;
   }
@@ -401,44 +386,22 @@
     transform: none !important;
     transition: none !important;
   }
-  .card,
-  .list-item,
-  .hoy-speak,
-  .source,
-  .btn-google,
-  .starter-chip,
   .score-ring-fg,
   .usage-meter-fill {
     transition: none !important;
-    transform: none !important;
   }
 }
 
-/* La preferencia local frances.motion3d === 'off' apaga en JS y en CSS las
- * mismas transiciones que el sistema, sin tocar el resto de la interfaz. */
-:root.motion-off {
-  --dur-fast: 0ms;
-  --dur-med: 0ms;
-  --dur-slow: 0ms;
-}
-
-:root.motion-off .route-enter {
+html.motion-off .route-enter {
   animation: none !important;
 }
 
-:root.motion-off .flip-tilt {
+html.motion-off .flip-tilt {
   transform: none !important;
   transition: none !important;
 }
 
-:root.motion-off .card,
-:root.motion-off .list-item,
-:root.motion-off .hoy-speak,
-:root.motion-off .source,
-:root.motion-off .btn-google,
-:root.motion-off .starter-chip,
-:root.motion-off .score-ring-fg,
-:root.motion-off .usage-meter-fill {
+html.motion-off .score-ring-fg,
+html.motion-off .usage-meter-fill {
   transition: none !important;
-  transform: none !important;
 }
