@@ -1,7 +1,7 @@
 // Quiz (UI-17): los 5 tipos de pregunta, orden solo con teclado, envío y
 // resultados, y borrador que sobrevive a una recarga.
 
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './console.fixture';
 import { DEMO_QUIZ_ID, loginDemo } from './helpers';
 
 async function answerCurrent(page: Page): Promise<void> {

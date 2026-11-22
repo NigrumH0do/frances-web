@@ -1,7 +1,7 @@
 // Temas (UI-13/UI-14): filtros, detalle con cuatro pestañas y publicación con
 // el PDF en canvas y el enlace seguro a Classroom.
 
-import { expect, test } from '@playwright/test';
+import { expect, test } from './console.fixture';
 import {
   DEMO_ITEM_ID,
   DEMO_TOPIC_ID,

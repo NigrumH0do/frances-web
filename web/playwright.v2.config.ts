@@ -5,6 +5,10 @@
 //
 // La preparación vive en `webServer.command`: build demo, instantánea y
 // `vite preview` en el 4174. No hay servidor Python en tiempo de test.
+//
+// QA-03: el spec con tag `@stress` sube su propio timeout a 600_000. CI no
+// baja `workers` aquí: el job `e2e` pasa `--grep-invert @stress` (45 min) y
+// `e2e-stress` pasa `--grep @stress --workers=1` (25 min).
 
 import { defineConfig, devices } from '@playwright/test';
 
@@ -24,7 +28,17 @@ export default defineConfig({
   reporter: process.env.CI ? [['dot'], ['html', { open: 'never' }]] : 'list',
   use: { baseURL: BASE_URL, trace: 'on-first-retry' },
   projects: [
-    { name: 'mobile-chromium', use: { ...devices['Pixel 7'] } },
+    {
+      name: 'mobile-chromium',
+      use: {
+        ...devices['Pixel 7'],
+        launchOptions: {
+          // El GPU del host vuelca KHR_debug a la consola. SwiftShader es el
+          // mismo camino que el runner de CI y no emite ese warning.
+          args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+        },
+      },
+    },
     { name: 'mobile-webkit', use: { ...devices['iPhone 14'] } },
   ],
   webServer: {
