@@ -29,6 +29,7 @@ import { Translate } from './questions/Translate';
 import type { QuizQuestion } from './questions/types';
 import { QuizResults } from './QuizResults';
 import { quizStrings } from './strings';
+import './quiz.css';
 
 function QuestionControl({
   question,

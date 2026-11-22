@@ -26,6 +26,7 @@ import { loadStats, saveStats, updateStats } from '../../pron/stats';
 import { SafeVoiceOrbScene } from '../../three/LazyScenes';
 import { ScoreSummary } from './ScoreSummary';
 import { WordList } from './WordList';
+import './pron.css';
 
 // Cadenas propias de P06 (R-18): no van a `es.ts`.
 export const PRACTICE_MESSAGES = {

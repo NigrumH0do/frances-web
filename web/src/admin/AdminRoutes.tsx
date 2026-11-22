@@ -11,6 +11,7 @@ import {
   adminNavStrings,
   type AdminModules,
 } from './adminNav';
+import './admin.css';
 
 function ScreenLoading() {
   return (

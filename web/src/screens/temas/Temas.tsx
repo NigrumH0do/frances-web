@@ -17,6 +17,7 @@ import { common, tr } from '../../l10n/es';
 import { useOffline } from '../../offline/OfflineContext';
 import { temasStrings as s } from './strings';
 import { useCourse } from './useCourse';
+import './temas.css';
 
 type Level = NonNullable<StudyTopic['cefr']>;
 type TopicFilter = 'all' | 'pending' | Level;

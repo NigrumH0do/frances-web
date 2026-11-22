@@ -19,6 +19,7 @@ import { persistPracticeResult } from '../../ui/pron/PracticeSession';
 import { ScoreSummary } from '../../ui/pron/ScoreSummary';
 import { WordList } from '../../ui/pron/WordList';
 import { textoStrings as s } from './strings';
+import '../../ui/pron/pron.css';
 
 // Palabra por debajo de este puntaje: se ofrece para oírla sola.
 const REPEAT_BELOW = 70;

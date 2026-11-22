@@ -5,14 +5,19 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const css = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'components.css'),
+const designDir = dirname(fileURLToPath(import.meta.url));
+const css = readFileSync(join(designDir, 'components.css'), 'utf8');
+const legacyCss = readFileSync(join(designDir, 'legacy.css'), 'utf8');
+const quizCss = readFileSync(
+  join(designDir, '../screens/quiz/quiz.css'),
   'utf8',
 );
-const legacyCss = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'legacy.css'),
+const repasarCss = readFileSync(
+  join(designDir, '../screens/repasar/repasar.css'),
   'utf8',
 );
+const hoyCss = readFileSync(join(designDir, '../screens/hoy/hoy.css'), 'utf8');
+const pronCss = readFileSync(join(designDir, '../ui/pron/pron.css'), 'utf8');
 
 // Cuerpo de todas las reglas cuyo selector (lista separada por comas) incluye `sel`.
 function ruleFor(text: string, sel: string): string {
@@ -71,7 +76,8 @@ describe('components.css', () => {
       '.select',
       '.chip-filter::after',
     ]) {
-      expect(ruleFor(css, sel), sel).toMatch(
+      const sheet = sel === '.option' ? quizCss : css;
+      expect(ruleFor(sheet, sel), sel).toMatch(
         /min-(height|block-size):\s*var\(--tap(-lg)?\)/,
       );
     }
@@ -146,16 +152,18 @@ describe('components.css', () => {
 
   test('el IPA va en monoespaciado recto y el francés del frente en 700', () => {
     for (const sel of ['.flip-face .ipa', '.flip-recap-ipa']) {
-      const body = ruleFor(css, sel);
+      const body = ruleFor(repasarCss, sel);
       expect(body, sel).toMatch(/font-family:\s*var\(--font-mono\)/);
       expect(body, sel).toMatch(/font-style:\s*normal/);
       expect(body, sel).not.toMatch(/italic/);
     }
-    expect(ruleFor(css, '.flip-face .front-fr')).toMatch(/font-weight:\s*700/);
+    expect(ruleFor(repasarCss, '.flip-face .front-fr')).toMatch(
+      /font-weight:\s*700/,
+    );
   });
 
   test('FSRS pasa a rejilla 2×2 bajo 380 px', () => {
-    const narrow = mediaBlock(css, 'max-width: 379px');
+    const narrow = mediaBlock(repasarCss, 'max-width: 379px');
     expect(narrow).toMatch(
       /\.rating\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*1fr\)/,
     );
@@ -194,7 +202,7 @@ describe('components.css', () => {
 
   test('las barras usan el hueco de la rejilla de 8', () => {
     for (const sel of ['.bars', '.bars-labels']) {
-      const body = ruleFor(css, sel);
+      const body = ruleFor(hoyCss, sel);
       expect(body, sel).toMatch(/gap:\s*var\(--sp-2\)/);
       expect(body, sel).not.toMatch(/gap:\s*6px/);
     }
@@ -222,7 +230,7 @@ describe('objetivos táctiles de 44 px en controles reusados (FIX-18)', () => {
   });
 
   test('el botón de grabación de la práctica declara 44 px', () => {
-    const body = ruleFor(legacyCss, '.practice-session > button');
+    const body = ruleFor(pronCss, '.practice-session > button');
     expect(body).toMatch(/min-height:\s*var\(--tap\)/);
     expect(body).toMatch(/min-width:\s*var\(--tap\)/);
   });
@@ -243,11 +251,11 @@ describe('contraste AA de tabs y grabación (CHG-16)', () => {
   });
 
   test('.practice-session > button usa fondo y color del sistema', () => {
-    const button = ruleFor(legacyCss, '.practice-session > button');
+    const button = ruleFor(pronCss, '.practice-session > button');
     expect(button).toMatch(/background:\s*var\(--c-card\)/);
     expect(button).toMatch(/color:\s*var\(--c-text\)/);
     expect(button).toMatch(/border:\s*1px solid var\(--c-border-strong\)/);
-    expect(ruleFor(legacyCss, '.practice-session > button:hover')).toMatch(
+    expect(ruleFor(pronCss, '.practice-session > button:hover')).toMatch(
       /background:\s*var\(--c-surface\)/,
     );
   });
@@ -286,9 +294,9 @@ describe('components.css: estado activo y esqueletos (UI-03)', () => {
   });
 });
 
-describe('legacy.css: cifra de pronunciación y transiciones', () => {
+describe('cifra de pronunciación y transiciones de legacy', () => {
   test('el total usa color de texto y peso 700, sin el color de la banda', () => {
-    const total = ruleFor(legacyCss, '.pron-score-total');
+    const total = ruleFor(pronCss, '.pron-score-total');
     expect(total).toMatch(/color:\s*var\(--c-text\)/);
     expect(total).toMatch(/font-weight:\s*700/);
   });

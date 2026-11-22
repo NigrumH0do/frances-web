@@ -3,10 +3,10 @@
 @import '@fontsource/spectral/latin-400.css';
 @import '@fontsource/spectral/latin-400-italic.css';
 @import '@fontsource/spectral/latin-600.css';
+@import '@fontsource/spectral/latin-700.css';
 @import './tokens.css';
 @import './components.css';
 @import './legacy.css';
-@import './screens.css';
 @import './motion.css';
 
 /* Base: elementos y el francés de estudio. Los valores vienen de tokens.css. */
@@ -111,4 +111,14 @@ h3[lang='fr'],
 .title.fr,
 .title.fr[lang='fr'] {
   font-family: var(--font-read);
+}
+
+/* Cifras de interfaz: el ancho no salta al cambiar el dígito. */
+.pron-score-total,
+.week-counts,
+.lab-count,
+.tab-count,
+.rating .btn small {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
