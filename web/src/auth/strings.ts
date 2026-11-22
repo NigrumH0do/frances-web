@@ -19,6 +19,8 @@ export const authStrings = {
       'No se pudo validar tu cuenta con Google. Inténtalo otra vez.',
     googleUnverified: 'Tu cuenta de Google debe tener el correo verificado.',
     accountDisabled: 'Tu cuenta está deshabilitada. Contacta al administrador.',
+    maxUsers:
+      'No se creó tu cuenta: se alcanzó el número máximo de usuarios. Contacta al administrador.',
     badCredentials: 'Email o contraseña incorrectos.',
     rateLimited: 'Demasiados intentos; espera un minuto',
     offline: 'Sin conexión. Vuelve a intentarlo cuando tengas red.',

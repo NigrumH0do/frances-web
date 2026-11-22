@@ -78,4 +78,15 @@ describe('tokens.css', () => {
   test('define la escala de tamaño táctil de 44 px', () => {
     expect(tokens).toMatch(/--tap:\s*44px/);
   });
+
+  test('define --c-gold en claro y en las dos paletas oscuras', () => {
+    const light = palette(tokens, 'light')['--c-gold'];
+    const dark = palette(tokens, 'dark')['--c-gold'];
+    const forced = palette(tokens, 'dark-forced')['--c-gold'];
+
+    expect(light).toMatch(/^#[0-9a-fA-F]{6}$/);
+    expect(dark).toMatch(/^#[0-9a-fA-F]{6}$/);
+    expect(dark).toBe(forced);
+    expect(light).not.toBe(dark);
+  });
 });

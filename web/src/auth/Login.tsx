@@ -37,6 +37,9 @@ function oauthNotice(search: string): {
   if (err === 'account_disabled') {
     return { kind: 'error', text: authStrings.login.accountDisabled };
   }
+  if (err === 'max_users') {
+    return { kind: 'error', text: authStrings.login.maxUsers };
+  }
   if (err === 'google_failed') {
     return { kind: 'error', text: authStrings.login.googleFailed };
   }

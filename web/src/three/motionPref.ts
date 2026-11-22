@@ -18,6 +18,13 @@ export function getMotion3dPref(): Motion3dPref {
   }
 }
 
+// La preferencia local también apaga el tilt de FlipCard y la entrada de
+// ruta: un único atributo en <html> mantiene CSS y JS sincronizados.
+function syncMotionOffClass(pref: Motion3dPref): void {
+  if (typeof document === 'undefined') return;
+  document.documentElement.classList.toggle('motion-off', pref === 'off');
+}
+
 export function setMotion3dPref(pref: Motion3dPref): void {
   if (typeof window === 'undefined') return;
   try {
@@ -25,6 +32,7 @@ export function setMotion3dPref(pref: Motion3dPref): void {
   } catch {
     // localStorage no disponible en modo privado estricto
   }
+  syncMotionOffClass(pref);
   for (const listener of listeners) {
     listener();
   }
@@ -78,10 +86,17 @@ export function resetWebGLSupportCacheForTests(): void {
   webglSupportedCache = null;
 }
 
+// Se aplica al cargar el módulo para que la primera pintura no anime aunque
+// React monte después.
+syncMotionOffClass(getMotion3dPref());
+
 function subscribe(callback: () => void): () => void {
   listeners.add(callback);
   const onStorage = (ev: StorageEvent) => {
-    if (ev.key === MOTION_3D_KEY || ev.key === null) callback();
+    if (ev.key === MOTION_3D_KEY || ev.key === null) {
+      syncMotionOffClass(getMotion3dPref());
+      callback();
+    }
   };
   let mql: MediaQueryList | null = null;
   if (typeof window !== 'undefined') {

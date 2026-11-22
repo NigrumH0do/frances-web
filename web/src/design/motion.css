@@ -1,10 +1,11 @@
 /* Frances Classroom v3 — sistema de movimiento «Cahier Atelier 3D» (ADR-023).
- * Usa únicamente tokens de tokens.css y anima transform/opacity sin layout thrashing.
+ * Usa únicamente tokens de tokens.css y anima transform/opacity sin layout
+ * thrashing. La única excepción documentada es `stroke-dashoffset` del anillo
+ * SVG de puntaje, que no tiene equivalente compuesto para progresar el arco.
  */
 
 :root {
   --ease-atelier: cubic-bezier(0.22, 1, 0.36, 1);
-  --dur-fast: 180ms;
   --dur-med: 320ms;
   --dur-slow: 520ms;
 }
@@ -30,10 +31,7 @@
 .list-item,
 .hoy-speak,
 .source {
-  transition:
-    transform var(--dur-fast) var(--ease-atelier),
-    box-shadow var(--dur-fast) var(--ease-atelier),
-    border-color var(--dur-fast) ease;
+  transition: transform var(--dur-fast) var(--ease-atelier);
 }
 
 @media (hover: hover) {
@@ -166,10 +164,7 @@
   font-weight: var(--fw-semibold);
   text-decoration: none;
   box-shadow: var(--shadow-1);
-  transition:
-    transform var(--dur-fast) var(--ease-atelier),
-    border-color var(--dur-fast) ease,
-    background var(--dur-fast) ease;
+  transition: transform var(--dur-fast) var(--ease-atelier);
 }
 
 .btn-google:hover {
@@ -301,11 +296,13 @@
   stroke-linecap: round;
   transform: rotate(-90deg);
   transform-origin: center;
+  /* Excepción documentada (ver cabecera): el arco SVG solo puede progresar
+   * con stroke-dashoffset; el cambio de color es instantáneo bajo motion-off. */
   transition: stroke-dashoffset var(--dur-slow) var(--ease-atelier);
 }
 
 .score-ring-fg.good {
-  stroke: var(--c-ok);
+  stroke: var(--c-success);
 }
 
 .score-ring-fg.warn {
@@ -353,10 +350,7 @@
   font-size: var(--fs-sm);
   text-align: left;
   cursor: pointer;
-  transition:
-    background var(--dur-fast) ease,
-    border-color var(--dur-fast) ease,
-    transform var(--dur-fast) var(--ease-atelier);
+  transition: transform var(--dur-fast) var(--ease-atelier);
 }
 
 .starter-chip:hover {
@@ -386,16 +380,20 @@
   height: 100%;
   background: var(--c-accent);
   border-radius: 999px;
-  transition: width var(--dur-med) var(--ease-atelier);
 }
 
 .usage-meter-fill.warn {
   background: var(--c-danger);
 }
 
-/* ---------- Movimiento reducido ---------- */
+/* ---------- Movimiento reducido y preferencia local «motion-off» ---------- */
 
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-med: 0ms;
+    --dur-slow: 0ms;
+  }
   .route-enter {
     animation: none !important;
   }
@@ -414,4 +412,33 @@
     transition: none !important;
     transform: none !important;
   }
+}
+
+/* La preferencia local frances.motion3d === 'off' apaga en JS y en CSS las
+ * mismas transiciones que el sistema, sin tocar el resto de la interfaz. */
+:root.motion-off {
+  --dur-fast: 0ms;
+  --dur-med: 0ms;
+  --dur-slow: 0ms;
+}
+
+:root.motion-off .route-enter {
+  animation: none !important;
+}
+
+:root.motion-off .flip-tilt {
+  transform: none !important;
+  transition: none !important;
+}
+
+:root.motion-off .card,
+:root.motion-off .list-item,
+:root.motion-off .hoy-speak,
+:root.motion-off .source,
+:root.motion-off .btn-google,
+:root.motion-off .starter-chip,
+:root.motion-off .score-ring-fg,
+:root.motion-off .usage-meter-fill {
+  transition: none !important;
+  transform: none !important;
 }

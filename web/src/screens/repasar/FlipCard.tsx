@@ -5,7 +5,7 @@ import { cx } from '../../components/cx';
 import type { CardView } from '../../contracts/generated';
 import { CardAudio } from '../../media/CardAudio';
 import { tr } from '../../l10n/es';
-import { prefersReducedMotion } from '../../three/motionPref';
+import { getMotion3dPref, prefersReducedMotion } from '../../three/motionPref';
 import { repasarStrings } from './strings';
 
 function isTextEntry(target: EventTarget | null): boolean {
@@ -55,7 +55,13 @@ export function FlipCard({
   const tiltRef = useRef<HTMLDivElement>(null);
 
   function handleTiltMove(event: PointerEvent<HTMLDivElement>): void {
-    if (prefersReducedMotion() || tiltRef.current === null) return;
+    if (
+      prefersReducedMotion() ||
+      getMotion3dPref() === 'off' ||
+      tiltRef.current === null
+    ) {
+      return;
+    }
     const rect = tiltRef.current.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
     const dx = (event.clientX - rect.left) / rect.width - 0.5;

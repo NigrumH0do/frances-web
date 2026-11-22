@@ -46,6 +46,9 @@
   --c-on-accent: #ffffff;
   --c-on-accent-soft: #1f2a8f;
 
+  /* Oro de las escenas 3D y del sello de racha (ADR-023) */
+  --c-gold: #c99a1e;
+
   /* Estados: verde de corrección, ámbar, boli rojo */
   --c-success: #17734a;
   --c-success-soft: #e6f4ec;
@@ -172,6 +175,7 @@
     --c-accent-soft: #232c52;
     --c-on-accent: #121a4a;
     --c-on-accent-soft: #cbd0ff;
+    --c-gold: #e6be53;
     --c-success: #7fd9a6;
     --c-success-soft: #173126;
     --c-warning: #f2c27a;
@@ -224,6 +228,7 @@
   --c-accent-soft: #232c52;
   --c-on-accent: #121a4a;
   --c-on-accent-soft: #cbd0ff;
+  --c-gold: #e6be53;
   --c-success: #7fd9a6;
   --c-success-soft: #173126;
   --c-warning: #f2c27a;

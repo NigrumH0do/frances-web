@@ -6,7 +6,7 @@ const LazyStreakCompass = lazy(() => import('./StreakCompassScene'));
 const LazyVoiceOrb = lazy(() => import('./VoiceOrbScene'));
 const LazyCardBurst = lazy(() => import('./CardBurstScene'));
 
-class SceneBoundary extends Component<
+export class SceneBoundary extends Component<
   { fallback: ReactNode; children: ReactNode },
   { hasError: boolean }
 > {
@@ -14,6 +14,12 @@ class SceneBoundary extends Component<
 
   static getDerivedStateFromError(): { hasError: boolean } {
     return { hasError: true };
+  }
+
+  componentDidCatch(): void {
+    // Red de seguridad secundaria: un fallo de WebGL ya se convirtió en el
+    // fallback editorial con getDerivedStateFromError; no se re-lanza ni se
+    // desmonta la pantalla que contiene la escena.
   }
 
   render(): ReactNode {

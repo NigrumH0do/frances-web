@@ -982,15 +982,15 @@ a.list-item:hover {
     var(--skeleton-b) 50%,
     var(--skeleton-a) 100%
   );
-  background-size: 200% 100%;
-  animation: shimmer 1.4s linear infinite;
+  animation: skeletonPulse 1.4s ease-in-out infinite;
 }
-@keyframes shimmer {
-  from {
-    background-position: 200% 0;
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 1;
   }
-  to {
-    background-position: -200% 0;
+  50% {
+    opacity: 0.55;
   }
 }
 .skeleton-title {
@@ -1188,32 +1188,6 @@ fieldset.stack > legend {
 .word.repetir {
   border-color: var(--c-score-repetir);
   background: var(--c-danger-soft);
-}
-.score-ring {
-  --v: 78;
-  --ring: var(--c-score-bien);
-  width: 96px;
-  height: 96px;
-  flex: none;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: conic-gradient(
-    var(--ring) calc(var(--v) * 1%),
-    var(--c-surface) 0
-  );
-}
-.score-ring > span {
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  background: var(--c-card);
-  display: grid;
-  place-items: center;
-  font-family: var(--font-display);
-  font-size: var(--fs-2xl);
-  font-weight: var(--fw-semibold);
-  font-variant-numeric: tabular-nums;
 }
 .phonemes {
   display: flex;

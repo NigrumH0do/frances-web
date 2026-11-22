@@ -192,3 +192,14 @@ test('muestra botón de Google si está habilitado y avisos de callback OAuth', 
     'Tu cuenta está deshabilitada. Contacta al administrador.',
   );
 });
+
+test('max_users del alta con Google muestra el aviso de límite de cuentas', () => {
+  const transport = fakeTransport({
+    'GET /api/auth/me': () => jsonResponse(UNAUTHENTICATED, 401),
+  });
+  renderLogin(transport, '/entrar?error=max_users');
+
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    'No se creó tu cuenta: se alcanzó el número máximo de usuarios. Contacta al administrador.',
+  );
+});
