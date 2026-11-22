@@ -190,6 +190,7 @@ let idleTimer: { cancel: () => void } | null = null;
 let busyWarned = false;
 let retired = false;
 let restoredAt: number | null = null;
+let publishedPalette: 'dark' | 'light' | null = null;
 
 function cssColorToHex(varName: string, fallback: number): number {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
@@ -223,10 +224,15 @@ function systemPrefersDark(): boolean {
 function isDarkTheme(): boolean {
   if (typeof document === 'undefined') return false;
   const root = document.documentElement;
-  if (root.dataset.palette === 'dark') return true;
-  if (root.dataset.palette === 'light') return false;
   if (root.classList.contains('theme-dark')) return true;
   if (root.classList.contains('theme-light')) return false;
+  const palette = root.dataset.palette;
+  if (
+    (palette === 'dark' || palette === 'light') &&
+    palette !== publishedPalette
+  ) {
+    return palette === 'dark';
+  }
   return systemPrefersDark();
 }
 
@@ -486,6 +492,7 @@ function publishDataset(session: Session, isDark: boolean): void {
   if (root.dataset.palette === next) return;
   session.writingPalette = true;
   root.dataset.palette = next;
+  publishedPalette = next;
   queueMicrotask(() => {
     session.writingPalette = false;
   });
@@ -507,7 +514,7 @@ function beginMix(session: Session, target: PaletteTarget): void {
 }
 
 function scheduleTheme(session: Session): void {
-  if (!session.alive || session.writingPalette) return;
+  if (!session.alive) return;
   if (session.themeRaf !== 0) return;
   session.themeRaf = requestAnimationFrame(() => {
     session.themeRaf = 0;
@@ -935,7 +942,15 @@ function attachSession(
     typeof MutationObserver === 'function' &&
     typeof document !== 'undefined'
   ) {
-    const observer = new MutationObserver(() => scheduleTheme(session));
+    const observer = new MutationObserver((records) => {
+      if (
+        session.writingPalette &&
+        records.every((record) => record.attributeName === 'data-palette')
+      ) {
+        return;
+      }
+      scheduleTheme(session);
+    });
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class', 'data-palette'],
@@ -1074,6 +1089,7 @@ export function __resetSceneHostForTests(): void {
   rendererFactory = null;
   hostClock = null;
   glCreateCount = 0;
+  publishedPalette = null;
   destroySharedRenderer();
 }
 
