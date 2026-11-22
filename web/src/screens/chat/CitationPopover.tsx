@@ -52,7 +52,7 @@ export function CitationPopover({
 }): JSX.Element {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLSpanElement>(null);
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = useRef<HTMLSpanElement>(null);
   const markerRef = useRef<HTMLAnchorElement>(null);
   const armedTouch = useRef(false);
   const suppressFocusOpen = useRef(false);
@@ -139,9 +139,9 @@ export function CitationPopover({
         {number}
       </Link>
       {open ? (
-        <dialog
+        <span
           ref={dialogRef}
-          open
+          role="dialog"
           className="cite-dialog"
           aria-modal="false"
           aria-labelledby={title === undefined ? undefined : titleId}
@@ -159,7 +159,7 @@ export function CitationPopover({
           ) : null}
           <span className="cite-dialog-snippet">{citation.snippet}</span>
           <Link to={href}>{chatStrings.openCitation}</Link>
-        </dialog>
+        </span>
       ) : null}
     </span>
   );
