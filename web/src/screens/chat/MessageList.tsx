@@ -53,28 +53,79 @@ function withoutSavedPending(
   return { ...pending, question: '', text: '' };
 }
 
-// El texto se pinta como texto (React escapa el HTML) y `[n]` solo se
-// convierte en enlace si existe una citation con ese número (P09-7).
-function renderText(content: string, citations: Citation[]): ReactNode[] {
+// El texto se pinta como texto (React escapa el HTML) y `[n]` o `[n, m]` solo
+// se convierten en enlaces si existe una citation para ese número (P09-7). El
+// backend renumera el texto guardado (REM-03), pero durante el stream todavía
+// llega la numeración original del modelo: `[4]` con una sola cita compactada.
+const CITATION_MARKER = /\[(\d+(?:\s*,\s*\d+)*)\]/g;
+
+function markerNumbers(group: string): number[] {
+  return group.split(',').map((raw) => Number(raw.trim()));
+}
+
+/**
+ * Número escrito en el texto → índice 1-based de `citations`.
+ *
+ * Si alguna marca ya apunta dentro de `citations`, se resuelve por índice
+ * (`[1]` → `citations[0]`) y las que se salen quedan como texto plano. Si
+ * ninguna encaja —el modelo citó `[4]` y solo hay una cita compactada— se
+ * asignan los números distintos en orden de primera aparición a 1…n.
+ */
+function citationIndexes(
+  content: string,
+  citations: Citation[],
+): Map<number, number> {
+  const indexes = new Map<number, number>();
+  if (citations.length === 0) return indexes;
+  const numbers = [...content.matchAll(CITATION_MARKER)].flatMap((match) =>
+    markerNumbers(match[1]),
+  );
+  if (numbers.some((number) => number >= 1 && number <= citations.length)) {
+    for (const number of numbers) {
+      if (number >= 1 && number <= citations.length) {
+        indexes.set(number, number);
+      }
+    }
+    return indexes;
+  }
+  const distinct: number[] = [];
+  for (const number of numbers) {
+    if (!distinct.includes(number)) distinct.push(number);
+  }
+  distinct.forEach((number, position) => {
+    if (position < citations.length) indexes.set(number, position + 1);
+  });
+  return indexes;
+}
+
+function renderText(
+  content: string,
+  citations: Citation[],
+  indexes: Map<number, number> = citationIndexes(content, citations),
+): ReactNode[] {
   const nodes: ReactNode[] = [];
-  const marker = /\[(\d+)\]/g;
+  const marker = new RegExp(CITATION_MARKER.source, 'g');
   let last = 0;
   let match = marker.exec(content);
   while (match !== null) {
-    const number = Number(match[1]);
-    const citation = citations[number - 1];
+    const group = markerNumbers(match[1]);
     nodes.push(content.slice(last, match.index));
-    if (citation !== undefined) {
+    let linked = 0;
+    for (const written of group) {
+      const index = indexes.get(written);
+      const citation = index === undefined ? undefined : citations[index - 1];
+      if (index === undefined || citation === undefined) continue;
+      if (linked > 0) nodes.push(' ');
       nodes.push(
         <CitationPopover
-          key={`citation-${number}-${match.index}`}
+          key={`citation-${index}-${match.index}-${linked}`}
           citation={citation}
-          number={number}
+          number={index}
         />,
       );
-    } else {
-      nodes.push(match[0]);
+      linked += 1;
     }
+    if (linked === 0) nodes.push(match[0]);
     last = match.index + match[0].length;
     match = marker.exec(content);
   }
@@ -170,6 +221,9 @@ function AssistantBubble({
   onCreateCard?: (content: string) => void;
 }) {
   const paragraphs = content.split(/\n{2,}/).filter((part) => part !== '');
+  // Un solo mapa para todo el mensaje: un grupo `[4]` del primer párrafo y un
+  // `[6]` del segundo tienen que alinearse con las mismas citas (REM-03).
+  const indexes = citationIndexes(content, citations);
 
   if (status === 'error') {
     return (
@@ -187,7 +241,9 @@ function AssistantBubble({
   return (
     <div className="bubble bot">
       {paragraphs.map((paragraph, index) => (
-        <p key={`paragraph-${index}`}>{renderText(paragraph, citations)}</p>
+        <p key={`paragraph-${index}`}>
+          {renderText(paragraph, citations, indexes)}
+        </p>
       ))}
 
       {status === 'no_material' ? (
