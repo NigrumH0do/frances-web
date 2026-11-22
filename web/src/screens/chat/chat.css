@@ -170,6 +170,7 @@ html.motion-off .dots span {
   text-align: left;
 }
 .cite-dialog-title {
+  display: block;
   font-weight: var(--fw-semibold);
 }
 .cite-dialog-page,

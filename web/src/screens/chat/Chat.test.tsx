@@ -905,7 +905,9 @@ test('el foco abre la vista previa de la cita y Escape la cierra', async () => {
   renderInRouter(<MessageList messages={[message]} />);
 
   const inline = screen.getByRole('link', { name: 'Fuente 1' });
-  inline.focus();
+  act(() => {
+    inline.focus();
+  });
 
   const dialog = await screen.findByRole('dialog');
   expect(dialog).toHaveAttribute('aria-modal', 'false');
