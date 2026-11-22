@@ -37,11 +37,27 @@
     min-width: 0;
   }
 
+  /* Sin alto máximo la ficha manda en la fila del grid (p. ej. 18.580 px
+     frente a 3.455 px de PDFs) y `sticky` se queda sin recorrido. Acotada al
+     viewport, se queda junto al material y desplaza por dentro. */
   .pub-split > :nth-child(2) {
     position: sticky;
     top: var(--sp-4);
     align-self: start;
+    max-height: calc(100dvh - var(--sp-8));
+    overflow-y: auto;
   }
+}
+
+/* ---------- Imágenes adjuntas ---------- */
+
+/* El blob llega a tamaño natural (800 px): sin `max-width` desborda `#main`
+   en móvil de 390 px. */
+.att-image,
+.pub-split img {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 /* ---------- Visor de PDF dentro de la columna ---------- */
