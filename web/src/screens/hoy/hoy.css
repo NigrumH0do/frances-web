@@ -6,14 +6,19 @@
   gap: var(--sp-2);
   align-items: end;
   height: 72px;
+  box-shadow: inset 0 -1px 0 var(--c-border-strong);
 }
 .bars span {
   display: block;
   border-radius: 4px 4px 0 0;
   background: var(--c-accent);
+  opacity: 0.8;
   min-height: 4px;
 }
-.bars span.off {
+.bars span.is-today {
+  opacity: 1;
+}
+.bars span.is-empty {
   background: var(--c-border);
 }
 .bars-labels {
@@ -96,6 +101,18 @@
   font-size: var(--fs-sm);
   color: var(--c-text-muted);
 }
+.plan-list li {
+  min-height: var(--tap);
+}
+.plan-list .check.done {
+  background: transparent;
+  border-color: var(--c-success);
+  color: var(--c-success);
+}
+.plan-list .title.is-done {
+  text-decoration: line-through;
+  color: var(--c-text-muted);
+}
 @media (min-width: 960px) {
   .hoy-grid {
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
@@ -117,6 +134,7 @@
   gap: var(--sp-2);
   text-align: center;
   font-family: var(--font-mono, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
   font-size: 0.72rem;
   color: var(--c-text-muted);
   margin-bottom: 2px;

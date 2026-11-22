@@ -36,7 +36,7 @@ export function PlanList({ day, entries, onToggle }: PlanListProps) {
 
   return (
     <section
-      className="card card-accent"
+      className="card card-accent plan-list"
       data-day={day}
       aria-labelledby="plan-hoy"
     >
@@ -69,7 +69,7 @@ export function PlanList({ day, entries, onToggle }: PlanListProps) {
 
                   <Link to={hrefFor(entry)} className="list-item grow">
                     <span className="grow">
-                      <span className="title">
+                      <span className={entry.done ? 'title is-done' : 'title'}>
                         {entry.title_es}
                         {entry.done ? (
                           <>

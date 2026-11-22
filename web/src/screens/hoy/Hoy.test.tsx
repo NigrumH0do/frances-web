@@ -3,6 +3,9 @@ import { IDBFactory } from 'fake-indexeddb';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import type {
   ItemSummary,
@@ -14,7 +17,25 @@ import { jsonResponse } from '../../api/testing';
 import { closeV2DbForTests } from '../../offline/db';
 import { pendingCount } from '../../offline/outbox';
 import { renderScreen } from '../../shell/testing';
+import { setMotion3dPref } from '../../three/motionPref';
 import { Hoy } from './Hoy';
+
+const hoyCss = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), 'hoy.css'),
+  'utf8',
+);
+
+function ruleFor(css: string, selector: string): string {
+  const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  let body = '';
+  for (const match of clean.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selectors = (match[1] as string)
+      .split(',')
+      .map((item) => item.trim());
+    if (selectors.includes(selector)) body += match[2] as string;
+  }
+  return body;
+}
 
 // La suite completa de la web crea muchas instancias de jsdom; estos tests
 // esperan IndexedDB y no deben fallar por la carga del runner.
@@ -162,6 +183,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   cleanup();
+  setMotion3dPref('auto');
   vi.useRealTimers();
   vi.restoreAllMocks();
 });
@@ -176,9 +198,12 @@ test('lista el plan con enlaces por tipo y marca hecho', async () => {
     }),
   });
 
-  expect(
-    await screen.findByRole('link', { name: /Repasar 18 tarjetas/ }),
-  ).toHaveAttribute('href', '/repasar');
+  const review = await screen.findByRole('link', {
+    name: /Repasar 18 tarjetas/,
+  });
+  expect(review).toHaveAttribute('href', '/repasar');
+  expect(review.querySelector('.title')).not.toHaveClass('is-done');
+  expect(document.querySelector('section.plan-list')).not.toBeNull();
   expect(
     screen.getByRole('link', { name: /Quiz: Le passé composé/ }),
   ).toHaveAttribute('href', '/quiz/qz_1');
@@ -197,6 +222,12 @@ test('lista el plan con enlaces por tipo y marca hecho', async () => {
     expect(transport.calls.at(-1)?.url).toBe('/api/plan/2026-11-02/1/done'),
   );
   expect(screen.getByText('1 de 4 hecho')).toBeVisible();
+  const doneLink = screen.getByRole('link', { name: /Repasar 18 tarjetas/ });
+  expect(doneLink.querySelector('.title')).toHaveClass('is-done');
+  expect(doneLink).not.toContainElement(
+    screen.getAllByRole('checkbox', { name: 'Hecho' })[0] as HTMLElement,
+  );
+  expect(screen.getByText('Hecho')).toBeVisible();
 });
 
 test('el «por qué» del LLM se marca como IA y no aparece si es null', async () => {
@@ -284,6 +315,8 @@ test('muestra carga, vacío y error con reintentar', async () => {
     }),
   });
   expect(screen.getByRole('status')).toHaveTextContent('Cargando…');
+  expect(screen.queryByText(/racha/)).not.toBeInTheDocument();
+  expect(document.querySelector('.hoy-compass-slot')).toBeNull();
   cleanup();
 
   renderScreen(<Hoy />, {
@@ -325,7 +358,22 @@ test('con datos guardados avisa sin conexión', async () => {
   );
 });
 
+test('con 3D apagado la racha 0 sigue visible y el slot tiene svg', async () => {
+  setMotion3dPref('off');
+  renderScreen(<Hoy />, {
+    routes: routes({ 'GET /api/me/stats': STATS_ZERO }),
+  });
+
+  expect(await screen.findByText('racha · 0 días')).toBeVisible();
+  const slot = document.querySelector('.hoy-compass-slot');
+  expect(slot?.querySelector('svg')).not.toBeNull();
+  const chip = screen.getByText('racha · 0 días').closest('.chip');
+  expect(chip).toHaveClass('chip-streak');
+  expect(chip?.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+});
+
 test('muestra saludo, racha, primera entrega y la semana', async () => {
+  setMotion3dPref('off');
   renderScreen(<Hoy />, { routes: routes() });
 
   expect(
@@ -335,7 +383,12 @@ test('muestra saludo, racha, primera entrega y la semana', async () => {
       { timeout: 5000 },
     ),
   ).toBeVisible();
-  expect(screen.getByText('6 días')).toBeVisible();
+  expect(screen.getByText('racha · 6 días')).toBeVisible();
+  const slot = document.querySelector('.hoy-compass-slot');
+  expect(slot?.querySelector('svg')).not.toBeNull();
+  expect(
+    screen.getByRole('link', { name: /Practica un texto tuyo/ }),
+  ).toHaveAttribute('href', '/repasar/texto');
   expect(
     screen.getByRole('link', {
       name: 'Rédaction « Mon dernier week-end »',
@@ -351,4 +404,49 @@ test('muestra saludo, racha, primera entrega y la semana', async () => {
   expect(
     Array.from(weekCounts?.children ?? []).map((el) => el.textContent),
   ).toEqual(['3', '4', '1', '3', '6', '0', '0']);
+  const bars = document.querySelectorAll('.bars > span');
+  expect(bars[4]).toHaveClass('is-today');
+  expect(bars[4]).not.toHaveClass('is-empty');
+  expect(bars[5]).toHaveClass('is-empty');
+  expect(bars[6]).toHaveClass('is-empty');
+  expect(bars[0]).not.toHaveClass('is-today');
+  expect(screen.getByText(/Actividad de la semana/)).toHaveClass('sr-only');
+});
+
+test('hoy.css parte la rejilla en 960, mide el slot y traza el eje', () => {
+  expect(hoyCss).toMatch(
+    /@media\s*\(\s*min-width:\s*960px\s*\)\s*\{[^}]*\.hoy-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1\.2fr\)\s+minmax\(0,\s*1fr\)/,
+  );
+  const slot = ruleFor(hoyCss, '.hoy-compass-slot');
+  expect(slot).toMatch(/width:\s*96px/);
+  expect(slot).toMatch(/height:\s*96px/);
+  expect(ruleFor(hoyCss, '.bars')).toMatch(
+    /box-shadow:\s*inset\s+0\s+-1px\s+0\s+var\(--c-border-strong\)/,
+  );
+  expect(ruleFor(hoyCss, '.bars span')).toMatch(/opacity:\s*0\.8/);
+  expect(ruleFor(hoyCss, '.bars span')).toMatch(/var\(--c-accent\)/);
+  expect(ruleFor(hoyCss, '.bars span.is-today')).toMatch(/opacity:\s*1/);
+  expect(ruleFor(hoyCss, '.bars span.is-empty')).toMatch(
+    /background:\s*var\(--c-border\)/,
+  );
+  expect(ruleFor(hoyCss, '.week-counts')).toMatch(
+    /font-variant-numeric:\s*tabular-nums/,
+  );
+  expect(ruleFor(hoyCss, '.week-counts')).toMatch(/gap:\s*var\(--sp-2\)/);
+  expect(ruleFor(hoyCss, '.plan-list li')).toMatch(
+    /min-height:\s*var\(--tap\)/,
+  );
+  const done = ruleFor(hoyCss, '.plan-list .check.done');
+  expect(done).toMatch(/background:\s*transparent/);
+  expect(done).toMatch(/border-color:\s*var\(--c-success\)/);
+  expect(done).toMatch(/color:\s*var\(--c-success\)/);
+  const title = ruleFor(hoyCss, '.plan-list .title.is-done');
+  expect(title).toMatch(/text-decoration:\s*line-through/);
+  expect(title).toMatch(/color:\s*var\(--c-text-muted\)/);
+  expect(hoyCss).not.toMatch(/color:\s*var\(--c-gold-3d\)/);
+  for (const match of hoyCss.matchAll(/transition\s*:\s*([^;]+)/g)) {
+    expect(match[1]).toMatch(
+      /(?:^|[\s,])(?:none|transform|opacity|stroke-dashoffset)\b/,
+    );
+  }
 });
