@@ -9,6 +9,19 @@ import type { Rating } from '../../srs/types';
 import { getMotion3dPref, prefersReducedMotion } from '../../three/motionPref';
 import { repasarStrings } from './strings';
 
+// Controles internos de la tarjeta (audio, selector de voz, enlaces fuente) y
+// elementos con papel de control: un `pointerdown` sobre ellos (incluido el
+// `<path>` SVG del icono, que no es un `HTMLElement`) no debe iniciar el gesto
+// de swipe ni capturar el puntero.
+function isInteractiveControl(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  return (
+    target.closest(
+      'button, a, select, input, textarea, label, [role="button"], [role="link"], [role="combobox"], audio, video',
+    ) !== null
+  );
+}
+
 function isTextEntry(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return (
@@ -60,6 +73,7 @@ export function FlipCard({
     pointerId: number;
     x: number;
     y: number;
+    captured: boolean;
   } | null>(null);
   const [tilting, setTilting] = useState(false);
 
@@ -98,27 +112,36 @@ export function FlipCard({
   }
 
   function handleSwipeDown(event: PointerEvent<HTMLDivElement>): void {
-    if (!gestureEnabled()) return;
+    // Nunca se captura el puntero aquí: en `pointerdown` la captura redirige
+    // `pointerup` y `click` al contenedor y los controles internos dejarían de
+    // responder (LIVE-A3 BUG-1). La captura se hace en `dragSwipe` cuando el
+    // arrastre horizontal es real.
+    if (!gestureEnabled() || isInteractiveControl(event.target)) return;
     swipeRef.current = {
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
+      captured: false,
     };
-    const node = event.currentTarget;
-    if (typeof node.setPointerCapture === 'function') {
-      try {
-        node.setPointerCapture(event.pointerId);
-      } catch {
-        // jsdom no implementa la captura del puntero.
-      }
-    }
   }
 
   function dragSwipe(event: PointerEvent<HTMLDivElement>): void {
     const swipe = swipeRef.current;
     if (swipe === null || swipe.pointerId !== event.pointerId) return;
-    if (!flipped || tiltRef.current === null) return;
     const dx = event.clientX - swipe.x;
+    const dy = event.clientY - swipe.y;
+    if (!swipe.captured && Math.abs(dx) > 8 && Math.abs(dx) >= Math.abs(dy)) {
+      const node = event.currentTarget;
+      if (typeof node.setPointerCapture === 'function') {
+        try {
+          node.setPointerCapture(event.pointerId);
+          swipe.captured = true;
+        } catch {
+          // jsdom no implementa la captura del puntero.
+        }
+      }
+    }
+    if (!flipped || tiltRef.current === null) return;
     tiltRef.current.style.setProperty('--swipe-x', `${dx}px`);
   }
 
@@ -126,6 +149,16 @@ export function FlipCard({
     const swipe = swipeRef.current;
     if (swipe === null || swipe.pointerId !== event.pointerId) return;
     swipeRef.current = null;
+    if (swipe.captured) {
+      const node = event.currentTarget;
+      if (typeof node.releasePointerCapture === 'function') {
+        try {
+          node.releasePointerCapture(event.pointerId);
+        } catch {
+          // El navegador ya había liberado el puntero.
+        }
+      }
+    }
     if (!gestureEnabled()) {
       tiltRef.current?.style.setProperty('--swipe-x', '0px');
       return;

@@ -477,6 +477,28 @@ function mockCardRect(): void {
   );
 }
 
+// jsdom no implementa la captura del puntero (LIVE-A3 BUG-1): el test define
+// `setPointerCapture`/`releasePointerCapture` en la propia tarjeta para
+// detectar cuándo el componente secuestra el puntero.
+function stubPointerCapture(node: HTMLElement): {
+  capture: ReturnType<typeof vi.fn>;
+  release: ReturnType<typeof vi.fn>;
+} {
+  const capture = vi.fn();
+  const release = vi.fn();
+  Object.defineProperty(node, 'setPointerCapture', {
+    configurable: true,
+    writable: true,
+    value: capture,
+  });
+  Object.defineProperty(node, 'releasePointerCapture', {
+    configurable: true,
+    writable: true,
+    value: release,
+  });
+  return { capture, release };
+}
+
 function swipe(
   element: HTMLElement,
   fromX: number,
@@ -585,6 +607,203 @@ test('el swipe frontal llama onFlip y el reverso informa el grado sin calificar 
   swipe(flippedTilt, 20, 140);
   expect(onSwipeRate).toHaveBeenCalledTimes(2);
   expect(onSwipeRate).toHaveBeenLastCalledWith(4);
+});
+
+test('los controles internos de la tarjeta no secuestran el puntero y reciben el clic', async () => {
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:audio');
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+
+  const onFlip = vi.fn();
+  const controlCard = card('controls', {
+    audio: [
+      {
+        field: 'front',
+        voice_id: 'voice-a',
+        url: '/api/audio/controls',
+        duration_ms: 1000,
+      },
+    ],
+    source_titles: { 'i-controls': 'Leçon 2 · Les contrôles' },
+  });
+
+  const { transport } = renderScreen(
+    <FlipCard card={controlCard} flipped onFlip={onFlip} />,
+    {
+      routes: {
+        'GET /api/voices': VOICES,
+        'GET /api/me/prefs': PREFS,
+        'GET /api/audio/controls': () =>
+          new Response(new Uint8Array([1, 2, 3]), {
+            headers: { 'Content-Type': 'audio/mpeg' },
+          }),
+      },
+    },
+  );
+
+  const tilt = document.querySelector('.flip-tilt') as HTMLElement;
+  const back = document.querySelector('.flip-back') as HTMLElement;
+  const scoped = within(back);
+  const { capture, release } = stubPointerCapture(tilt);
+
+  const play = await scoped.findByRole('button', { name: 'Reproducir' });
+  const slow = scoped.getByRole('button', { name: 'Lento' });
+  const voice = scoped.getByLabelText('Voz');
+  const source = scoped.getByRole('link', {
+    name: 'Fuente: Leçon 2 · Les contrôles',
+  });
+
+  // El icono del botón es un SVG: `event.target` no es un HTMLElement.
+  const iconPath = play.querySelector('svg path');
+  expect(iconPath).not.toBeNull();
+  expect(iconPath).not.toBeInstanceOf(HTMLElement);
+
+  for (const target of [iconPath as Element, play, slow, voice, source]) {
+    fireEvent.pointerDown(target, {
+      pointerId: 1,
+      pointerType: 'mouse',
+      clientX: 40,
+      clientY: 40,
+    });
+    fireEvent.pointerUp(target, {
+      pointerId: 1,
+      pointerType: 'mouse',
+      clientX: 40,
+      clientY: 40,
+    });
+  }
+  expect(capture).not.toHaveBeenCalled();
+  expect(release).not.toHaveBeenCalled();
+  expect(onFlip).not.toHaveBeenCalled();
+
+  // Tampoco se guarda el gesto: un desplazamiento posterior no voltea.
+  fireEvent.pointerDown(play, {
+    pointerId: 1,
+    pointerType: 'touch',
+    clientX: 40,
+    clientY: 40,
+  });
+  fireEvent.pointerUp(tilt, {
+    pointerId: 1,
+    pointerType: 'touch',
+    clientX: 200,
+    clientY: 40,
+  });
+  expect(capture).not.toHaveBeenCalled();
+  expect(onFlip).not.toHaveBeenCalled();
+
+  // Y los clics sí ejecutan su acción.
+  await userEvent.click(slow);
+  expect(slow).toHaveAttribute('aria-pressed', 'true');
+
+  await userEvent.click(play);
+  await waitFor(() =>
+    expect(
+      transport.calls.filter((call) => call.url === '/api/audio/controls'),
+    ).toHaveLength(1),
+  );
+});
+
+test('solo un arrastre horizontal captura el puntero y sigue volteando y calificando', () => {
+  mockCardRect();
+  const onFlip = vi.fn();
+  const onSwipeRate = vi.fn();
+  const { container, rerender } = render(
+    <MemoryRouter>
+      <FlipCard
+        card={CARD}
+        flipped={false}
+        onFlip={onFlip}
+        onSwipeRate={onSwipeRate}
+      />
+    </MemoryRouter>,
+  );
+  const tilt = container.querySelector('.flip-tilt') as HTMLElement;
+  const { capture, release } = stubPointerCapture(tilt);
+
+  // Un toque sin arrastre no captura el puntero.
+  fireEvent.pointerDown(tilt, {
+    pointerId: 1,
+    pointerType: 'touch',
+    clientX: 100,
+    clientY: 100,
+  });
+  fireEvent.pointerUp(tilt, {
+    pointerId: 1,
+    pointerType: 'touch',
+    clientX: 100,
+    clientY: 100,
+  });
+  expect(capture).not.toHaveBeenCalled();
+  expect(release).not.toHaveBeenCalled();
+  expect(onFlip).not.toHaveBeenCalled();
+
+  // Un arrastre menor que el umbral (8 px) tampoco captura ni voltea.
+  fireEvent.pointerDown(tilt, {
+    pointerId: 1,
+    pointerType: 'touch',
+    clientX: 100,
+    clientY: 100,
+  });
+  fireEvent.pointerMove(tilt, {
+    pointerId: 1,
+    pointerType: 'touch',
+    clientX: 106,
+    clientY: 101,
+  });
+  expect(capture).not.toHaveBeenCalled();
+  fireEvent.pointerUp(tilt, {
+    pointerId: 1,
+    pointerType: 'touch',
+    clientX: 106,
+    clientY: 101,
+  });
+  expect(capture).not.toHaveBeenCalled();
+  expect(onFlip).not.toHaveBeenCalled();
+
+  // Un arrastre vertical no captura ni voltea.
+  fireEvent.pointerDown(tilt, {
+    pointerId: 1,
+    pointerType: 'touch',
+    clientX: 100,
+    clientY: 100,
+  });
+  fireEvent.pointerMove(tilt, {
+    pointerId: 1,
+    pointerType: 'touch',
+    clientX: 104,
+    clientY: 160,
+  });
+  expect(capture).not.toHaveBeenCalled();
+  fireEvent.pointerUp(tilt, {
+    pointerId: 1,
+    pointerType: 'touch',
+    clientX: 104,
+    clientY: 160,
+  });
+  expect(onFlip).not.toHaveBeenCalled();
+
+  // Un arrastre horizontal real captura una sola vez y sigue volteando.
+  swipe(tilt, 10, 80);
+  expect(capture).toHaveBeenCalledTimes(1);
+  expect(capture).toHaveBeenCalledWith(1);
+  expect(release).toHaveBeenCalledTimes(1);
+  expect(release).toHaveBeenCalledWith(1);
+  expect(onFlip).toHaveBeenCalledTimes(1);
+
+  rerender(
+    <MemoryRouter>
+      <FlipCard card={CARD} flipped onFlip={onFlip} onSwipeRate={onSwipeRate} />
+    </MemoryRouter>,
+  );
+  const flippedTilt = container.querySelector('.flip-tilt') as HTMLElement;
+  const flippedStub = stubPointerCapture(flippedTilt);
+
+  swipe(flippedTilt, 160, 40);
+  expect(flippedStub.capture).toHaveBeenCalledTimes(1);
+  expect(flippedStub.release).toHaveBeenCalledTimes(1);
+  expect(onSwipeRate).toHaveBeenCalledWith(1);
+  expect(onFlip).toHaveBeenCalledTimes(1);
 });
 
 test('con motion3d off el swipe no voltea ni califica', () => {
