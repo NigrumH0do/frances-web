@@ -20,6 +20,8 @@
 .shell-tabbar {
   order: 2;
   flex: none;
+  height: 0;
+  overflow: visible;
 }
 
 .shell-skip {
@@ -43,13 +45,14 @@
   transform: translateY(0);
 }
 
-@media (min-width: 900px) {
+@media (min-width: 960px) {
   .shell {
     flex-direction: row;
   }
 
   .shell-tabbar {
     order: 0;
+    height: auto;
   }
 
   .shell-main {
