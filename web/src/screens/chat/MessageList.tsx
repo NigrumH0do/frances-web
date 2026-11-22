@@ -5,6 +5,7 @@ import type { UiError } from '../../api/client';
 import type { ChatMessageOut, Citation } from '../../contracts/generated';
 import { tr } from '../../l10n/es';
 import { messageFor } from '../../l10n/errors';
+import { CitationPopover, citationHref } from './CitationPopover';
 import { Thinking } from './Thinking';
 import type { AskPhase } from './useAsk';
 import { chatStrings } from './strings';
@@ -52,18 +53,6 @@ function withoutSavedPending(
   return { ...pending, question: '', text: '' };
 }
 
-function citationHref(citation: Citation): string {
-  const params = new URLSearchParams();
-  if (citation.page !== null && citation.page !== undefined) {
-    params.set('pagina', String(citation.page));
-  }
-  params.set('adjunto', citation.source);
-  const query = params.toString();
-  return `/publicaciones/${encodeURIComponent(citation.item_id)}${
-    query === '' ? '' : `?${query}`
-  }`;
-}
-
 // El texto se pinta como texto (React escapa el HTML) y `[n]` solo se
 // convierte en enlace si existe una citation con ese número (P09-7).
 function renderText(content: string, citations: Citation[]): ReactNode[] {
@@ -77,14 +66,11 @@ function renderText(content: string, citations: Citation[]): ReactNode[] {
     nodes.push(content.slice(last, match.index));
     if (citation !== undefined) {
       nodes.push(
-        <Link
+        <CitationPopover
           key={`citation-${number}-${match.index}`}
-          to={citationHref(citation)}
-          className="cite"
-          aria-label={tr(chatStrings.citation, { n: number })}
-        >
-          {number}
-        </Link>,
+          citation={citation}
+          number={number}
+        />,
       );
     } else {
       nodes.push(match[0]);

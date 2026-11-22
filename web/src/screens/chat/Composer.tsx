@@ -1,4 +1,4 @@
-import { useId, useState, type JSX, type KeyboardEvent } from 'react';
+import { useId, useState, type JSX, type KeyboardEvent, type Ref } from 'react';
 import { Button } from '../../components';
 import { tr } from '../../l10n/es';
 import { chatStrings } from './strings';
@@ -14,19 +14,32 @@ export function Composer({
   disabled,
   reason,
   onSend,
+  draft,
+  onDraftChange,
+  inputRef,
 }: {
   disabled: boolean;
   reason?: string;
   onSend: (question: string) => void | Promise<void>;
+  draft?: string;
+  onDraftChange?: (value: string) => void;
+  inputRef?: Ref<HTMLTextAreaElement>;
 }): JSX.Element {
-  const [value, setValue] = useState('');
+  const [internal, setInternal] = useState('');
+  const controlled = draft !== undefined;
+  const value = controlled ? draft : internal;
   const id = useId();
   const counterId = `${id}-counter`;
+
+  function update(next: string): void {
+    if (controlled) onDraftChange?.(next);
+    else setInternal(next);
+  }
 
   function send(questionValue: string = value): void {
     const question = questionValue.trim();
     if (disabled || question.length === 0) return;
-    setValue('');
+    update('');
     void onSend(question);
   }
 
@@ -53,6 +66,7 @@ export function Composer({
           {chatStrings.questionLabel}
         </label>
         <textarea
+          ref={inputRef}
           id={id}
           className="textarea"
           name="question"
@@ -62,7 +76,7 @@ export function Composer({
           maxLength={MAX_QUESTION}
           value={value}
           disabled={disabled}
-          onChange={(event) => setValue(event.target.value)}
+          onChange={(event) => update(event.target.value)}
           onKeyDown={onKeyDown}
         />
         <Button

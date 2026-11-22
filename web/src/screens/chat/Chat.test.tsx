@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ReactElement } from 'react';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { ApiProvider } from '../../api/ApiContext';
 import { createApiClient } from '../../api/client';
@@ -32,6 +32,7 @@ import { closeV2DbForTests } from '../../offline/db';
 import { OfflineProvider } from '../../offline/OfflineContext';
 import Chat from './Chat';
 import { MessageList } from './MessageList';
+import { readStarterContext, starterPrompts } from './starters';
 
 const THREAD: ChatThreadOut = {
   id: 'th_1',
@@ -101,7 +102,7 @@ function sseResponse(events: ChatEvent[]): Response {
 
 function renderChatWithTransport(
   transport: Transport,
-  opts: { path: string; pattern: string } = {
+  opts: { path: string; pattern: string; state?: unknown } = {
     path: '/chat/th_1',
     pattern: '/chat/:threadId',
   },
@@ -114,7 +115,9 @@ function renderChatWithTransport(
   render(
     <ApiProvider client={client}>
       <OfflineProvider userId="u1">
-        <MemoryRouter initialEntries={[opts.path]}>
+        <MemoryRouter
+          initialEntries={[{ pathname: opts.path, state: opts.state }]}
+        >
           <Routes>
             <Route path={opts.pattern} element={<Chat />} />
           </Routes>
@@ -130,6 +133,7 @@ function renderChatScreen(opts: {
   pattern: string;
   routes?: Record<string, unknown>;
   online?: boolean;
+  state?: unknown;
 }) {
   if (opts.online === false) {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
@@ -138,8 +142,43 @@ function renderChatScreen(opts: {
   const client = renderChatWithTransport(transport, {
     path: opts.path,
     pattern: opts.pattern,
+    state: opts.state,
   });
   return { transport, client };
+}
+
+function stubWideViewport(): void {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query.includes('min-width: 960px'),
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
+}
+
+// jsdom ignora `pointerType` en el init de MouseEvent.
+function clickAsTouch(element: HTMLElement): void {
+  const event = new MouseEvent('click', {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+  });
+  Object.defineProperty(event, 'pointerType', { value: 'touch' });
+  fireEvent(element, event);
+}
+
+function PathProbe(): ReactElement {
+  const location = useLocation();
+  return (
+    <div data-testid="path">
+      {location.pathname}
+      {location.search}
+    </div>
+  );
 }
 
 function renderInRouter(ui: ReactElement) {
@@ -683,7 +722,7 @@ test('borra una conversación solo después de confirmar', async () => {
   );
 });
 
-test('carga las conversaciones y abre la última sin threadId', async () => {
+test('en estrecho, /chat muestra la lista y no el cuerpo del hilo', async () => {
   renderChatScreen({
     path: '/chat',
     pattern: '/chat',
@@ -698,10 +737,54 @@ test('carga las conversaciones y abre la última sin threadId', async () => {
     '¿Cuándo uso être?',
   );
   expect(within(list).getByText('5 nov 05:01')).toBeVisible();
-  expect(await screen.findByText(/Con être…/)).toBeVisible();
+  expect(screen.queryByText(/Con être…/)).not.toBeInTheDocument();
 });
 
-test('chips iniciales envían pregunta en hilo vacío y Crear tarjeta abre diálogo prellenado', async () => {
+test('desde 960 px, /chat muestra la lista, el cuerpo y el hilo activo', async () => {
+  stubWideViewport();
+  renderChatScreen({
+    path: '/chat',
+    pattern: '/chat',
+    routes: {
+      'GET /api/chat/threads': [OTHER_THREAD, THREAD],
+      'GET /api/chat/threads/th_1': DETAIL,
+    },
+  });
+
+  const list = await screen.findByLabelText('Conversaciones');
+  expect(within(list).getByRole('link', { current: 'page' })).toHaveTextContent(
+    '¿Cuándo uso être?',
+  );
+  const conversation = await screen.findByText(/Con être…/);
+  const active = within(list).getByRole('link', { current: 'page' });
+  expect(document.querySelector('.chat-split')).not.toBeNull();
+  expect(
+    active.compareDocumentPosition(conversation) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
+test('en estrecho, /chat/:threadId muestra solo la conversación y el enlace atrás', async () => {
+  renderChatScreen({
+    path: '/chat/th_1',
+    pattern: '/chat/:threadId',
+    routes: {
+      'GET /api/chat/threads': [THREAD],
+      'GET /api/chat/threads/th_1': DETAIL,
+    },
+  });
+
+  expect(await screen.findByText(/Con être…/)).toBeVisible();
+  expect(
+    screen.queryByRole('heading', { name: 'Conversaciones' }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Conversaciones' })).toHaveAttribute(
+    'href',
+    '/chat',
+  );
+});
+
+test('chips iniciales rellenan el compositor y Crear tarjeta abre diálogo prellenado', async () => {
   let sent = false;
   const { transport } = renderChatScreen({
     path: '/chat/th_1',
@@ -727,6 +810,17 @@ test('chips iniciales envían pregunta en hilo vacío y Crear tarjeta abre diál
   });
   await userEvent.click(starter);
 
+  const box = screen.getByRole('textbox', { name: 'Pregunta' });
+  expect(box).toHaveValue('¿Cómo se forma el passé composé?');
+  expect(box).toHaveFocus();
+  expect(
+    transport.calls.find(
+      (c) => c.method === 'POST' && c.url === '/api/chat/threads/th_1/messages',
+    ),
+  ).toBeUndefined();
+
+  await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
+
   await waitFor(() =>
     expect(
       transport.calls.find(
@@ -744,4 +838,148 @@ test('chips iniciales envían pregunta en hilo vacío y Crear tarjeta abre diál
   const dialog = await screen.findByRole('dialog');
   expect(within(dialog).getByLabelText('Español')).toHaveValue('Con être…');
   expect(within(dialog).getByLabelText('Notas')).toHaveValue('Con être…');
+});
+
+const STARTER_BASE = [
+  '¿Cómo se forma el passé composé?',
+  'Resume los puntos clave para el examen',
+  'Dame ejemplos con vocabulario de la clase',
+] as const;
+
+test('starterPrompts sin contexto devuelve los tres chips actuales', () => {
+  expect(starterPrompts()).toEqual([...STARTER_BASE]);
+  expect(starterPrompts({})).toEqual([...STARTER_BASE]);
+  expect(readStarterContext(null)).toBeUndefined();
+  expect(readStarterContext({ firstQuestion: 'hola' })).toBeUndefined();
+  expect(readStarterContext({ cardNote: 'true' })).toBeUndefined();
+  expect(readStarterContext({ topicTitle: '   ' })).toBeUndefined();
+});
+
+test('starterPrompts con nota de tarjeta antepone el chip contextual', () => {
+  expect(starterPrompts({ cardNote: true })).toEqual([
+    'explícame la nota de esta tarjeta',
+    ...STARTER_BASE,
+  ]);
+  expect(starterPrompts({ topicTitle: 'Les verbes' })[0]).toBe(
+    'Explícame el tema «Les verbes»',
+  );
+  expect(starterPrompts({ upcomingTitle: 'Rédaction' })[0]).toBe(
+    'Prepárame la entrega «Rédaction»',
+  );
+  expect(readStarterContext({ cardNote: true, firstQuestion: 'hola' })).toEqual(
+    { cardNote: true },
+  );
+});
+
+test('location.state con cardNote muestra el chip de la nota', async () => {
+  renderChatScreen({
+    path: '/chat/th_1',
+    pattern: '/chat/:threadId',
+    state: { cardNote: true },
+    routes: {
+      'GET /api/chat/threads': [THREAD],
+      'GET /api/chat/threads/th_1': EMPTY_THREAD,
+    },
+  });
+
+  expect(
+    await screen.findByRole('button', {
+      name: 'explícame la nota de esta tarjeta',
+    }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole('button', { name: '¿Cómo se forma el passé composé?' }),
+  ).toBeVisible();
+});
+
+test('el foco abre la vista previa de la cita y Escape la cierra', async () => {
+  const cited: Citation = {
+    ...CITATION,
+    item_title: 'Passé composé avec être',
+  };
+  const message: ChatMessageOut = {
+    ...ASSISTANT_MESSAGE,
+    content: 'Con être… [1]',
+    citations: [cited],
+  };
+  renderInRouter(<MessageList messages={[message]} />);
+
+  const inline = screen.getByRole('link', { name: 'Fuente 1' });
+  inline.focus();
+
+  const dialog = await screen.findByRole('dialog');
+  expect(dialog).toHaveAttribute('aria-modal', 'false');
+  expect(dialog).toHaveTextContent('Passé composé avec être');
+  expect(dialog).toHaveTextContent('p. 3');
+  expect(dialog).toHaveTextContent('Leçon 7 — Le passé composé');
+  expect(within(dialog).getByRole('link')).toHaveAttribute(
+    'href',
+    '/publicaciones/cw_7?pagina=3&adjunto=att_1',
+  );
+
+  await userEvent.keyboard('{Escape}');
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(inline).toHaveFocus();
+});
+
+test('un toque abre la vista previa sin navegar hasta el enlace interior', () => {
+  const cited: Citation = {
+    ...CITATION,
+    item_title: 'Passé composé avec être',
+  };
+  const message: ChatMessageOut = {
+    ...ASSISTANT_MESSAGE,
+    content: 'Con être… [1]',
+    citations: [cited],
+  };
+  render(
+    <MemoryRouter initialEntries={['/chat/th_1']}>
+      <PathProbe />
+      <MessageList messages={[message]} />
+    </MemoryRouter>,
+  );
+
+  const inline = screen.getByRole('link', { name: 'Fuente 1' });
+  clickAsTouch(inline);
+
+  expect(screen.getByTestId('path')).toHaveTextContent('/chat/th_1');
+  const dialog = screen.getByRole('dialog');
+  expect(dialog).toHaveAttribute('aria-modal', 'false');
+  expect(within(dialog).getByRole('link')).toHaveAttribute(
+    'href',
+    '/publicaciones/cw_7?pagina=3&adjunto=att_1',
+  );
+
+  fireEvent.click(within(dialog).getByRole('link'));
+  expect(screen.getByTestId('path')).toHaveTextContent(
+    '/publicaciones/cw_7?pagina=3&adjunto=att_1',
+  );
+});
+
+test('el css del chat parte a 960 px y deja el compositor fijo', () => {
+  const css = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), 'chat.css'),
+    'utf8',
+  );
+  expect(css).toContain('.content-split .chat-split');
+  expect(css).toMatch(
+    /@media \(min-width: 960px\)\s*\{[^}]*grid-template-columns:\s*280px minmax\(0, 1fr\);/,
+  );
+  expect(css).toMatch(
+    /\.composer\s*\{[^}]*position:\s*sticky;[^}]*bottom:\s*0;[^}]*z-index:\s*2;[^}]*background:\s*var\(--c-bg\);/,
+  );
+  expect(css).toMatch(
+    /\.composer \.textarea\s*\{[^}]*max-height:\s*calc\(1\.5em \* 4 \+ 20px\);/,
+  );
+  expect(css).toMatch(/\.thinking \.btn\s*\{[^}]*min-height:\s*var\(--tap\)/);
+  expect(css).toContain('html.motion-off .dots span');
+  expect(css).not.toMatch(/(^|[^-\w])order\s*:/);
+  expect(css).not.toContain('.paper');
+  expect(css).not.toContain('var(--c-gold-3d)');
+  const blink = css.slice(
+    css.indexOf('@keyframes blink'),
+    css.indexOf('.steps'),
+  );
+  expect(blink).toContain('opacity');
+  expect(blink).not.toContain('transform');
 });
