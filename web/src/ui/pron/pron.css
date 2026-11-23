@@ -1,0 +1,345 @@
+/* Pronunciación: puntaje, sesión y anillo. */
+
+.pron-score {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+}
+.pron-score-total {
+  font-size: var(--fs-3xl);
+  line-height: var(--lh-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+  font-weight: 700;
+}
+.pron-score-band {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+.score-band-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.score-band-icon[data-band='excelente'] {
+  color: var(--c-score-excelente);
+}
+.score-band-icon[data-band='bien'] {
+  color: var(--c-score-bien);
+}
+.score-band-icon[data-band='mejorable'] {
+  color: var(--c-score-mejorable);
+}
+.score-band-icon[data-band='repetir'] {
+  color: var(--c-score-repetir);
+}
+.pron-score-parts {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+  color: var(--c-text);
+}
+.pron-score-hint {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular, 400);
+  color: var(--c-text-muted);
+}
+
+.pron-band-excelente {
+  color: var(--c-score-excelente);
+}
+.pron-band-bien {
+  color: var(--c-score-bien);
+}
+.pron-band-mejorable {
+  color: var(--c-score-mejorable);
+}
+.pron-band-repetir {
+  color: var(--c-score-repetir);
+}
+
+.pron-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-read);
+  font-size: var(--fs-xl);
+}
+.pron-word {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: var(--tap);
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--r-sm);
+  border-bottom: 3px solid currentColor;
+  color: var(--c-text);
+}
+.pron-word.pron-band-mejorable {
+  background: var(--c-warning-soft);
+}
+.pron-word.pron-band-repetir {
+  background: var(--c-danger-soft);
+}
+.pron-word-score {
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+.pron-word-error {
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  color: var(--c-text-muted);
+}
+
+.pron-phonemes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pron-phoneme {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+  min-height: var(--tap);
+  padding: var(--sp-2);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  font-family: var(--font-mono);
+  font-style: normal;
+}
+.pron-phoneme.pron-band-repetir {
+  border-color: var(--c-score-repetir);
+}
+
+.practice-session {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.practice-front {
+  font-family: var(--font-read);
+  font-size: var(--fs-2xl);
+  line-height: 1.25;
+  margin: 0;
+}
+.practice-status {
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+}
+.practice-analyzing {
+  align-items: center;
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+}
+.practice-analyzing-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 0;
+  border-radius: 999px;
+  background: var(--c-accent);
+  animation: practice-pulse 1s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .practice-analyzing-dot {
+    animation: none;
+  }
+}
+@keyframes practice-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+.practice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.practice-actions button {
+  min-height: var(--tap);
+  min-width: var(--tap);
+}
+/* «Grabar/Detener»: contraste AA. Sin fondo/color propios, WebKit usa el
+ * botón nativo (blanco sobre gris) y axe lo marca como color-contrast. */
+.practice-session > button {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-md);
+  background: var(--c-card);
+  color: var(--c-text);
+  font: inherit;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+.practice-session > button:hover {
+  background: var(--c-surface);
+}
+
+/* ---------- Puntaje de pronunciación ---------- */
+
+.pron-score {
+  --v: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'total parts'
+    'hint parts';
+  column-gap: var(--sp-4);
+  row-gap: var(--sp-2);
+  align-items: start;
+}
+.pron-score > p:first-child {
+  grid-area: total;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+}
+.pron-score > .pron-score-hint {
+  grid-area: hint;
+  max-width: 14ch;
+}
+.pron-score-parts {
+  grid-area: parts;
+}
+.pron-score-total {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+@media (max-width: 420px) {
+  .pron-score {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'total'
+      'hint'
+      'parts';
+  }
+  .pron-score > .pron-score-hint {
+    max-width: none;
+  }
+}
+
+/* ---------- Pronunciación: orbe acústico + anillo de puntaje + palabras ---------- */
+
+.acoustic-slot,
+.orb-wrap {
+  width: 160px;
+  height: 160px;
+  margin-inline: auto;
+  position: relative;
+}
+
+.acoustic-cabin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.record-orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--c-record);
+  color: var(--c-on-record);
+  font: inherit;
+  cursor: pointer;
+}
+
+.record-orb:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.record-orb-label {
+  position: absolute;
+  left: calc(100% + var(--sp-3));
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--c-text);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.score-ring-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+
+.score-ring {
+  width: 76px;
+  height: 76px;
+  flex: none;
+}
+
+.score-ring-bg {
+  fill: none;
+  stroke: var(--c-border);
+  stroke-width: 7;
+}
+
+.score-ring-fg {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  /* Excepción documentada (ver cabecera): el arco SVG solo puede progresar
+   * con stroke-dashoffset; el cambio de color es instantáneo bajo motion-off. */
+  transition: stroke-dashoffset var(--dur-slow) var(--ease);
+}
+
+.word-play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap);
+  padding: 6px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-border);
+  background: var(--c-card);
+  color: var(--c-text);
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.word-play-btn:hover {
+  border-color: var(--c-accent);
+  background: var(--c-accent-soft);
+  color: var(--c-on-accent-soft);
+}

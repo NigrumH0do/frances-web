@@ -14,20 +14,22 @@ export function Translate({ q, value, onChange }: QuestionProps<string>) {
           </span>
         ) : null}
       </legend>
-      <Field
-        label={quizStrings.translateLabel}
-        hint={quizStrings.translateHint}
-      >
-        <textarea
-          className="textarea fr"
-          lang="fr"
-          rows={4}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          autoComplete="off"
-          spellCheck={false}
-        />
-      </Field>
+      <div className="quiz-answer" key={q.id}>
+        <Field
+          label={quizStrings.translateLabel}
+          hint={quizStrings.translateHint}
+        >
+          <textarea
+            className="textarea fr"
+            lang="fr"
+            rows={4}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </Field>
+      </div>
     </fieldset>
   );
 }

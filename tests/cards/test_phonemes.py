@@ -1,20 +1,26 @@
 """Tests de fonemización espeak-ng y mapa a etiquetas Azure (CRD-06)."""
 
+import gc
 import json
 import sqlite3
+import warnings
+from pathlib import Path
 from typing import Any
 
 import pytest
+import typer
+from typer.testing import CliRunner
 
 from frances.cards.phoneme_map import ESPEAK_TO_AZURE
 from frances.cards.phonemes import (
     espeak_ipa,
     ipa_display,
+    register,
     run_phonemize,
     to_azure_phonemes,
 )
 from frances.models import card_id
-from frances.stage import StageContext
+from frances.stage import StageContext, StageReport, make_context
 
 NOW = "2026-10-14T10:17:00.000000Z"
 
@@ -175,3 +181,38 @@ ADR_004_LABELS = {
 def test_labels_are_exactly_adr_004_table() -> None:
     assert len(ADR_004_LABELS) == 37
     assert set(ESPEAK_TO_AZURE.values()) == ADR_004_LABELS
+
+
+def test_phonemize_cli_closes_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    ctx = make_context(tmp_path, {})
+    calls: list[int] = []
+    real_close = ctx.store.close
+
+    def spy_close() -> None:
+        calls.append(1)
+        real_close()
+
+    monkeypatch.setattr("frances.cards.phonemes.make_context", lambda _data: ctx)
+    monkeypatch.setattr(
+        "frances.cards.phonemes.run_phonemize",
+        lambda _ctx: StageReport(stage="phonemize", status="ok"),
+    )
+    monkeypatch.setattr(ctx.store, "close", spy_close)
+    app = typer.Typer()
+
+    @app.command()
+    def ping() -> None:
+        typer.echo("pong")
+
+    register(app)
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", ResourceWarning)
+            res = CliRunner().invoke(app, ["phonemize", "--data", str(tmp_path)])
+            gc.collect()
+        assert res.exit_code == 0, res.output
+        assert len(calls) == 1
+        assert [w for w in caught if issubclass(w.category, ResourceWarning)] == []
+    finally:
+        if not calls:
+            real_close()

@@ -61,9 +61,11 @@ def test_ci_is_read_only_and_guards_the_real_build():
     ci = yaml.safe_load(ci_text)
     assert ci["permissions"] == {"contents": "read"}
     steps = ci["jobs"]["web"]["steps"]
-    guarded = [
-        s for s in steps if s.get("run") == "npm run build && node scripts/check-no-demo.mjs dist"
-    ]
+    guard = (
+        "npm run build && node scripts/check-no-demo.mjs dist"
+        " && node scripts/check-three-budget.mjs dist"
+    )
+    guarded = [s for s in steps if s.get("run") == guard]
     assert guarded and guarded[0]["working-directory"] == "web"
     uses = [s["uses"] for j in ci["jobs"].values() for s in j["steps"] if "uses" in s]
     assert uses and all(PINNED.fullmatch(u.split(" ")[0]) for u in uses)

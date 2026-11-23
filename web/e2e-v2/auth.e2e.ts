@@ -1,6 +1,6 @@
 // Sesión v2 (Task UI-08): login, `next`, invitación y cierre de sesión.
 
-import { expect, test } from '@playwright/test';
+import { expect, test } from './console.fixture';
 import { loginDemo } from './helpers';
 
 test('credenciales malas muestran un mensaje genérico', async ({ page }) => {

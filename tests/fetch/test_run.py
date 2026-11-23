@@ -2,10 +2,12 @@
 
 import contextlib
 import dataclasses
+import gc
 import hashlib
 import json
 import sqlite3
 import sys
+import warnings
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -25,7 +27,7 @@ from frances.fetch import run as run_mod
 from frances.fetch.drive import NATIVE_PREFIX, DriveClient, DriveMeta
 from frances.fetch.run import run_fetch
 from frances.models.ids import attachment_id, item_id
-from frances.stage import StageContext, make_context
+from frances.stage import StageContext, StageReport, make_context
 from frances.sync.google_http import ForbiddenError, NotFoundError
 from frances.timeutil import format_ts, norm_ts
 
@@ -434,13 +436,54 @@ def test_unexpected_error_bumps_attempts_and_redacts(tmp_path: Path, monkeypatch
     assert "ya29.fixture" not in " ".join(rep.errors)
 
 
+def _fetch_app() -> typer.Typer:
+    # Segundo comando para que typer use modo grupo: con uno solo no acepta el nombre.
+    app = typer.Typer()
+
+    @app.command()
+    def ping() -> None:
+        typer.echo("pong")
+
+    run_mod.register(app)
+    return app
+
+
 def test_fetch_cli_reports_partial(tmp_path: Path) -> None:
     synced_ctx(tmp_path, "v1")
-    app = typer.Typer()
-    run_mod.register(app)
-    with mocks("v1"):
-        res = CliRunner(env=FAKE_ENV).invoke(app, ["fetch", "--data", str(tmp_path)])
-    assert res.exit_code == 2
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", ResourceWarning)
+        with mocks("v1"):
+            res = CliRunner(env=FAKE_ENV).invoke(_fetch_app(), ["fetch", "--data", str(tmp_path)])
+        exit_code = res.exit_code
+        del res
+        gc.collect()
+    assert exit_code == 2
+    assert [w for w in caught if issubclass(w.category, ResourceWarning)] == []
+
+
+def test_fetch_cli_closes_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    ctx = make_context(tmp_path, FAKE_ENV)
+    calls: list[int] = []
+    real_close = ctx.store.close
+
+    def spy_close() -> None:
+        calls.append(1)
+        real_close()
+
+    monkeypatch.setattr(ctx.store, "close", spy_close)
+    monkeypatch.setattr(run_mod, "make_context", lambda _data: ctx)
+    monkeypatch.setattr(run_mod, "run_fetch", lambda _ctx: StageReport(stage="fetch", status="ok"))
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", ResourceWarning)
+            res = CliRunner().invoke(_fetch_app(), ["fetch", "--data", str(tmp_path)])
+            gc.collect()
+        assert res.exit_code == 0, res.output
+        assert len(calls) == 1
+        assert [w for w in caught if issubclass(w.category, ResourceWarning)] == []
+    finally:
+        if not calls:
+            real_close()
 
 
 def test_native_export_not_found_is_partial(tmp_path: Path, monkeypatch: Any) -> None:

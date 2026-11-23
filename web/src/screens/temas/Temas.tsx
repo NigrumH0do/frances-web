@@ -1,5 +1,5 @@
 import { useId, useMemo, useState, type JSX } from 'react';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { useApi } from '../../api/ApiContext';
 import { useResource } from '../../api/useResource';
 import {
@@ -7,16 +7,18 @@ import {
   Chip,
   FilterChip,
   Icon,
-  ListItem,
   Progress,
   Segmented,
   StateView,
 } from '../../components';
+import { cx } from '../../components/cx';
 import type { StudyTopic, TopicProgress } from '../../contracts/generated';
 import { common, tr } from '../../l10n/es';
 import { useOffline } from '../../offline/OfflineContext';
-import { temasStrings as s } from './strings';
+import { mastery, type Mastery } from './mastery';
+import { masteryLabel, temasStrings as s } from './strings';
 import { useCourse } from './useCourse';
+import './temas.css';
 
 type Level = NonNullable<StudyTopic['cefr']>;
 type TopicFilter = 'all' | 'pending' | Level;
@@ -47,6 +49,53 @@ function progressFor(
       cards_learned: 0,
       last_quiz_score: null,
     }
+  );
+}
+
+function MasteryIcon({ state }: { state: Mastery }): JSX.Element {
+  const props = {
+    className: 'icon icon-sm',
+    viewBox: '0 0 24 24',
+    'aria-hidden': true,
+    focusable: false,
+  } as const;
+  if (state === 'todo') {
+    return (
+      <svg {...props}>
+        <circle cx="12" cy="12" r="8" />
+      </svg>
+    );
+  }
+  if (state === 'doing') {
+    return (
+      <svg {...props}>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v5l3 2" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...props}>
+      <path d="m5 12 5 5 9-10" />
+    </svg>
+  );
+}
+
+function MasteryPill({
+  cardsLearned,
+  cardsTotal,
+  lastQuizScore,
+}: {
+  cardsLearned: number;
+  cardsTotal: number;
+  lastQuizScore: number | null;
+}): JSX.Element {
+  const state = mastery(cardsLearned, cardsTotal, lastQuizScore);
+  return (
+    <span className={cx('mastery', `mastery-${state}`)}>
+      <MasteryIcon state={state} />
+      {masteryLabel(state)}
+    </span>
   );
 }
 
@@ -183,47 +232,60 @@ function TopicsList({
             entry.cards_total > 0
               ? Math.round((entry.cards_learned / entry.cards_total) * 100)
               : 0;
+          const active = topic.id === activeTopicId;
           return (
             <li key={topic.id}>
-              <ListItem
+              <Link
                 to={`/temas/${topic.id}`}
-                title={
-                  <span className="row-between">
-                    <span className="fr" lang="fr">
-                      {topic.title}
-                    </span>
-                    <span className="row wrap">
-                      {topic.id === activeTopicId ? (
-                        <Chip>{s.active}</Chip>
-                      ) : null}
-                      {topic.cefr !== null ? (
-                        <Chip tone="level">{topic.cefr}</Chip>
-                      ) : null}
-                    </span>
-                  </span>
-                }
-                meta={
-                  <span className="stack">
-                    <span>{topicsLabel(topic)}</span>
-                    {topic.source_changed ? (
-                      <Chip tone="warning">{s.sourceChanged}</Chip>
-                    ) : null}
-                    <span className="row">
-                      <span className="grow">
-                        <Progress
-                          value={entry.cards_learned}
-                          max={entry.cards_total}
-                          label={tr(s.progressLabel, {
-                            title: topic.title,
-                            percent,
-                          })}
+                className={cx('list-item', 'topic-row', active && 'is-active')}
+                aria-current={active ? 'true' : undefined}
+              >
+                <span className="grow">
+                  <span className="title">
+                    <span className="row-between">
+                      <span className="fr" lang="fr">
+                        {topic.title}
+                      </span>
+                      <span className="row wrap">
+                        {active ? <Chip>{s.active}</Chip> : null}
+                        {topic.cefr !== null ? (
+                          <Chip tone="level">{topic.cefr}</Chip>
+                        ) : null}
+                        <MasteryPill
+                          cardsLearned={entry.cards_learned}
+                          cardsTotal={entry.cards_total}
+                          lastQuizScore={entry.last_quiz_score}
                         />
                       </span>
-                      <span className="xs muted">{percent} %</span>
                     </span>
                   </span>
-                }
-              />
+                  <br />
+                  <span className="meta">
+                    <span className="stack">
+                      <span>{topicsLabel(topic)}</span>
+                      {topic.source_changed ? (
+                        <Chip tone="warning">{s.sourceChanged}</Chip>
+                      ) : null}
+                      <span className="row">
+                        <span className="grow">
+                          <Progress
+                            value={entry.cards_learned}
+                            max={entry.cards_total}
+                            label={tr(s.progressLabel, {
+                              title: topic.title,
+                              percent,
+                            })}
+                          />
+                        </span>
+                        <span className="xs muted topic-percent">
+                          {percent} %
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                </span>
+                <Icon name="chevron" />
+              </Link>
             </li>
           );
         })}

@@ -70,10 +70,14 @@ export function WeekStrip({ week }: { week: readonly DayCount[] }) {
         <div className="bars" aria-hidden="true">
           {week.map((day) => {
             const total = day.reviews + day.quiz_attempts;
+            const names = [
+              day.day === today ? 'is-today' : '',
+              total === 0 ? 'is-empty' : '',
+            ].filter((name) => name.length > 0);
             return (
               <span
                 key={day.day}
-                className={total === 0 ? 'off' : undefined}
+                className={names.length > 0 ? names.join(' ') : undefined}
                 style={{
                   height: `${Math.max(4, Math.round((total / max) * 100))}%`,
                 }}

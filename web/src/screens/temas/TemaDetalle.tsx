@@ -11,6 +11,7 @@ import { TopicCards } from './TopicCards';
 import { TopicItems } from './TopicItems';
 import { TopicQuizzes } from './TopicQuizzes';
 import { TopicSummary } from './TopicSummary';
+import './temas.css';
 
 function subtitleFor(topic: StudyTopic): string {
   const publications =
@@ -87,31 +88,33 @@ export function TemaDetalle(): JSX.Element {
           onRetry={state.reload}
         >
           {(topic) => (
-            <Tabs
-              label={s.tabsLabel}
-              tabs={[
-                {
-                  id: 'resumen',
-                  label: s.summary,
-                  panel: <TopicSummary topic={topic} />,
-                },
-                {
-                  id: 'clases',
-                  label: s.classes,
-                  panel: <TopicItems itemIds={topic.item_ids} />,
-                },
-                {
-                  id: 'tarjetas',
-                  label: s.cards,
-                  panel: <TopicCards topicId={topic.id} />,
-                },
-                {
-                  id: 'quiz',
-                  label: s.quiz,
-                  panel: <TopicQuizzes topicId={topic.id} />,
-                },
-              ]}
-            />
+            <div className="topic-tabs">
+              <Tabs
+                label={s.tabsLabel}
+                tabs={[
+                  {
+                    id: 'resumen',
+                    label: s.summary,
+                    panel: <TopicSummary topic={topic} />,
+                  },
+                  {
+                    id: 'clases',
+                    label: s.classes,
+                    panel: <TopicItems itemIds={topic.item_ids} />,
+                  },
+                  {
+                    id: 'tarjetas',
+                    label: s.cards,
+                    panel: <TopicCards topicId={topic.id} />,
+                  },
+                  {
+                    id: 'quiz',
+                    label: s.quiz,
+                    panel: <TopicQuizzes topicId={topic.id} />,
+                  },
+                ]}
+              />
+            </div>
           )}
         </StateView>
       )}

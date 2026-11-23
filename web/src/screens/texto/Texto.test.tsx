@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -17,8 +17,14 @@ import { jsonResponse } from '../../api/testing';
 import { closeFrancesDbForTests } from '../../db/idb';
 import { closeV2DbForTests } from '../../offline/db';
 import { listAttempts } from '../../pron/attempts';
+import { createLevelMeter } from '../../pron/levelMeter';
 import { renderScreen } from '../../shell/testing';
+import { SpeakPanel } from './SpeakPanel';
 import Texto from './Texto';
+
+vi.mock('../../pron/levelMeter', () => ({
+  createLevelMeter: vi.fn(() => null),
+}));
 import bonjour from '../../../../tests/fixtures/azure/bonjour.json';
 
 const VOICES: VoiceOut[] = [
@@ -82,6 +88,8 @@ function routes(extra: Record<string, unknown> = {}) {
 }
 
 beforeEach(async () => {
+  vi.mocked(createLevelMeter).mockReset();
+  vi.mocked(createLevelMeter).mockImplementation(() => null);
   indexedDB = new IDBFactory();
   await closeV2DbForTests();
   await closeFrancesDbForTests();
@@ -255,4 +263,113 @@ test('R-42: el token no se guarda y la voz grabada no va a disco', () => {
     .join('\n');
   expect(source).not.toMatch(/AZURE_SPEECH_KEY|fromSubscription/i);
   expect(source).not.toMatch(/localStorage|sessionStorage|indexedDB|caches\./);
+});
+
+test('SpeakPanel monta la cabina y reanuda el medidor antes de getUserMedia', async () => {
+  const order: string[] = [];
+  const resume = vi.fn(() => {
+    order.push('resume');
+  });
+  const connect = vi.fn(() => {
+    order.push('connect');
+  });
+  const close = vi.fn(() => {
+    order.push('close');
+  });
+  vi.mocked(createLevelMeter).mockImplementation(
+    () =>
+      ({
+        resumeFromGesture: resume,
+        connect,
+        close,
+        read: vi.fn(),
+        silentEpisodes: 0,
+      }) as unknown as ReturnType<typeof createLevelMeter>,
+  );
+
+  class FakeMediaRecorder {
+    state: RecordingState = 'inactive';
+    onstop: (() => void) | null = null;
+    ondataavailable: ((event: BlobEvent) => void) | null = null;
+    mimeType = 'audio/webm';
+    start(): void {
+      this.state = 'recording';
+    }
+    stop(): void {
+      this.state = 'inactive';
+      this.onstop?.();
+    }
+  }
+  vi.stubGlobal('MediaRecorder', FakeMediaRecorder);
+
+  const stop = vi.fn(() => {
+    order.push('track-stop');
+  });
+  let release: (stream: MediaStream) => void = () => undefined;
+  Object.defineProperty(navigator, 'mediaDevices', {
+    configurable: true,
+    value: {
+      getUserMedia: vi.fn(
+        () =>
+          new Promise<MediaStream>((resolve) => {
+            order.push('gum');
+            release = resolve;
+          }),
+      ),
+    },
+  });
+
+  try {
+    renderScreen(
+      <SpeakPanel
+        text="Bonjour"
+        ready
+        recognizer={null}
+        assessUnavailable={false}
+        modelClip={null}
+        clipFor={() => Promise.reject(new Error('sin modelo'))}
+        onPracticed={() => undefined}
+      />,
+    );
+
+    expect(document.querySelector('.acoustic-slot')).not.toBeNull();
+    const record = screen.getByRole('button', { name: 'Grabarme' });
+    expect(record).toHaveClass('record-orb');
+
+    await userEvent.click(record);
+    expect(resume).toHaveBeenCalledTimes(1);
+    expect(order.indexOf('resume')).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf('resume')).toBeLessThan(order.indexOf('gum'));
+    expect(connect).not.toHaveBeenCalled();
+
+    await act(async () => {
+      release({
+        getTracks: () => [{ stop }],
+      } as unknown as MediaStream);
+    });
+
+    const stopButton = await screen.findByRole('button', { name: 'Detener' });
+    expect(order.indexOf('gum')).toBeLessThan(order.indexOf('connect'));
+    expect(connect).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(stopButton);
+    await waitFor(() => expect(order).toContain('track-stop'));
+    expect(order.indexOf('close')).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf('close')).toBeLessThan(order.indexOf('track-stop'));
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
+test('texto.css fija la pauta en 32 px y un solo anillo de foco', () => {
+  const css = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), 'texto.css'),
+    'utf8',
+  );
+  expect(css).toMatch(/line-height:\s*32px;\s*\/\*\s*--rule-step \* 4 \*\//);
+  expect(css).not.toMatch(/\.lab-sheet:focus-within/);
+  expect(css).toMatch(
+    /\.lab-textarea:focus-visible\s*\{[^}]*outline:\s*var\(--focus-ring\)/,
+  );
+  expect(css).toMatch(/@media\s*\(\s*min-width:\s*960px\s*\)/);
 });

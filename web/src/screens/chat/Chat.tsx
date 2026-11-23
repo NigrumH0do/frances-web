@@ -21,7 +21,62 @@ import { Composer } from './Composer';
 import { MessageList, type PendingAsk } from './MessageList';
 import { ThreadList } from './ThreadList';
 import { useAsk, type AskPhase } from './useAsk';
+import { readStarterContext, starterPrompts } from './starters';
 import { chatStrings } from './strings';
+import './chat.css';
+
+function useMinWidth(px: number): boolean {
+  const query = `(min-width: ${px}px)`;
+
+  function read(): boolean {
+    if (
+      typeof window === 'undefined' ||
+      typeof window.matchMedia !== 'function'
+    ) {
+      return false;
+    }
+    return window.matchMedia(query).matches;
+  }
+
+  const [matches, setMatches] = useState(read);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    update();
+    media.addEventListener?.('change', update);
+    return () => media.removeEventListener?.('change', update);
+  }, [query]);
+
+  return matches;
+}
+
+function StarterChips({
+  prompts,
+  onPick,
+}: {
+  prompts: readonly string[];
+  onPick: (prompt: string) => void;
+}): JSX.Element {
+  return (
+    <div className="stack" aria-label={chatStrings.startersTitle}>
+      <p className="xs muted">{chatStrings.startersTitle}</p>
+      <div className="starter-chips">
+        {prompts.map((prompt) => (
+          <button
+            key={prompt}
+            type="button"
+            className="starter-chip"
+            onClick={() => onPick(prompt)}
+          >
+            {prompt}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // Claves de navegación cuya primera pregunta ya se envió: el modo estricto de
 // React monta dos veces y la pregunta no debe salir dos veces.
@@ -34,7 +89,8 @@ function byUpdatedDesc(a: ChatThreadOut, b: ChatThreadOut): number {
 /**
  * Pantalla de chat (P09-7): hilos por usuario, SSE por POST, «pensando» con
  * cronómetro de hasta 30 s, cancelar y respuestas con citas a publicación y
- * página. Sin `threadId` muestra la lista y el hilo más reciente.
+ * página. En estrecho, sin `threadId` solo la lista; con `threadId` solo la
+ * conversación. Desde 960 px, lista y conversación juntas.
  */
 export default function Chat(): JSX.Element {
   const api = useApi();
@@ -42,6 +98,7 @@ export default function Chat(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
   const { threadId } = useParams<{ threadId?: string }>();
+  const wide = useMinWidth(960);
 
   const threads = useResource(online ? 'chat-threads' : null, (signal) =>
     api.threads({ signal }),
@@ -52,14 +109,20 @@ export default function Chat(): JSX.Element {
     [threadData],
   );
 
-  const activeId = threadId ?? sortedThreads[0]?.id ?? null;
+  const showList = wide || threadId === undefined;
+  const showThread = wide || threadId !== undefined;
+  const activeId = threadId ?? (wide ? (sortedThreads[0]?.id ?? null) : null);
   const detail = useResource(
-    online && activeId !== null ? `chat-thread:${activeId}` : null,
+    online && showThread && activeId !== null
+      ? `chat-thread:${activeId}`
+      : null,
     (signal) => api.thread(activeId as string, { signal }),
   );
 
   const ask = useAsk(activeId ?? '');
   const [question, setQuestion] = useState('');
+  const [draft, setDraft] = useState('');
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const [actionError, setActionError] = useState<UiError | null>(null);
   const [creating, setCreating] = useState(false);
   const [cardDraft, setCardDraft] = useState<Partial<CardEditorValues> | null>(
@@ -232,6 +295,30 @@ export default function Chat(): JSX.Element {
         detail.data.messages.length === 0 &&
         pending === null));
 
+  const listPane = online && showList;
+  const threadPane = showThread;
+  const split = wide && listPane && threadPane;
+  const prompts = starterPrompts(readStarterContext(location.state));
+
+  function pickStarter(prompt: string): void {
+    setDraft(prompt);
+    composerRef.current?.focus();
+  }
+
+  const starters = showStarters ? (
+    <StarterChips prompts={prompts} onPick={pickStarter} />
+  ) : null;
+  const composer = (
+    <Composer
+      disabled={!canAsk}
+      reason={reason}
+      onSend={handleSend}
+      draft={draft}
+      onDraftChange={setDraft}
+      inputRef={composerRef}
+    />
+  );
+
   return (
     <div className="stack">
       <AppBar
@@ -269,70 +356,63 @@ export default function Chat(): JSX.Element {
         </div>
       ) : null}
 
-      {online && threadId === undefined ? (
-        <StateView
-          state={threads}
-          empty={(data) => data.length === 0}
-          emptyText={chatStrings.emptyThreads}
-          emptyAction={
-            <Button
-              variant="secondary"
-              icon="chat"
-              disabled={creating}
-              onClick={() => void newThread()}
-            >
-              {chatStrings.newThread}
-            </Button>
-          }
-          onRetry={threads.reload}
-        >
-          {(data) => (
-            <ThreadList
-              threads={data}
-              activeId={activeId ?? undefined}
-              busy={creating}
-              onNew={() => void newThread()}
-              onDelete={removeThread}
-            />
-          )}
-        </StateView>
-      ) : null}
-
-      {online && activeId !== null ? (
-        <StateView
-          state={detail}
-          emptyText={chatStrings.emptyThread}
-          onRetry={detail.reload}
-        >
-          {(data) => (
-            <MessageList
-              messages={data.messages}
-              pending={pending}
-              onCreateCard={openCardFromMessage}
-            />
-          )}
-        </StateView>
-      ) : null}
-
-      {showStarters ? (
-        <div className="stack" aria-label={chatStrings.startersTitle}>
-          <p className="xs muted">{chatStrings.startersTitle}</p>
-          <div className="starter-chips">
-            {chatStrings.starters.map((prompt) => (
-              <button
-                key={prompt}
-                type="button"
-                className="starter-chip"
-                onClick={() => void handleSend(prompt)}
+      <div className={split ? 'chat-split' : 'stack'}>
+        {listPane ? (
+          <StateView
+            state={threads}
+            empty={(data) => data.length === 0}
+            emptyText={chatStrings.emptyThreads}
+            emptyAction={
+              <Button
+                variant="secondary"
+                icon="chat"
+                disabled={creating}
+                onClick={() => void newThread()}
               >
-                {prompt}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
+                {chatStrings.newThread}
+              </Button>
+            }
+            onRetry={threads.reload}
+          >
+            {(data) => (
+              <ThreadList
+                threads={data}
+                activeId={activeId ?? undefined}
+                busy={creating}
+                onNew={() => void newThread()}
+                onDelete={removeThread}
+              />
+            )}
+          </StateView>
+        ) : null}
 
-      <Composer disabled={!canAsk} reason={reason} onSend={handleSend} />
+        {threadPane ? (
+          <div className="stack chat-pane">
+            {online && activeId !== null ? (
+              <StateView
+                state={detail}
+                emptyText={chatStrings.emptyThread}
+                onRetry={detail.reload}
+              >
+                {(data) => (
+                  <MessageList
+                    messages={data.messages}
+                    pending={pending}
+                    onCreateCard={openCardFromMessage}
+                  />
+                )}
+              </StateView>
+            ) : null}
+            {starters}
+            {composer}
+          </div>
+        ) : (
+          <>
+            {starters}
+            {composer}
+          </>
+        )}
+      </div>
 
       <NewCardDialog
         open={cardDraft !== null}

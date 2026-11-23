@@ -60,7 +60,7 @@ const CARD: CardView = {
   state: null,
 };
 
-function setup(routes: Record<string, unknown> = {}) {
+function setup(routes: Record<string, unknown> = {}, slowLabel?: string) {
   const transport = fakeTransport({
     'GET /api/voices': VOICES,
     'GET /api/me/prefs': PREFS,
@@ -76,7 +76,7 @@ function setup(routes: Record<string, unknown> = {}) {
   });
   render(
     <ApiProvider client={client}>
-      <CardAudio card={CARD} field="front" />
+      <CardAudio card={CARD} field="front" slowLabel={slowLabel} />
     </ApiProvider>,
   );
   return { transport };
@@ -104,6 +104,37 @@ test('CardAudio pide el audio con GET completo a la url de la API', async () => 
   });
   expect(call.method).toBe('GET');
   expect(call.headers.has('Range')).toBe(false);
+});
+
+test('sin slowLabel CardAudio muestra Más lento', async () => {
+  setup();
+  expect(
+    await screen.findByRole('button', { name: 'Más lento' }),
+  ).toBeVisible();
+});
+
+test('«Lento» reutiliza el blob ya cargado a 0,75×', async () => {
+  const { transport } = setup({}, 'Lento');
+  expect(
+    screen.queryByRole('button', { name: 'Más lento' }),
+  ).not.toBeInTheDocument();
+  await userEvent.click(
+    await screen.findByRole('button', { name: 'Reproducir' }),
+  );
+  expect(await screen.findByRole('button', { name: 'Detener' })).toBeTruthy();
+  await waitFor(() =>
+    expect(
+      transport.calls.filter((call) => call.url === '/api/audio/k1'),
+    ).toHaveLength(1),
+  );
+
+  await userEvent.click(screen.getByRole('button', { name: 'Lento' }));
+  const audio = document.querySelector('audio') as HTMLAudioElement;
+  expect(audio.playbackRate).toBe(0.75);
+  expect(
+    transport.calls.filter((call) => call.url === '/api/audio/k1'),
+  ).toHaveLength(1);
+  expect(document.querySelectorAll('audio')).toHaveLength(1);
 });
 
 test('CardAudio usa la preferida que devuelve la API', async () => {

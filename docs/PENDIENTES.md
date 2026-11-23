@@ -1,7 +1,7 @@
 # Pendientes de Frances Classroom (v2)
 
 Lo que falta para producción, lo que solo decide el dueño y los límites conocidos.
-Actualizado el 2026-11-21. Marca cada casilla al resolverla y anota la decisión.
+Actualizado el 2026-11-22. Marca cada casilla al resolverla y anota la decisión.
 
 La lista de la v1 (R2, Worker de Cloudflare, GitHub Pages con bundle cifrado) quedó
 sin efecto con la spec v2; su historia está en el git. El demo v2 tampoco se
@@ -33,14 +33,16 @@ e [`../infra/README.md`](../infra/README.md). Cada uno deja un ADR firmado.
 
 - [x] **ADR-018 (Cahier y Texto libre):** aprobado (ampliado con Cahier Atelier 3D en ADR-023; Spectral + Lexend autoalojadas bajo `font-src 'self'`).
 - [x] **ADR-019 (RapidOCR y Office):** aprobado para OCR local y extracción de PowerPoint y Word.
+- [x] **ADR-025 / ADR-026 (Cahier Atelier 3D — Edición Definitiva):** 5 decisiones D0 aprobadas el 2026-11-22; pendiente solo checklist en hardware real y CI Smoke arm64 del PR.
 - [ ] **SPK-05 (ADR-005):** OAuth con la cuenta institucional de la universidad
   (Google Workspace UNAL): proyecto GCP, cliente OAuth en producción y refresh
   token de Classroom/Drive. `LIVE-01` depende de esta tarea y `GOL-02` reutiliza
   sus pasos 2–5 y 7; el ADR-005 sigue sin escribir.
 - [ ] **Voces jóvenes (SPK-02, ADR-002):** escuchar las 4 voces sintéticas y fijar su
   tono. Hoy usan valores provisionales de `src/frances/audio/voices_default.yaml`.
-- [ ] **Archivos de más de 50 MB:** subir `classroom.max_download_mb` o dejarlos
-  fuera. Las carpetas de Drive enlazadas no se recorren.
+- [x] **Archivos de más de 50 MB:** se mantiene `classroom.max_download_mb = 50` (y
+  se acepta dejar sin texto los `.ppt`/`.doc` antiguos sin LibreOffice para
+  conservar liviana la imagen Docker ARM).
 
 ## 3. Mejoras propuestas
 
@@ -50,6 +52,10 @@ e [`../infra/README.md`](../infra/README.md). Cada uno deja un ADR firmado.
 | Fichas y tarjetas | Prompt `cards-3` (notas pedagógicas y contexto en frases), grounding lematizado con `spaCy`, respaldo de reglas si los sobrevivientes quedan vacíos y reverso enriquecido en `FlipCard` (`CHG-22` / `ADR-024`) | Resuelto en v3 (`ADR-024`) |
 | Plan del día | Agregar práctica de pronunciación | Hoy el plan no la pide ni la cuenta |
 | Proxy | `FRANCES_FORWARDED_ALLOW_IPS` configurado con la subred `172.28.0.0/24` de `edge` en `compose.yaml` | Resuelto en v3 |
+| Buscador de `/temas` | Conectar el campo al FTS5 de `GET /api/search` o ajustar el placeholder a «Buscar tema…» | El placeholder promete una búsqueda que hoy no se ejecuta; diferido post-merge (observación no bloqueante validada en vivo el 2026-11-22) |
+| `/repasar/texto` | Mantener TTS + evaluación oral en v2; evaluar un `[CHG]` para añadir traducción + IPA por frase libre más adelante | No bloquea el alcance v2; diferido post-merge (observación no bloqueante validada en vivo el 2026-11-22) |
+| Consola Admin (`Temas` y `Tarjetas`) | Mantener el alcance v2 actual; evaluar paginación en Admin Tarjetas y alta/baja de temas vía `[CHG]` si se requiere | El alcance v2 alcanza para operar la instancia; diferido post-merge (observación no bloqueante validada en vivo el 2026-11-22) |
+| Detalles menores UX/API | Pulir los 45 px residuales en la ficha móvil larga, sincronizar el destello `.is-cited` al montar el PDF y uniformar el `405` a `method_not_allowed` en una iteración posterior | Hallazgos no bloqueantes del cierre en vivo; diferido post-merge (observación no bloqueante validada en vivo el 2026-11-22) |
 
 ## 4. Sin probar
 

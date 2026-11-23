@@ -1,9 +1,11 @@
 """Etapas sync/reconcile + CLI + semántica de fallo de auth (SYN-07)."""
 
 import dataclasses
+import gc
 import hashlib
 import json
 import sys
+import warnings
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -21,7 +23,7 @@ from google_mock import FRENCH_COURSE_ID, install_google_mocks
 from frances.db.store import Store
 from frances.errors import AuthError
 from frances.models.ids import item_id
-from frances.stage import make_context
+from frances.stage import StageReport, make_context
 from frances.sync.attachments import extract_attachments
 from frances.sync.classroom import CLASSROOM_BASE_URL
 from frances.sync.run import register, run_reconcile, run_sync
@@ -139,8 +141,73 @@ def test_auth_failure_writes_nothing(tmp_path: Path, respx_mock: respx.Router) -
 def test_sync_cli_auth_failure_exits_3(tmp_path: Path, respx_mock: respx.Router) -> None:
     install_google_mocks(respx_mock, "v1")
     respx_mock.post(TOKEN_URL).respond(400, json={"error": "invalid_grant"})
-    res = CliRunner(env=FAKE_ENV).invoke(make_app(), ["sync", "--data", str(tmp_path)])
-    assert res.exit_code == 3
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", ResourceWarning)
+        res = CliRunner(env=FAKE_ENV).invoke(make_app(), ["sync", "--data", str(tmp_path)])
+        exit_code = res.exit_code
+        del res
+        gc.collect()
+    assert exit_code == 3
+    assert [w for w in caught if issubclass(w.category, ResourceWarning)] == []
+
+
+def _spy_close(ctx: Any, monkeypatch: pytest.MonkeyPatch) -> tuple[list[int], Any]:
+    """Cuenta llamadas a ``ctx.store.close`` y cierra la conexión de verdad."""
+    calls: list[int] = []
+    real_close = ctx.store.close
+
+    def spy_close() -> None:
+        calls.append(1)
+        real_close()
+
+    monkeypatch.setattr(ctx.store, "close", spy_close)
+    return calls, real_close
+
+
+def _assert_no_resource_warning(caught: list[warnings.WarningMessage]) -> None:
+    assert [w for w in caught if issubclass(w.category, ResourceWarning)] == []
+
+
+def test_sync_cli_closes_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    ctx = make_context(tmp_path, FAKE_ENV)
+    calls, real_close = _spy_close(ctx, monkeypatch)
+    monkeypatch.setattr("frances.sync.run.make_context", lambda _data: ctx)
+    monkeypatch.setattr(
+        "frances.sync.run.run_sync",
+        lambda _ctx, _full=False: StageReport(stage="sync", status="ok"),
+    )
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", ResourceWarning)
+            res = CliRunner().invoke(make_app(), ["sync", "--data", str(tmp_path)])
+            gc.collect()
+        assert res.exit_code == 0, res.output
+        assert len(calls) == 1
+        _assert_no_resource_warning(caught)
+    finally:
+        if not calls:
+            real_close()
+
+
+def test_reconcile_cli_closes_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    ctx = make_context(tmp_path, FAKE_ENV)
+    calls, real_close = _spy_close(ctx, monkeypatch)
+    monkeypatch.setattr("frances.sync.run.make_context", lambda _data: ctx)
+    monkeypatch.setattr(
+        "frances.sync.run.run_reconcile",
+        lambda _ctx: StageReport(stage="reconcile", status="ok"),
+    )
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", ResourceWarning)
+            res = CliRunner().invoke(make_app(), ["reconcile", "--data", str(tmp_path)])
+            gc.collect()
+        assert res.exit_code == 0, res.output
+        assert len(calls) == 1
+        _assert_no_resource_warning(caught)
+    finally:
+        if not calls:
+            real_close()
 
 
 def test_sync_end_to_end_v1_then_rerun(tmp_path: Path) -> None:

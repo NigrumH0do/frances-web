@@ -1,4 +1,4 @@
-import { useState, type JSX, type ReactNode } from 'react';
+import { useEffect, useState, type JSX, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { useApi } from '../../api/ApiContext';
 import { useResource } from '../../api/useResource';
@@ -27,6 +27,7 @@ import { AttachmentBlock } from '../../media/AttachmentView';
 import { CardAudio } from '../../media/CardAudio';
 import { SheetView } from './SheetView';
 import { publicacionStrings as s } from './strings';
+import './publicacion.css';
 
 function pageFromParams(raw: string | null): number | null {
   if (raw === null) return null;
@@ -169,7 +170,23 @@ function ItemBody({
   const [newCardOpen, setNewCardOpen] = useState(false);
   const page = pageFromParams(params.get('pagina'));
   const citedAttachment = params.get('adjunto');
+  const cited = page !== null || citedAttachment !== null;
+  const [citedOn, setCitedOn] = useState(cited);
   const firstPdf = detail.attachments.find(isPdf)?.id ?? null;
+
+  useEffect(() => {
+    if (!cited) {
+      setCitedOn(false);
+      return;
+    }
+    setCitedOn(true);
+    const timer = window.setTimeout(() => {
+      setCitedOn(false);
+    }, 1600);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [cited]);
 
   function initialPageFor(att: AttachmentView): number | undefined {
     if (page === null) return undefined;
@@ -223,6 +240,51 @@ function ItemBody({
       </div>
 
       <div className="pub-split">
+        {paragraphs.length > 0 || detail.attachments.length > 0 ? (
+          <div className="stack-lg">
+            {paragraphs.length > 0 ? (
+              <section className="stack" aria-label={s.text}>
+                <div className="section-title">
+                  <h2>{s.text}</h2>
+                </div>
+                <Card>
+                  <div className="stack">
+                    {paragraphs.map((paragraph, index) => (
+                      <p
+                        className={langProps.className}
+                        lang={langProps.lang}
+                        key={`${index}-${paragraph}`}
+                      >
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </Card>
+              </section>
+            ) : null}
+
+            {detail.attachments.length > 0 ? (
+              <section
+                className={citedOn ? 'stack is-cited' : 'stack'}
+                aria-label={s.attachments}
+              >
+                <div className="section-title">
+                  <h2>{s.attachments}</h2>
+                </div>
+                <div className="stack">
+                  {detail.attachments.map((att) => (
+                    <AttachmentBlock
+                      key={att.id}
+                      att={att}
+                      initialPage={initialPageFor(att)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
+        ) : null}
+
         <div className="stack-lg">
           <section className="stack" aria-label={s.sheet}>
             <div className="section-title">
@@ -303,48 +365,6 @@ function ItemBody({
             </StateView>
           </section>
         </div>
-
-        {paragraphs.length > 0 || detail.attachments.length > 0 ? (
-          <div className="stack-lg">
-            {paragraphs.length > 0 ? (
-              <section className="stack" aria-label={s.text}>
-                <div className="section-title">
-                  <h2>{s.text}</h2>
-                </div>
-                <Card>
-                  <div className="stack">
-                    {paragraphs.map((paragraph, index) => (
-                      <p
-                        className={langProps.className}
-                        lang={langProps.lang}
-                        key={`${index}-${paragraph}`}
-                      >
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
-                </Card>
-              </section>
-            ) : null}
-
-            {detail.attachments.length > 0 ? (
-              <section className="stack" aria-label={s.attachments}>
-                <div className="section-title">
-                  <h2>{s.attachments}</h2>
-                </div>
-                <div className="stack">
-                  {detail.attachments.map((att) => (
-                    <AttachmentBlock
-                      key={att.id}
-                      att={att}
-                      initialPage={initialPageFor(att)}
-                    />
-                  ))}
-                </div>
-              </section>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     </div>
   );

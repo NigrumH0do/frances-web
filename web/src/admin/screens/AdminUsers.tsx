@@ -204,7 +204,10 @@ export function AdminUsers() {
 
   return (
     <div className="stack-lg">
-      <AppBar title={strings.title} back={{ to: '/mas', label: 'Más' }} />
+      <AppBar
+        title={strings.title}
+        back={{ to: '/mas/admin', label: 'Administración' }}
+      />
 
       <Segmented
         label={strings.filterLabel}

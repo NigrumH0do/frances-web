@@ -62,6 +62,9 @@ test('pipeline muestra el último run y reintenta un fallo', async () => {
   });
 
   expect(await screen.findByText('fetch')).toBeVisible();
+  expect(screen.getByText('2')).toHaveClass('nums');
+  expect(screen.getByText(/downloaded: 3/)).toHaveClass('nums');
+  expect(screen.getByText('Intento 5 de 5')).toHaveClass('nums');
   await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
   await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
 

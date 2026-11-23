@@ -4,12 +4,28 @@ import { tr } from '../../l10n/es';
 import type { AskPhase } from './useAsk';
 import { chatStrings } from './strings';
 
+function motionOff(): boolean {
+  return (
+    typeof document !== 'undefined' &&
+    document.documentElement.classList.contains('motion-off')
+  );
+}
+
 function prefersReducedMotion(): boolean {
   return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    motionOff() ||
+    (typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   );
+}
+
+function livePhase(phase: AskPhase): string {
+  if (phase === 'writing') return chatStrings.stepWrite;
+  if (phase === 'citing') return chatStrings.stepCite;
+  if (phase === 'searching' || phase === 'sending')
+    return chatStrings.stepSearch;
+  return '';
 }
 
 function usePrefersReducedMotion(): boolean {
@@ -23,7 +39,7 @@ function usePrefersReducedMotion(): boolean {
       return;
     }
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReduced(query.matches);
+    const update = () => setReduced(prefersReducedMotion());
     update();
     query.addEventListener?.('change', update);
     return () => query.removeEventListener?.('change', update);
@@ -94,6 +110,9 @@ export function Thinking({
 
   return (
     <div className="thinking" role="status">
+      <p className="sr-only" aria-live="polite">
+        {livePhase(phase)}
+      </p>
       <div className="row-between">
         <span className="row">
           {reduced ? null : (

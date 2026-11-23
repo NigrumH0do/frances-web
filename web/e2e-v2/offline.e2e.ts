@@ -2,7 +2,7 @@
 // instantánea del demo, las reseñas entran en la cola y se envían al volver la
 // red. Es el e2e del Review Focus P09-4.
 
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './console.fixture';
 import { loginDemo } from './helpers';
 
 async function waitForServiceWorker(page: Page): Promise<void> {
@@ -11,6 +11,7 @@ async function waitForServiceWorker(page: Page): Promise<void> {
   });
   // `clientsClaim` puede no haber tomado esta pestaña todavía; una recarga
   // garantiza que la navegación ya pase por el service worker.
+  await page.waitForLoadState('networkidle');
   await page.reload();
   await expect
     .poll(
@@ -18,6 +19,8 @@ async function waitForServiceWorker(page: Page): Promise<void> {
       { timeout: 30_000 },
     )
     .toBe(true);
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await page.waitForLoadState('networkidle');
 }
 
 async function cacheEntries(page: Page, name: string): Promise<number> {
@@ -87,6 +90,7 @@ test('offline: shell cacheado, cola de reseñas y sincronización', async ({
     .poll(() => cacheEntries(page, 'frances-demo'), { timeout: 30_000 })
     .toBeGreaterThan(0);
 
+  await page.waitForLoadState('networkidle');
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();

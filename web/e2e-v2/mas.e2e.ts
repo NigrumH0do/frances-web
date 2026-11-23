@@ -1,7 +1,7 @@
 // Más (UI-19): tema persistente, tarjetas nuevas por día y ausencia de admin
 // para el usuario demo.
 
-import { expect, test } from '@playwright/test';
+import { expect, test } from './console.fixture';
 import { loginDemo } from './helpers';
 
 test('el tema oscuro persiste tras recargar', async ({ page }) => {

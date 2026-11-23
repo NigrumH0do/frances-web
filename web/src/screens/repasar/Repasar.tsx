@@ -14,15 +14,23 @@ import { previewIntervals } from '../../review/intervals';
 import { currentCard } from '../../review/session';
 import { useReviewSession } from '../../review/useReviewSession';
 import type { Rating } from '../../srs/types';
+import {
+  burstOnFinish,
+  burstOnRate,
+  type BurstRequest,
+  type BurstVariant,
+} from '../../three/burstPhysics';
 import { SafeCardBurstScene } from '../../three/LazyScenes';
 import { FlipCard } from './FlipCard';
 import { RatingBar } from './RatingBar';
 import { ReviewTabs } from './ReviewTabs';
 import { remainingLabel, repasarStrings } from './strings';
+import './repasar.css';
 
 type Notice =
   | { kind: 'suspend' | 'hard'; cardId: string; text: string }
-  | { kind: 'queued'; text: string };
+  | { kind: 'queued'; text: string }
+  | { kind: 'swipe'; text: string };
 
 function Summary({
   reviewed,
@@ -58,7 +66,7 @@ export function Repasar() {
 
   const [notice, setNotice] = useState<Notice | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [burstCount, setBurstCount] = useState(0);
+  const [burst, setBurst] = useState<BurstRequest | null>(null);
   const [editedCard, setEditedCard] = useState<CardView | null>(null);
   const [initialIds, setInitialIds] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -67,7 +75,10 @@ export function Repasar() {
     () => new Set(),
   );
   const planMarked = useRef(false);
+  const burstSeq = useRef(0);
   const finishedBurstRef = useRef(false);
+  const swipeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rateCurrentRef = useRef<(rating: Rating) => void>(() => undefined);
 
   const queue = session.state.queue;
   const total = queue.length;
@@ -159,8 +170,27 @@ export function Repasar() {
     }
   }
 
+  function clearSwipeTimer(): void {
+    if (swipeTimerRef.current !== null) {
+      clearTimeout(swipeTimerRef.current);
+      swipeTimerRef.current = null;
+    }
+  }
+
+  useEffect(() => clearSwipeTimer, [index]);
+
+  function emitBurst(variant: BurstVariant): void {
+    burstSeq.current += 1;
+    setBurst({ id: burstSeq.current, variant });
+  }
+
   async function undoNotice() {
     const target = notice;
+    if (target !== null && target.kind === 'swipe') {
+      clearSwipeTimer();
+      setNotice(null);
+      return;
+    }
     if (target === null || target.kind === 'queued') return;
     setNotice(null);
     const body: CardFlagsIn =
@@ -221,24 +251,43 @@ export function Repasar() {
   function rateCurrent(rating: Rating) {
     const selected = currentCard(session.state);
     if (selected === null) return;
+    clearSwipeTimer();
     setReviewedIds((previous) => {
       const next = new Set(previous);
       next.add(selected.id);
       return next;
     });
     setNotice(null);
-    if (rating === 3 || rating === 4) {
-      setBurstCount((n) => n + 1);
-    }
+    const variant = burstOnRate({ rating, index, total });
+    if (variant !== null) emitBurst(variant);
     void session.grade(rating);
   }
 
+  rateCurrentRef.current = rateCurrent;
+
+  function handleSwipeRate(rating: Rating): void {
+    clearSwipeTimer();
+    setNotice({
+      kind: 'swipe',
+      text: tr(repasarStrings.swipePending, {
+        grade: repasarStrings.ratings[rating],
+      }),
+    });
+    swipeTimerRef.current = setTimeout(() => {
+      swipeTimerRef.current = null;
+      rateCurrentRef.current(rating);
+    }, 5000);
+  }
+
   useEffect(() => {
-    if (finished && session.state.done > 0) {
-      if (!finishedBurstRef.current) {
-        finishedBurstRef.current = true;
-        setBurstCount((n) => n + 1);
-      }
+    const variant = burstOnFinish({
+      finished,
+      done: session.state.done,
+      alreadyEmitted: finishedBurstRef.current,
+    });
+    if (variant !== null) {
+      finishedBurstRef.current = true;
+      emitBurst(variant);
     } else if (!finished) {
       finishedBurstRef.current = false;
     }
@@ -289,7 +338,7 @@ export function Repasar() {
   return (
     <div className="stack-lg repasar-stage">
       <div className="burst-overlay" aria-hidden="true">
-        <SafeCardBurstScene trigger={burstCount} />
+        <SafeCardBurstScene request={burst} />
       </div>
       <AppBar
         title={repasarStrings.title}
@@ -362,6 +411,7 @@ export function Repasar() {
                   card={visibleCard ?? current}
                   flipped={session.state.flipped}
                   onFlip={session.flip}
+                  onSwipeRate={handleSwipeRate}
                 />
                 {session.state.flipped ? (
                   <RatingBar intervals={intervals} onRate={rateCurrent} />

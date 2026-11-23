@@ -1,0 +1,180 @@
+/* Chat: compositor, pensamiento y sugerencias. */
+
+.thinking {
+  align-self: flex-start;
+  width: 88%;
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+  border: 1px dashed var(--c-border-strong);
+  background: var(--c-card);
+}
+.dots {
+  display: inline-flex;
+  gap: 5px;
+}
+.dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  animation: blink 1.2s infinite ease-in-out;
+}
+.dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.steps {
+  list-style: none;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+}
+.steps li {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.steps .done {
+  color: var(--c-success);
+}
+.steps .now {
+  color: var(--c-text);
+  font-weight: var(--fw-semibold);
+}
+.steps .todo {
+  color: var(--c-text-muted);
+}
+.thinking .btn {
+  min-height: var(--tap);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dots span {
+    animation: none;
+  }
+}
+html.motion-off .dots span {
+  animation: none;
+}
+.composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'field send'
+    'count count';
+  gap: var(--sp-1) var(--sp-2);
+  align-items: end;
+  padding: var(--sp-3) 0 var(--sp-2);
+  background: var(--c-bg);
+  border-top: 1px solid var(--c-border);
+}
+.composer .textarea {
+  grid-area: field;
+  min-height: var(--tap);
+  height: auto;
+  max-height: calc(1.5em * 4 + 20px);
+  border-radius: var(--r-lg);
+  padding: 10px var(--sp-4);
+  resize: none;
+  field-sizing: content;
+}
+.composer > .btn {
+  grid-area: send;
+}
+.composer .composer-count {
+  grid-area: count;
+  justify-self: end;
+  font-size: var(--fs-xs);
+  color: var(--c-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Chat: chips iniciales ---------- */
+
+.starter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.starter-chip {
+  min-height: var(--tap);
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-card);
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.starter-chip:hover {
+  background: var(--c-accent-soft);
+  color: var(--c-on-accent-soft);
+  border-color: var(--c-accent);
+  transform: translateY(-1px);
+}
+
+/* Desde 960 px, dentro de content-split: lista y luego conversación. */
+@media (min-width: 960px) {
+  .content-split .chat-split {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--sp-4);
+  }
+}
+.chat-pane {
+  min-width: 0;
+}
+.cite-pop {
+  position: relative;
+  display: inline-block;
+}
+.cite-dialog {
+  position: absolute;
+  inset: auto;
+  left: 0;
+  top: calc(100% + 4px);
+  z-index: 3;
+  width: min(16rem, 70vw);
+  height: auto;
+  margin: 0;
+  display: grid;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-md);
+  background: var(--c-card);
+  color: var(--c-text);
+  text-align: left;
+}
+.cite-dialog-title {
+  display: block;
+  font-weight: var(--fw-semibold);
+}
+.cite-dialog-page,
+.cite-dialog-snippet {
+  display: block;
+  font-size: var(--fs-sm);
+}

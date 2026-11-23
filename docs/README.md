@@ -1,7 +1,7 @@
 # Documentación de Frances Classroom
 
 Qué leer según lo que necesites. Lo **vigente** describe la app v2 y su evolución v3
-(servidor propio, `ADRs 021–024`). Lo **histórico** describe la v1 (sitio estático
+(servidor propio, `ADRs 021–025`). Lo **histórico** describe la v1 (sitio estático
 con bundle cifrado en R2 y Worker de Cloudflare), retirada en CHG-16 y CHG-21; se
 guarda como registro de decisiones.
 
@@ -23,6 +23,7 @@ guarda como registro de decisiones.
 | [`superpowers/plans/2026-11-02-00-v2-master-plan.md`](superpowers/plans/2026-11-02-00-v2-master-plan.md) | **Vigente.** Contratos, interfaces y reglas globales de la v2 |
 | `superpowers/plans/2026-11-02-08…12-*.md` | Planes P08–P12 (servidor, rediseño, IA, gestión, go-live). P08–P11 están hechos; P12 espera las tareas humanas |
 | [`superpowers/plans/tasks.yaml`](superpowers/plans/tasks.yaml) | Grafo de tareas (`uv run python scripts/tasks_check.py --waves`) |
+| [`superpowers/plans/2026-11-21-13-cahier-edicion-definitiva.md`](superpowers/plans/2026-11-21-13-cahier-edicion-definitiva.md) | Plan P13: Cahier Atelier 3D — Edición Definitiva (ADR-025) |
 | [`superpowers/plans/2026-11-06-manual-subagentes.md`](superpowers/plans/2026-11-06-manual-subagentes.md) | Cómo se repartió el trabajo entre agentes |
 | [`design/v2/`](design/v2/README.md) | Maquetas HTML aprobadas (ADR-009); el estilo final cambió con ADR-018 |
 | `superpowers/specs/2026-10-14-*.md`, `superpowers/plans/2026-10-14-*.md` | **Histórico (v1).** Lo que sigue en pie de la v1 lo dice la spec v2 |
@@ -44,18 +45,20 @@ guarda como registro de decisiones.
 | [015](decisions/ADR-015-groq-llm.md) | LLM en Groq | Reemplazado por 016 |
 | [016](decisions/ADR-016-onerouter-llm.md) | LLM en OneRouter | Aceptado |
 | [017](decisions/ADR-017-ai17-rules-cards-quiz.md) | Evaluación del LLM sin tarjetas ni quiz | Aceptado; reemplazado en parte por [024](decisions/ADR-024-tarjetas-ia-lematizacion-y-temas.md): `--task cards` volvió al LLM (`cards-3`) y solo `quiz` sale 0 con reglas |
-| [018](decisions/ADR-018-cahier-y-texto-libre.md) | Sistema visual «Cahier» y Texto libre | Aceptado |
+| [018](decisions/ADR-018-cahier-y-texto-libre.md) | Sistema visual «Cahier» y Texto libre | Aceptado; paleta y quiebres reemplazados por 025 |
 | [019](decisions/ADR-019-ocr-rapidocr-y-office.md) | RapidOCR y lectura de Office | Aceptado |
 | [020](decisions/ADR-020-sin-github-pages.md) | Sin GitHub Pages; solo el servidor | Aceptado |
 | [021](decisions/ADR-021-login-google-y-aprobacion-admin.md) | Login web con Google y aprobación admin | Aceptado |
 | [022](decisions/ADR-022-pool-multicuenta-azure.md) | Pool multicuenta Azure Speech y Translator | Aceptado |
-| [023](decisions/ADR-023-cahier-atelier-3d-y-animaciones.md) | Sistema visual «Cahier Atelier 3D» y animaciones WebGL | Aceptado |
+| [023](decisions/ADR-023-cahier-atelier-3d-y-animaciones.md) | Sistema visual «Cahier Atelier 3D» y animaciones WebGL | Aceptado; oro y reloj de movimiento reemplazados por 025 |
 | [024](decisions/ADR-024-tarjetas-ia-lematizacion-y-temas.md) | Tarjetas IA v2/v3 (`cards-3` con notas pedagógicas), lematización y temas | Aceptado |
+| [025](decisions/ADR-025-cahier-atelier-3d-edicion-definitiva.md) | Cahier Atelier 3D — Edición Definitiva: paleta, tipografía, quiebre 960 px y un reloj de movimiento | Aceptado |
+| [026](decisions/ADR-026-cahier-aceptacion.md) | Acta de aceptación de Cahier Atelier 3D — Edición Definitiva (matriz QA-04) | Pendiente de firma del dueño |
 
 ## Otros
 
 | Documento | Para qué |
 |---|---|
-| [`../.agents/skills/cahier-3d-atelier/SKILL.md`](../.agents/skills/cahier-3d-atelier/SKILL.md) | Sistema visual «Cahier Atelier 3D», escenas Three.js y reglas de CSS/movimiento |
+| [`../.agents/skills/cahier-3d-atelier/SKILL.md`](../.agents/skills/cahier-3d-atelier/SKILL.md) | Sistema visual «Cahier Atelier 3D — Edición Definitiva (ADR-025)», escenas Three.js y reglas de CSS/movimiento |
 | [`../tests/fixtures/llm_eval/README.md`](../tests/fixtures/llm_eval/README.md) | Set sintético para evaluar las salidas del LLM |
 | [`../contracts/`](../contracts/) | JSON Schema de la API y de los modelos (`frances schema export`) |

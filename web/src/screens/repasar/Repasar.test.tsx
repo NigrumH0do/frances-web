@@ -3,6 +3,9 @@ import { IDBFactory } from 'fake-indexeddb';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import type {
   CardView,
@@ -17,6 +20,29 @@ import { closeV2DbForTests } from '../../offline/db';
 import { pendingCount } from '../../offline/outbox';
 import { renderScreen } from '../../shell/testing';
 import Repasar from './Repasar';
+
+const burstSeen = vi.hoisted(() => ({
+  requests: [] as Array<{ id: number; variant: 'grade' | 'complete' } | null>,
+}));
+
+vi.mock('../../three/LazyScenes', () => ({
+  SafeCardBurstScene: ({
+    request,
+  }: {
+    request?: { id: number; variant: 'grade' | 'complete' } | null;
+  }) => {
+    burstSeen.requests.push(request ?? null);
+    return null;
+  },
+}));
+
+function emittedBursts(): Array<{ id: number; variant: 'grade' | 'complete' }> {
+  const byId = new Map<number, { id: number; variant: 'grade' | 'complete' }>();
+  for (const request of burstSeen.requests) {
+    if (request !== null) byId.set(request.id, request);
+  }
+  return [...byId.values()];
+}
 
 const FSRS: FsrsCard = {
   due: '2026-11-05T10:00:00.000000Z',
@@ -98,9 +124,11 @@ beforeEach(async () => {
   indexedDB = new IDBFactory();
   await closeV2DbForTests();
   localStorage.clear();
+  burstSeen.requests.length = 0;
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -384,4 +412,111 @@ test('con datos guardados avisa sin conexión y las reseñas van a la cola', asy
 
   expect(await screen.findByText('Guardadas sin conexión: 1')).toBeVisible();
   expect(await pendingCount('u1')).toBe(1);
+});
+
+test('calificar 3 en la penúltima emite grade y la última cierra con un solo complete', async () => {
+  renderScreen(<Repasar />, {
+    routes: {
+      'GET /api/review/queue': [CARD_A, CARD_B],
+      'POST /api/reviews': state('a'),
+      'GET /api/plan/today': PLAN_WITHOUT_REVIEW,
+    },
+  });
+
+  expect(await screen.findByText('bonjour')).toBeVisible();
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Mostrar respuesta' }),
+  );
+  await userEvent.click(screen.getByRole('button', { name: /^Bien/ }));
+
+  expect(await screen.findByText('merci')).toBeVisible();
+  expect(emittedBursts().filter((burst) => burst.variant === 'grade')).toEqual([
+    { id: 1, variant: 'grade' },
+  ]);
+  expect(
+    emittedBursts().filter((burst) => burst.variant === 'complete'),
+  ).toHaveLength(0);
+
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Mostrar respuesta' }),
+  );
+  await userEvent.click(screen.getByRole('button', { name: /^Bien/ }));
+  expect(await screen.findByText('Sesión terminada')).toBeVisible();
+
+  const bursts = emittedBursts();
+  expect(bursts.filter((burst) => burst.variant === 'grade')).toHaveLength(1);
+  expect(bursts.filter((burst) => burst.variant === 'complete')).toEqual([
+    { id: 2, variant: 'complete' },
+  ]);
+  expect(bursts).toHaveLength(2);
+});
+
+test('calificar 4 en la última tarjeta emite exactamente un complete', async () => {
+  renderScreen(<Repasar />, {
+    routes: {
+      'GET /api/review/queue': [CARD_A],
+      'POST /api/reviews': state('a'),
+      'GET /api/plan/today': PLAN_WITHOUT_REVIEW,
+    },
+  });
+
+  expect(await screen.findByText('bonjour')).toBeVisible();
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Mostrar respuesta' }),
+  );
+  await userEvent.click(screen.getByRole('button', { name: /^Fácil/ }));
+  expect(await screen.findByText('Sesión terminada')).toBeVisible();
+
+  expect(emittedBursts()).toEqual([{ id: 1, variant: 'complete' }]);
+});
+
+test('las teclas 1–4 califican al momento, sin la espera del swipe', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const user = userEvent.setup({
+    advanceTimers: vi.advanceTimersByTimeAsync,
+  });
+  const { transport } = renderScreen(<Repasar />, {
+    routes: {
+      'GET /api/review/queue': [CARD_A],
+      'POST /api/reviews': state('a'),
+      'GET /api/plan/today': PLAN_WITHOUT_REVIEW,
+    },
+  });
+
+  expect(await screen.findByText('bonjour')).toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Mostrar respuesta' }));
+  await user.keyboard('3');
+  await waitFor(() =>
+    expect(transport.calls.some((call) => call.url === '/api/reviews')).toBe(
+      true,
+    ),
+  );
+  const body = transport.calls.find((call) => call.url === '/api/reviews')!
+    .body as ReviewIn;
+  expect(body.rating).toBe(3);
+});
+
+test('el CSS de repaso usa 2×2, IPA mono recto y no queda burstCount', () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const css = readFileSync(join(here, 'repasar.css'), 'utf8');
+  const source = readFileSync(join(here, 'Repasar.tsx'), 'utf8');
+  expect(css).toMatch(/@media\s*\(\s*max-width:\s*379px\s*\)/);
+  expect(css).toMatch(
+    /\.rating\s*\{[^}]*grid-template-columns:\s*repeat\(\s*2,\s*1fr\s*\)/,
+  );
+  const ipa = /\.flip-face \.ipa\s*,\s*\.flip-recap-ipa\s*\{([^}]*)\}/.exec(
+    css,
+  );
+  expect(ipa?.[1]).toMatch(/font-family:\s*var\(--font-mono\)/);
+  expect(ipa?.[1]).toMatch(/font-style:\s*normal/);
+  expect(ipa?.[1]).not.toMatch(/italic/);
+  expect(css).toMatch(/min-height:\s*min\(68dvh,\s*560px\)/);
+  expect(css).toMatch(/\.show-answer\s*\{[^}]*position:\s*sticky/);
+  expect(css).toMatch(/\.show-answer\s*\{[^}]*bottom:\s*0/);
+  expect(css).toMatch(
+    /\.flip-tilt\.is-tilting\s*\{[^}]*will-change:\s*transform/,
+  );
+  expect(css).not.toMatch(/color:\s*var\(--c-gold-3d\)/);
+  expect(source).not.toContain('burstCount');
+  expect(source).not.toContain('setBurstCount');
 });

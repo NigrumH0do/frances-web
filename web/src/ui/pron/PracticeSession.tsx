@@ -19,13 +19,15 @@ import { saveAttempt } from '../../pron/attempts';
 import { addSeconds, monthOf, secondsOf } from '../../pron/quota';
 import type { Recognizer } from '../../pron/recognizer';
 import { useBlobPlayer } from '../../media/useBlobPlayer';
+import { usePracticeLevelMeter } from '../../pron/practiceHooks';
 import { createRecorder } from '../../pron/recorder';
 import type { Recorder, RecorderState } from '../../pron/recorder';
 import { isCanonicalPhoneme } from '../../pron/phonemeLabels';
 import { loadStats, saveStats, updateStats } from '../../pron/stats';
-import { SafeVoiceOrbScene } from '../../three/LazyScenes';
+import { AcousticCabin } from './AcousticCabin';
 import { ScoreSummary } from './ScoreSummary';
 import { WordList } from './WordList';
+import './pron.css';
 
 // Cadenas propias de P06 (R-18): no van a `es.ts`.
 export const PRACTICE_MESSAGES = {
@@ -108,6 +110,7 @@ export function PracticeSession({
   const [saveFailed, setSaveFailed] = useState(false);
   const [take, setTake] = useState<Blob | null>(null);
   const player = useBlobPlayer();
+  const { meterRef } = usePracticeLevelMeter();
   const recorderRef = useRef<Recorder | null>(null);
   const onFinishedRef = useRef(onFinished);
   onFinishedRef.current = onFinished;
@@ -120,6 +123,7 @@ export function PracticeSession({
     let active = true;
     const recorder = createRecorder(recognizer, undefined, undefined, {
       captureTake: true,
+      meterRef,
     });
     recorderRef.current = recorder;
     setRecState(recorder.getState());
@@ -228,14 +232,15 @@ export function PracticeSession({
     recState.status === 'requesting_mic';
 
   return (
-    <div className="practice-session paper">
-      <div className="orb-wrap" aria-hidden="true">
-        <SafeVoiceOrbScene
-          active={recState.status === 'recording'}
-          score={result?.scores.pron}
-        />
-      </div>
-      <p lang="fr" className="practice-front">
+    <div className="practice-session">
+      <AcousticCabin
+        active={busy}
+        score={result?.scores.pron}
+        meterRef={meterRef}
+        onToggle={busy ? stop : record}
+        showButton={recognizer !== null && result === null && !scoring}
+      />
+      <p lang="fr" className="practice-front paper">
         {card.front_fr}
       </p>
       {card.back_es !== null && <p>{card.back_es}</p>}
@@ -244,11 +249,6 @@ export function PracticeSession({
         <p>{PRACTICE_MESSAGES.unavailable}</p>
       ) : (
         <>
-          {result === null && !scoring && (
-            <button type="button" onClick={busy ? stop : record}>
-              {busy ? PRACTICE_MESSAGES.stop : PRACTICE_MESSAGES.record}
-            </button>
-          )}
           {analyzing ? (
             <p
               className="callout info practice-analyzing"

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo, type ComponentType } from 'react';
-import { Route, Routes } from 'react-router';
+import { Link, Route, Routes, useLocation } from 'react-router';
 import { useAuth } from '../auth/AuthContext';
 import { AppBar, Skeleton } from '../components';
 import { common } from '../l10n/es';
@@ -11,6 +11,7 @@ import {
   adminNavStrings,
   type AdminModules,
 } from './adminNav';
+import './admin.css';
 
 function ScreenLoading() {
   return (
@@ -19,6 +20,39 @@ function ScreenLoading() {
       <Skeleton variant="title" />
       <Skeleton />
       <Skeleton variant="block" />
+    </div>
+  );
+}
+
+function AdminSubnav() {
+  const { pathname } = useLocation();
+  return (
+    <nav className="admin-subnav" aria-label={adminNavStrings.title}>
+      {ADMIN_SCREENS.map((screen) => {
+        const to = `/mas/admin/${screen.path}`;
+        return (
+          <Link
+            key={screen.path}
+            to={to}
+            aria-current={pathname === to ? 'page' : undefined}
+          >
+            {screen.title}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function AdminChild({ Screen }: { Screen: ComponentType }) {
+  return (
+    <div className="admin-console admin-dense">
+      <AdminSubnav />
+      <div className="admin-console-main">
+        <Suspense fallback={<ScreenLoading />}>
+          <Screen />
+        </Suspense>
+      </div>
     </div>
   );
 }
@@ -68,11 +102,7 @@ export function AdminRoutes({
         <Route
           key={path}
           path={path}
-          element={
-            <Suspense fallback={<ScreenLoading />}>
-              <Screen />
-            </Suspense>
-          }
+          element={<AdminChild Screen={Screen} />}
         />
       ))}
       <Route path="*" element={<NotFound />} />

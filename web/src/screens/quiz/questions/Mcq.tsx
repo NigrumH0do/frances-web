@@ -17,22 +17,24 @@ export function Mcq({ q, value, onChange }: QuestionProps<string>) {
           </span>
         ) : null}
       </legend>
-      <div className="options" role="radiogroup" aria-labelledby={legendId}>
-        {q.options.map((option, index) => (
-          <button
-            key={`${option}-${index}`}
-            type="button"
-            role="radio"
-            aria-checked={value === option}
-            className="option"
-            onClick={() => onChange(option)}
-          >
-            <span className="key" aria-hidden="true">
-              {LETTERS[index] ?? index + 1}
-            </span>
-            <span lang="fr">{option}</span>
-          </button>
-        ))}
+      <div className="quiz-answer" key={q.id}>
+        <div className="options" role="radiogroup" aria-labelledby={legendId}>
+          {q.options.map((option, index) => (
+            <button
+              key={`${option}-${index}`}
+              type="button"
+              role="radio"
+              aria-checked={value === option}
+              className="option"
+              onClick={() => onChange(option)}
+            >
+              <span className="key" aria-hidden="true">
+                {LETTERS[index] ?? index + 1}
+              </span>
+              <span lang="fr">{option}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </fieldset>
   );
